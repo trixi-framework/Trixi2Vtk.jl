@@ -1,8 +1,5 @@
 module Interpolate
 
-# Get useful bits and pieces from Trixi
-include("../../../../src/solvers/dg/interpolation.jl")
-
 using ..Trixi2Vtk
 
 

@@ -2,6 +2,7 @@ module Trixi2Vtk
 
 # Include all top-level submodule files
 include("auxiliary.jl")
+include("interpolation.jl")
 include("interpolate.jl")
 include("io.jl")
 include("pointlocators.jl")
