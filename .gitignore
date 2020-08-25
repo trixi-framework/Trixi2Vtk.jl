@@ -1,0 +1,16 @@
+*.pdf
+*.png
+*.h5
+*.mp4
+*.mem
+*.vtu
+*.pvd
+*.avi
+*.ogv
+**/Manifest.toml
+out/
+docs/build
+public/
+coverage/
+coverage_report/
+**/*.jl.*.cov
