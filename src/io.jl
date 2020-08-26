@@ -1,6 +1,3 @@
-using HDF5: h5open, attrs, exists
-
-
 # Check if file is a data file
 function is_solution_restart_file(filename::String)
   # Open file for reading

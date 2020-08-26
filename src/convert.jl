@@ -1,13 +1,7 @@
-using WriteVTK: vtk_save, paraview_collection
-using TimerOutputs
-using ProgressMeter: @showprogress, Progress, next!
-using Glob: glob
-
-
 """
-    run(filename::AbstractString...;
-        format=:vtu, verbose=false, hide_progress=false, pvd=nothing,
-        output_directory=".", nvisnodes=nothing)
+    convert(filename::AbstractString...;
+            format=:vtu, verbose=false, hide_progress=false, pvd=nothing,
+            output_directory=".", nvisnodes=nothing)
 
 Convert Trixi-generated output files to VTK files (VTU or VTI).
 
@@ -26,13 +20,13 @@ Convert Trixi-generated output files to VTK files (VTU or VTI).
 
 # Examples
 ```julia
-julia> Trixi2Vtk.run("out/solution_000*.h5")
+julia> Trixi2Vtk.convert("out/solution_000*.h5")
 [...]
 ```
 """
-function run(filename::AbstractString...;
-             format=:vtu, verbose=false, hide_progress=false, pvd=nothing,
-             output_directory=".", nvisnodes=nothing)
+function convert(filename::AbstractString...;
+                 format=:vtu, verbose=false, hide_progress=false, pvd=nothing,
+                 output_directory=".", nvisnodes=nothing)
   # Reset timer
   reset_timer!()
 

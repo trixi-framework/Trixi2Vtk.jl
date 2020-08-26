@@ -1,6 +1,3 @@
-using StaticArrays: SVector
-
-
 # Main data structure for quadtree-like point locator
 struct PointLocator{NDIMS}
   center::SVector{NDIMS, Float64}

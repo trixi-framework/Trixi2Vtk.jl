@@ -1,8 +1,3 @@
-using StaticArrays: SVector
-using TimerOutputs
-using WriteVTK: vtk_grid, MeshCell, VTKCellTypes, vtk_save, paraview_collection
-
-
 # Create and return VTK grids that are ready to be filled with data (vtu version)
 function build_vtk_grids(::Val{:vtu}, coordinates, levels, center_level_0, length_level_0,
                          n_visnodes, verbose, output_directory, is_datafile, filename)

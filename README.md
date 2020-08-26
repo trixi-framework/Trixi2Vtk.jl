@@ -52,16 +52,16 @@ julia> using Trixi2Vtk
 ```
 To process an HDF5 file generate by Trixi.jl, execute
 ```julia
-Trixi2Vtk.run("out/solution_000000.h5")
+Trixi2Vtk.convert("out/solution_000000.h5")
 ```
 This will convert `out/solution_000000.h5` to an unstructured VTK file with a
 `.vtu` file extension.
 
-Sometimes it can be helpful to run Trixi2Vtk non-interactively in batch mode, e.g.,
+Sometimes it can be helpful to use Trixi2Vtk non-interactively in batch mode, e.g.,
 when starting a simulation from another script. This is possible by directly passing
 the code that shall be executed to Julia
 ```bash
-julia -e 'using Trixi2Vtk; Trixi2Vtk.run("out/restart_*")'
+julia -e 'using Trixi2Vtk; Trixi2Vtk.convert("out/restart_*")'
 ```
 
 

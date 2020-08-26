@@ -8,7 +8,7 @@ const EXAMPLES_DIR = joinpath(pathof(Trixi) |> dirname |> dirname, "examples")
 
 
 function run_trixi(parameters_file; parameters...)
-  @test_nowarn Trixi.run(joinpath(EXAMPLES_DIR, parameters_file); parameters...)
+  @test_nowarn Trixi.convert(joinpath(EXAMPLES_DIR, parameters_file); parameters...)
 end
 
 
@@ -20,8 +20,8 @@ end
 
 
 function test_trixi2vtk_run(filenames, outdir; hashes=nothing, kwargs...)
-  @test_nowarn Trixi2Vtk.run(filename=joinpath(outdir, filenames),
-                             output_directory=outdir, kwargs...)
+  @test_nowarn Trixi2Vtk.convert(joinpath(outdir, filenames),
+                                 output_directory=outdir, kwargs...)
 
   if !isnothing(hashes)
     for (filename, hash_expected) in hashes
