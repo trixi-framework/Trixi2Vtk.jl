@@ -6,7 +6,7 @@ With **Trixi2Vtk.jl** you can convert the HDF5-based output files created by
 files) to VTK files. The converted files can then be further processed with
 [ParaView](https://www.paraview.org) to generate publication-quality
 visualizations. Trixi2Vtk is part of the [Trixi
-framework](https://github.com/trixi-framework)
+framework](https://github.com/trixi-framework).
 
 
 ## Installation
@@ -45,7 +45,7 @@ julia> using Trixi2Vtk
 ```
 To process an HDF5 file generate by Trixi.jl, execute
 ```julia
-Trixi.run("out/solution_000000.h5")
+Trixi2Vtk.run("out/solution_000000.h5")
 ```
 This will convert `out/solution_000000.h5` to an unstructured VTK file with a
 `.vtu` file extension.
@@ -61,7 +61,7 @@ julia -e 'using Trixi2Vtk; Trixi2Vtk.run("out/restart_*")'
 ## Authors
 Trixi2Vtk is maintained by the
 [Trixi authors](https://github.com/trixi-framework/Trixi.jl/blob/master/AUTHORS.md).
-Its principal developres are
+Its principal developers are
 [Michael Schlottke-Lakemper](https://www.mi.uni-koeln.de/NumSim/schlottke-lakemper)
 (University of Cologne, Germany) and [Hendrik Ranocha](https://ranocha.de)
 (KAUST, Saudi Arabia).
