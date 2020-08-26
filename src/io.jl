@@ -28,7 +28,11 @@ function read_meshfile(filename::String)
   # Open file for reading
   h5open(filename, "r") do file
     # Extract basic information
-    ndims_ = read(attrs(file)["ndims"])
+    if exists(attrs(file), "ndims")
+      ndims_ = read(attrs(file)["ndims"])
+    else
+      ndims_ = read(attrs(file)["ndim"]) # FIXME once Trixi's 3D branch is merged & released
+    end
     n_cells = read(attrs(file)["n_cells"])
     n_leaf_cells = read(attrs(file)["n_leaf_cells"])
     center_level_0 = read(attrs(file)["center_level_0"])
@@ -68,7 +72,11 @@ function read_datafile(filename::String)
   # Open file for reading
   h5open(filename, "r") do file
     # Extract basic information
-    ndims_ = read(attrs(file)["ndims"])
+    if exists(attrs(file), "ndims")
+      ndims_ = read(attrs(file)["ndims"])
+    else
+      ndims_ = read(attrs(file)["ndim"])
+    end
     N = read(attrs(file)["N"])
     n_elements = read(attrs(file)["n_elements"])
     n_variables = read(attrs(file)["n_vars"])
