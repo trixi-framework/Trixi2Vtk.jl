@@ -1,37 +1,49 @@
 using WriteVTK: vtk_save, paraview_collection
 using TimerOutputs
 using ProgressMeter: @showprogress, Progress, next!
+using Glob: glob
 
 
 """
-    run(; args=nothing, kwargs...)
+    run(filename::AbstractString...;
+        format=:vtu, verbose=false, hide_progress=false, pvd=nothing,
+        output_directory=".", nvisnodes=nothing)
 
 Convert Trixi-generated output files to VTK files (VTU or VTI).
 
-If `args` is given, it should be an `ARGS`-like array of strings that holds
-command line arguments, and will be interpreted by the `ArgParse` module. If
-`args` is omitted, you can supply all command line arguments via keyword
-arguments. In this case, you have to provide at least one input file path in
-the `filename` variable.
+# Arguments
+- `filename`: One or more Trixi solution/restart/mesh files to convert to a VTK file.
+              Filenames support file globbing, e.g., "solution*" to match all files starting
+              with `solution`.
+- `format`: Output format for solution/restart files. Can be 'vtu' or 'vti'.
+- `verbose`: Set to `true` to enable verbose output.
+- `hide_progress`: Hide progress bar (will be hidden automatically if `verbose` is `true`).
+- `pvd`: Use this filename to store PVD file (instead of auto-detecting name). Note that
+         only the name will be used (directory and file extension are ignored).
+- `output_directory`: Output directory where generated files are stored.
+- `nvisnodes`: Number of visualization nodes per element (default: twice the number of DG nodes).
+               A value of `0` (zero) uses the number of nodes in the DG elements.
 
 # Examples
 ```julia
-julia> Trixi2Vtk.run(filename="out/solution_000000.h5")
+julia> Trixi2Vtk.run("out/solution_000*.h5")
 [...]
 ```
 """
-function run(; args=nothing, kwargs...)
+function run(filename::AbstractString...;
+             format=:vtu, verbose=false, hide_progress=false, pvd=nothing,
+             output_directory=".", nvisnodes=nothing)
   # Reset timer
   reset_timer!()
 
-  # Handle command line or keyword arguments
-  args = get_arguments(args; kwargs...)
-
-  # Store for convenience
-  verbose = args["verbose"]
-  hide_progress = args["hide_progress"]
-  filenames = args["filename"]
-  format = Symbol(args["format"])
+  # Convert filenames to a single list of strings
+  if isempty(filename)
+    error("no input file was provided")
+  end
+  filenames = String[]
+  for pattern in filename
+    append!(filenames, glob(pattern))
+  end
 
   # Ensure valid format
   if !(format in (:vtu, :vti))
@@ -48,7 +60,7 @@ function run(; args=nothing, kwargs...)
 
   # Get pvd filenames and open files
   if !is_single_file
-    pvd_filename, pvd_celldata_filename = pvd_filenames(args)
+    pvd_filename, pvd_celldata_filename = pvd_filenames(filenames, pvd, output_directory)
     verbose && println("Opening PVD files '$(pvd_filename).pvd' + '$(pvd_celldata_filename).pvd'...")
     @timeit "open PVD file" begin
       pvd = paraview_collection(pvd_filename)
@@ -108,12 +120,12 @@ function run(; args=nothing, kwargs...)
       end
 
       # Determine resolution for data interpolation
-      if args["nvisnodes"] == nothing
+      if nvisnodes == nothing
         n_visnodes = 2 * n_nodes
-      elseif args["nvisnodes"] == 0
+      elseif nvisnodes == 0
         n_visnodes = n_nodes
       else
-        n_visnodes = args["nvisnodes"]
+        n_visnodes = nvisnodes
       end
     else
       # If file is a mesh file, do not interpolate data
@@ -121,12 +133,12 @@ function run(; args=nothing, kwargs...)
     end
 
     # Create output directory if it does not exist
-    mkpath(args["output_directory"])
+    mkpath(output_directory)
 
     # Build VTK grids
     vtk_nodedata, vtk_celldata = build_vtk_grids(Val(format), coordinates, levels, center_level_0,
                                                  length_level_0, n_visnodes, verbose,
-                                                 args["output_directory"], is_datafile, filename)
+                                                 output_directory, is_datafile, filename)
 
     # Interpolate data
     if is_datafile

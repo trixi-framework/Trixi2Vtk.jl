@@ -84,27 +84,27 @@ end
 
 
 # Determine and return filenames for PVD fiels
-function pvd_filenames(args)
+function pvd_filenames(filenames, pvd, output_directory)
   # Determine pvd filename
-  if !isnothing(args["pvd"])
+  if !isnothing(pvd)
     # Use filename if given on command line
-    filename = args["pvd"]
+    filename = pvd
 
     # Strip of directory/extension
     filename, _ = splitext(splitdir(filename)[2])
   else
-    filename = get_pvd_filename(args["filename"])
+    filename = get_pvd_filename(filenames)
 
     # If filename is empty, it means we were not able to determine an
     # appropriate file thus the user has to supply one
     if filename == ""
       error("could not auto-detect PVD filename (input file names have no common prefix): " *
-            "please provide a PVD filename name with `--pvd`")
+            "please provide a PVD filename name with the keyword argument `pvd=...`")
     end
   end
 
   # Get full filenames
-  pvd_filename = joinpath(args["output_directory"], filename)
+  pvd_filename = joinpath(output_directory, filename)
   pvd_celldata_filename = pvd_filename * "_celldata"
 
   return pvd_filename, pvd_celldata_filename
@@ -117,6 +117,24 @@ function get_pvd_filename(filenames::AbstractArray)
   bases = getindex.(splitext.(filenames), 1)
   pvd_filename = longest_common_prefix(bases)
   return pvd_filename
+end
+
+
+# Determine longest common prefix
+function longest_common_prefix(strings::AbstractArray)
+  # Return early if array is empty
+  if isempty(strings)
+    return ""
+  end
+
+  # Count length of common prefix, by ensuring that all strings are long enough
+  # and then comparing the next character
+  len = 0
+  while all(length.(strings) .> len) && all(getindex.(strings, len+1) .== strings[1][len+1])
+    len +=1
+  end
+
+  return strings[1][1:len]
 end
 
 
