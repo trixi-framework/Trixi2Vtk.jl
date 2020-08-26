@@ -1,3 +1,1 @@
-
-using Test
-@test 1 == 1 #TODO
+include("test_2d.jl")
