@@ -1,9 +1,3 @@
-module VtkTools
-
-using ..PointLocators: PointLocator, insert!
-using ..Auxiliary: longest_common_prefix
-using ..Trixi2Vtk
-
 using StaticArrays: SVector
 using TimerOutputs
 using WriteVTK: vtk_grid, MeshCell, VTKCellTypes, vtk_save, paraview_collection
@@ -179,8 +173,8 @@ function calc_vtk_points_cells(::Val{2}, coordinates::AbstractMatrix{Float64},
   # Convert array-of-points to two-dimensional array
   vtk_points = Matrix{Float64}(undef, ndim, length(points))
   for point_id in 1:length(points)
-    vtk_points[1, point_id] = points[point_id].x[1]
-    vtk_points[2, point_id] = points[point_id].x[2]
+    vtk_points[1, point_id] = points[point_id][1]
+    vtk_points[2, point_id] = points[point_id][2]
   end
 
   return vtk_points, vtk_cells
@@ -253,6 +247,3 @@ function calc_vtk_points_cells(::Val{3}, coordinates::AbstractMatrix{Float64},
   return vtk_points, vtk_cells
 end
 
-
-
-end # module VtkTools

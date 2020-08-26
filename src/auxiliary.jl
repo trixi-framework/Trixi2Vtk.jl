@@ -1,5 +1,3 @@
-module Auxiliary
-
 using ArgParse: ArgParseSettings, @add_arg_table!, parse_args
 
 
@@ -92,32 +90,6 @@ function parse_commandline_arguments(args=ARGS)
 end
 
 
-####################################################################################################
-# From auxiliary/auxiliary.jl
-####################################################################################################
-# Allow an expression to be terminated gracefully by Ctrl-c.
-#
-# On Unix-like operating systems, gracefully handle user interrupts (SIGINT), also known as
-# Ctrl-c, while evaluation expression `ex`.
-macro interruptable(ex)
-  @static Sys.isunix() && quote
-    ccall(:jl_exit_on_sigint, Cvoid, (Cint,), 0)
-
-    try
-      # Try to run code
-      $(esc(ex))
-    catch e
-      # Only catch interrupt exceptions and end with a nice message
-      isa(e, InterruptException) || rethrow(e)
-      println(stderr, "\nExecution interrupted by user (Ctrl-c)")
-    end
-
-    # Disable interrupt handling again
-    ccall(:jl_exit_on_sigint, Cvoid, (Cint,), 1)
-  end
-end
-
-
 # Determine longest common prefix
 function longest_common_prefix(strings::AbstractArray)
   # Return early if array is empty
@@ -135,5 +107,3 @@ function longest_common_prefix(strings::AbstractArray)
   return strings[1][1:len]
 end
 
-
-end # module Auxiliary

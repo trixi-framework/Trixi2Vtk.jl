@@ -1,5 +1,3 @@
-module PointLocators
-
 using StaticArrays: SVector
 
 
@@ -194,5 +192,3 @@ function get_point_id(pl::PointLocator, points::Vector{P}, point::P) where {P}
   return 0
 end
 
-
-end # module PointLocators

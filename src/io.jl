@@ -1,5 +1,3 @@
-module Io
-
 using HDF5: h5open, attrs, exists
 
 
@@ -114,5 +112,3 @@ function read_datafile(filename::String)
   end
 end
 
-
-end # module Io

@@ -1,7 +1,3 @@
-module Interpolate
-
-using ..Trixi2Vtk
-
 
 # Interpolate data from input format to desired output format (vtu version)
 function interpolate_data(::Val{:vtu}, input_data, coordinates, levels,
@@ -193,5 +189,3 @@ function raw2visnodes(data_gl::AbstractArray{Float64}, n_visnodes::Int)
   return reshape(data_vis, n_visnodes^ndims_ * n_elements, n_variables)
 end
 
-
-end # module Interpolate
