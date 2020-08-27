@@ -2,7 +2,8 @@
 
 <!-- [![Docs-stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://trixi-framework.github.io/Trixi2Vtk.jl/stable) -->
 [![Docs-dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://trixi-framework.github.io/Trixi2Vtk.jl/dev)
-[![Build](https://travis-ci.com/trixi-framework/Trixi2Vtk.jl.svg?branch=master)](https://travis-ci.com/trixi-framework/Trixi2Vtk.jl)
+[![Build Linux & macOS](https://travis-ci.com/trixi-framework/Trixi2Vtk.jl.svg?branch=master)](https://travis-ci.com/trixi-framework/Trixi2Vtk.jl)
+[![Build Windows](https://ci.appveyor.com/api/projects/status/3vw2i3iy9n9641wq?svg=true)](https://ci.appveyor.com/project/ranocha/trixi2vtk-jl)
 [![Codecov](https://codecov.io/gh/trixi-framework/Trixi2Vtk.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/trixi-framework/Trixi2Vtk.jl)
 [![Coveralls](https://coveralls.io/repos/github/trixi-framework/Trixi2Vtk.jl/badge.svg?branch=master)](https://coveralls.io/github/trixi-framework/Trixi2Vtk.jl?branch=master)
 [![License: MIT](https://img.shields.io/badge/License-MIT-success.svg)](https://opensource.org/licenses/MIT)
