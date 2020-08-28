@@ -44,6 +44,9 @@ end
 # Create and return VTK grids that are ready to be filled with data (vti version)
 function build_vtk_grids(::Val{:vti}, coordinates, levels, center_level_0, length_level_0,
                          n_visnodes, verbose, output_directory, is_datafile, filename)
+    # Extract number of spatial dimensions
+    ndims_ = size(coordinates, 1)
+
     # Prepare VTK points and cells for celldata file
     @timeit "prepare VTK cells" vtk_celldata_points, vtk_celldata_cells = calc_vtk_points_cells(
         Val(ndims_), coordinates, levels, center_level_0, length_level_0, 1)
