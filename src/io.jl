@@ -74,7 +74,11 @@ function read_datafile(filename::String)
     else
       ndims_ = read(attrs(file)["ndim"])
     end
-    N = read(attrs(file)["N"])
+    if exists(attrs(file), "polydeg")
+      polydeg = read(attrs(file)["polydeg"])
+    else
+      polydeg = read(attrs(file)["N"])
+    end
     n_elements = read(attrs(file)["n_elements"])
     n_variables = read(attrs(file)["n_vars"])
     time = read(attrs(file)["time"])
@@ -86,7 +90,7 @@ function read_datafile(filename::String)
     end
 
     # Extract data arrays
-    n_nodes = N + 1
+    n_nodes = polydeg + 1
 
     if ndims_ == 2
       data = Array{Float64}(undef, n_nodes, n_nodes, n_elements, n_variables)
