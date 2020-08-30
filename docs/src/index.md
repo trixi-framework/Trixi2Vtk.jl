@@ -12,9 +12,9 @@ with Trixi2Vtk, please refer to the [documentation of Trixi](https://trixi-frame
 
 ## Installation
 
-If you have not yet installed Julia, please follow the instructions for your
-operating system found [here](https://julialang.org/downloads/platform/).
-Trixi2Vtk works with Julia v1.5 or higher.
+If you have not yet installed Julia, please [follow the instructions for your
+operating system](https://julialang.org/downloads/platform/). Trixi2Vtk works
+with Julia v1.5 or higher.
 Official binaries are available for Windows, macOS, Linux, and FreeBSD.
 
 Trixi2Vtk is a registered Julia package. Thus, you can install it via
