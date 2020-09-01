@@ -3,11 +3,12 @@
 **Trixi2Vtk.jl** can convert the HDF5-based output files created by
 [Trixi.jl](https://github.com/trixi-framework/Trixi.jl) (solution or restart
 files) to VTK files. The converted files can then be further processed with
-[ParaView](https://www.paraview.org) to generate publication-quality
-visualizations. Trixi2Vtk is part of the [Trixi framework](https://github.com/trixi-framework).
+[ParaView](https://www.paraview.org) or [VisIt](https://visit.llnl.gov) to
+generate publication-quality visualizations. Trixi2Vtk is part of the
+[Trixi framework](https://github.com/trixi-framework).
 
-For further documentation of Trixi.jl and tutorials explaining how to use Trixi
-with Trixi2Vtk, please refer to the [documentation of Trixi](https://trixi-framework.github.io/Trixi.jl/stable/).
+For further information on how to use Trixi with Trixi2Vtk, please refer to the
+[documentation of Trixi](https://trixi-framework.github.io/Trixi.jl/stable/).
 
 
 ## Installation
