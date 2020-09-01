@@ -1,5 +1,6 @@
 # Trixi2Vtk.jl
 
+[![Docs-stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://trixi-framework.github.io/Trixi.jl/stable)
 [![Build Linux & macOS](https://travis-ci.com/trixi-framework/Trixi2Vtk.jl.svg?branch=master)](https://travis-ci.com/trixi-framework/Trixi2Vtk.jl)
 [![Build Windows](https://ci.appveyor.com/api/projects/status/3vw2i3iy9n9641wq?svg=true)](https://ci.appveyor.com/project/ranocha/trixi2vtk-jl)
 [![Codecov](https://codecov.io/gh/trixi-framework/Trixi2Vtk.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/trixi-framework/Trixi2Vtk.jl)
