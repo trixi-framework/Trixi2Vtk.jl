@@ -19,7 +19,7 @@ include("vtktools.jl")
 include("trixi2vtk.jl")
 
 
-# export types/functions that define the public API of Trixi2Img
+# export types/functions that define the public API of Trixi2Vtk
 export trixi2vtk
 
 
