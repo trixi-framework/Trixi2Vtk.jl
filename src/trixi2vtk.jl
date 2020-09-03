@@ -1,7 +1,7 @@
 """
-    convert(filename::AbstractString...;
-            format=:vtu, verbose=false, hide_progress=false, pvd=nothing,
-            output_directory=".", nvisnodes=nothing)
+    trixi2vtk(filename::AbstractString...;
+              format=:vtu, verbose=false, hide_progress=false, pvd=nothing,
+              output_directory=".", nvisnodes=nothing)
 
 Convert Trixi-generated output files to VTK files (VTU or VTI).
 
@@ -20,14 +20,13 @@ Convert Trixi-generated output files to VTK files (VTU or VTI).
 
 # Examples
 ```julia
-julia> Trixi2Vtk.convert("out/solution_000*.h5")
+julia> trixi2vtk("out/solution_000*.h5")
 [...]
 ```
 """
-function Trixi2Vtk.convert(filename::AbstractString...;
-                           format=:vtu, verbose=false, hide_progress=false, pvd=nothing,
-                           output_directory=".", nvisnodes=nothing)
-  # Note: We have to prefix `Trixi2Vtk.` to `convert` to avoid overwriting `Base.convert`
+function trixi2vtk(filename::AbstractString...;
+                   format=:vtu, verbose=false, hide_progress=false, pvd=nothing,
+                   output_directory=".", nvisnodes=nothing)
   # Reset timer
   reset_timer!()
 

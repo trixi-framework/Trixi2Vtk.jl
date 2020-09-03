@@ -15,8 +15,12 @@ include("io.jl")
 include("pointlocators.jl")
 include("vtktools.jl")
 
-# Include top-level convert method
-include("convert.jl")
+# Include top-level driver method
+include("trixi2vtk.jl")
+
+
+# export types/functions that define the public API of Trixi2Img
+export trixi2vtk
 
 
 end # module Trixi2Vtk

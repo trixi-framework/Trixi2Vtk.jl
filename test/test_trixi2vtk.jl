@@ -19,9 +19,8 @@ function sha1file(filename)
 end
 
 
-function test_trixi2vtk_convert(filenames, outdir; hashes=nothing, kwargs...)
-  @test_nowarn Trixi2Vtk.convert(joinpath(outdir, filenames);
-                                 output_directory=outdir, kwargs...)
+function test_trixi2vtk(filenames, outdir; hashes=nothing, kwargs...)
+  @test_nowarn trixi2vtk(joinpath(outdir, filenames); output_directory=outdir, kwargs...)
 
   if !isnothing(hashes)
     for (filename, hash_expected) in hashes
