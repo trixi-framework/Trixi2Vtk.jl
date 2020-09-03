@@ -24,9 +24,10 @@ julia> Trixi2Vtk.convert("out/solution_000*.h5")
 [...]
 ```
 """
-function convert(filename::AbstractString...;
-                 format=:vtu, verbose=false, hide_progress=false, pvd=nothing,
-                 output_directory=".", nvisnodes=nothing)
+function Trixi2Vtk.convert(filename::AbstractString...;
+                           format=:vtu, verbose=false, hide_progress=false, pvd=nothing,
+                           output_directory=".", nvisnodes=nothing)
+  # Note: We have to prefix `Trixi2Vtk.` to `convert` to avoid overwriting `Base.convert`
   # Reset timer
   reset_timer!()
 
