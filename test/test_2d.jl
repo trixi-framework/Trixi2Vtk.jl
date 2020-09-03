@@ -11,7 +11,7 @@ isdir(outdir) && rm(outdir, recursive=true)
 
 
 @testset "2D" begin
-  run_trixi("parameters.toml", n_steps_max=1)
+  run_trixi(joinpath("2d", "parameters.toml"), n_steps_max=1)
 
   @testset "uniform mesh" begin
     test_trixi2vtk("solution_000000.h5", outdir,

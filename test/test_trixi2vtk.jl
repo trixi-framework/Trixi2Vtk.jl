@@ -4,7 +4,7 @@ using Trixi
 using Trixi2Vtk
 
 # pathof(Trixi) returns /path/to/Trixi/src/Trixi.jl, dirname gives the parent directory
-const EXAMPLES_DIR = joinpath(pathof(Trixi) |> dirname |> dirname, "examples", "2d")
+const EXAMPLES_DIR = joinpath(pathof(Trixi) |> dirname |> dirname, "examples")
 
 
 function run_trixi(parameters_file; parameters...)
