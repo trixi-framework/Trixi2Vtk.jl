@@ -32,6 +32,7 @@ mkdir(artifacts_dir)
               "'...")
       cp(joinpath(outdir, outfile), joinpath(artifacts_dir, testname * "-" * outfile))
     end
+    readdir(artifacts_dir)
   end
 
   @testset "uniform mesh with vti output" begin
@@ -49,6 +50,7 @@ mkdir(artifacts_dir)
               "'...")
       cp(joinpath(outdir, outfile), joinpath(artifacts_dir, testname * "-" * outfile))
     end
+    readdir(artifacts_dir)
   end
 end
 
