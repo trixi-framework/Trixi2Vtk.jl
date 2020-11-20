@@ -2,7 +2,7 @@ module Trixi2Vtk
 
 # Include other packages
 using Glob: glob
-using HDF5: h5open, attrs, exists
+using HDF5: h5open, attributes, exists
 using ProgressMeter: @showprogress, Progress, next!
 using StaticArrays: SVector
 using TimerOutputs
