@@ -10,7 +10,7 @@ outdir = "out"
 isdir(outdir) && rm(outdir, recursive=true)
 
 # Create empty artifacts directory where all files that should be preserved will be stored
-artifacts_dir = "artifacts"
+artifacts_dir = joinpath(pathof(Trixi) |> dirname |> dirname, "artifacts")
 isdir(artifacts_dir) && rm(artifacts_dir, recursive=true)
 mkdir(artifacts_dir)
 
@@ -32,7 +32,6 @@ mkdir(artifacts_dir)
               "'...")
       cp(joinpath(outdir, outfile), joinpath(artifacts_dir, testname * "-" * outfile))
     end
-    readdir(artifacts_dir)
   end
 
   @testset "uniform mesh with vti output" begin
@@ -50,7 +49,6 @@ mkdir(artifacts_dir)
               "'...")
       cp(joinpath(outdir, outfile), joinpath(artifacts_dir, testname * "-" * outfile))
     end
-    readdir(artifacts_dir)
   end
 end
 
