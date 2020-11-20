@@ -10,7 +10,7 @@ outdir = "out"
 isdir(outdir) && rm(outdir, recursive=true)
 
 # Create empty artifacts directory where all files that should be preserved will be stored
-artifacts_dir = joinpath(pathof(Trixi) |> dirname |> dirname, "artifacts")
+artifacts_dir = joinpath(pathof(Trixi2Vtk) |> dirname |> dirname, "artifacts")
 isdir(artifacts_dir) && rm(artifacts_dir, recursive=true)
 mkdir(artifacts_dir)
 
