@@ -2,7 +2,6 @@
 
 [![Docs-stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://trixi-framework.github.io/Trixi.jl/stable)
 [![Build Status](https://github.com/trixi-framework/Trixi2Vtk.jl/workflows/CI/badge.svg)](https://github.com/trixi-framework/Trixi2Vtk.jl/actions?query=workflow%3ACI)
-[![Codecov](https://codecov.io/gh/trixi-framework/Trixi2Vtk.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/trixi-framework/Trixi2Vtk.jl)
 [![Coveralls](https://coveralls.io/repos/github/trixi-framework/Trixi2Vtk.jl/badge.svg?branch=master)](https://coveralls.io/github/trixi-framework/Trixi2Vtk.jl?branch=master)
 [![License: MIT](https://img.shields.io/badge/License-MIT-success.svg)](https://opensource.org/licenses/MIT)
 [![GitHub commits since tagged version](https://img.shields.io/github/commits-since/trixi-framework/Trixi2Vtk.jl/v0.2.1.svg?style=social&logo=github)](https://github.com/trixi-framework/Trixi2Vtk.jl)
