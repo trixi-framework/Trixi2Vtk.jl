@@ -66,7 +66,7 @@ jobs:
           path-to-lcov: ./lcov.info
       - uses: actions/upload-artifact@v2
         with:
-          name: test-output-files
+          name: test-output-files-${{ matrix.version }}-${{ matrix.os }}-${{ matrix.arch }}
           path: artifacts/
           if-no-files-found: error
 
