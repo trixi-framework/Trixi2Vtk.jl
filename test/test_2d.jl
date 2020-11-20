@@ -11,7 +11,7 @@ isdir(outdir) && rm(outdir, recursive=true)
 
 
 @testset "2D" begin
-  run_trixi(joinpath("2d", "parameters.toml"), n_steps_max=1)
+  run_trixi(joinpath("2d", "elixir_advection_extended.jl"), maxiters=1)
 
   @testset "uniform mesh" begin
     test_trixi2vtk("solution_000000.h5", outdir,
@@ -21,7 +21,7 @@ isdir(outdir) && rm(outdir, recursive=true)
 
   @testset "uniform mesh with vti output" begin
     test_trixi2vtk("restart_000001.h5", outdir,
-        hashes=[("restart_000001.vti", "a6f5f7f1c5610ab58658335afba57b3427a6e731"),
+        hashes=[("restart_000001.vti", "664f25ab018a373774b5aad69ad3f2f5a3b21649"),
                 ("restart_000001_celldata.vtu", "e396c3ba63276347966d4264cf0f52d592221830")],
         format=:vti)
   end
