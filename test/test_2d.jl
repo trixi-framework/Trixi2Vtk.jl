@@ -27,6 +27,9 @@ mkdir(artifacts_dir)
     outfiles = ("solution_000000.vtu", "solution_000000_celldata.vtu")
     testname = "uniform-mesh"
     for outfile in outfiles
+      println("Copying '", abspath(joinpath(outdir, outfile)),
+              "' to '", abspath(joinpath(artifacts_dir, testname * "-" * outfile)),
+              "'...")
       cp(joinpath(outdir, outfile), joinpath(artifacts_dir, testname * "-" * outfile))
     end
   end
@@ -41,6 +44,9 @@ mkdir(artifacts_dir)
     outfiles = ("restart_000001.vti", "restart_000001_celldata.vtu")
     testname = "uniform-mesh-with-vti-output"
     for outfile in outfiles
+      println("Copying '", abspath(joinpath(outdir, outfile)),
+              "' to '", abspath(joinpath(artifacts_dir, testname * "-" * outfile)),
+              "'...")
       cp(joinpath(outdir, outfile), joinpath(artifacts_dir, testname * "-" * outfile))
     end
   end
