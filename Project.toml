@@ -1,7 +1,7 @@
 name = "Trixi2Vtk"
 uuid = "bc1476a1-1ca6-4cc3-950b-c312b255ff95"
 authors = ["Michael Schlottke-Lakemper <mschlott@math.uni-koeln.de>"]
-version = "0.2.2-pre"
+version = "0.2.2"
 
 [deps]
 Glob = "c27321d9-0574-5035-807b-f59d2c89b15c"
