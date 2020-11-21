@@ -9,6 +9,7 @@
 *.ogv
 **/Manifest.toml
 out/
+artifacts/
 docs/build
 public/
 coverage/

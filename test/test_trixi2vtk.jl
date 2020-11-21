@@ -7,8 +7,8 @@ using Trixi2Vtk
 const EXAMPLES_DIR = joinpath(pathof(Trixi) |> dirname |> dirname, "examples")
 
 
-function run_trixi(parameters_file; parameters...)
-  @test_nowarn Trixi.run(joinpath(EXAMPLES_DIR, parameters_file); parameters...)
+function run_trixi(elixir; parameters...)
+  @test_nowarn trixi_include(joinpath(EXAMPLES_DIR, elixir); parameters...)
 end
 
 
