@@ -13,7 +13,7 @@ jobs:
   allow_failures:
     - julia: nightly
   include:
-    - if: type = push AND branch = master
+    - if: type = push AND branch = main
       julia: 1
       os: osx
     # - stage: "Documentation"
@@ -32,7 +32,7 @@ coveralls: true
 # avoid duplicate tests in PRs
 branches:
   only:
-    - master
+    - main
 
 notifications:
   email: false

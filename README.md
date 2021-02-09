@@ -2,7 +2,7 @@
 
 [![Docs-stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://trixi-framework.github.io/Trixi.jl/stable)
 [![Build Status](https://github.com/trixi-framework/Trixi2Vtk.jl/workflows/CI/badge.svg)](https://github.com/trixi-framework/Trixi2Vtk.jl/actions?query=workflow%3ACI)
-[![Coveralls](https://coveralls.io/repos/github/trixi-framework/Trixi2Vtk.jl/badge.svg?branch=master)](https://coveralls.io/github/trixi-framework/Trixi2Vtk.jl?branch=master)
+[![Coveralls](https://coveralls.io/repos/github/trixi-framework/Trixi2Vtk.jl/badge.svg?branch=main)](https://coveralls.io/github/trixi-framework/Trixi2Vtk.jl?branch=main)
 [![License: MIT](https://img.shields.io/badge/License-MIT-success.svg)](https://opensource.org/licenses/MIT)
 [![GitHub commits since tagged version](https://img.shields.io/github/commits-since/trixi-framework/Trixi2Vtk.jl/v0.2.4.svg?style=social&logo=github)](https://github.com/trixi-framework/Trixi2Vtk.jl)
 
@@ -50,7 +50,7 @@ For further information on how to use Trixi with Trixi2Vtk, please refer to the
 
 ## Authors
 Trixi2Vtk is maintained by the
-[Trixi authors](https://github.com/trixi-framework/Trixi.jl/blob/master/AUTHORS.md).
+[Trixi authors](https://github.com/trixi-framework/Trixi.jl/blob/main/AUTHORS.md).
 Its principal developers are
 [Michael Schlottke-Lakemper](https://www.mi.uni-koeln.de/NumSim/schlottke-lakemper)
 (University of Cologne, Germany) and [Hendrik Ranocha](https://ranocha.de)
