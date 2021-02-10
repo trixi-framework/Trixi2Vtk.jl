@@ -17,6 +17,7 @@ on:
       - '.github/workflows/CompatHelper.yml'
       - '.github/workflows/TagBot.yml'
       - 'docs/**'
+  workflow_dispatch:
 
 jobs:
   test:
