@@ -111,45 +111,9 @@ function build_vtk_grids(::Val{:vts}, mesh, n_nodes, n_visnodes, verbose,
     # Open VTK files
     verbose && println("| Building VTK grid...")
     if is_datafile
-      # Compute mesh coordinates
-      Nx = size(mesh, 1)
-      Ny = size(mesh, 2)
-      nvisnodes = n_nodes - 1
-      Ni = Nx * nvisnodes
-      Nj = Ny * nvisnodes
+      visu_nodes = calc_visualization_nodes(mesh, basis, node_coordinates)
 
-      # Create output array
-      xy = Array{Float64}(undef, 2, Ni + 1, Nj + 1)
-
-      # Compute vertex coordinates for all visualization nodes except the last layer of nodex in +x/+y
-      for cell_y in axes(mesh, 2), cell_x in axes(mesh, 1)
-        for j in Trixi.eachnode(basis), i in Trixi.eachnode(basis)
-          index_x = (cell_x - 1) * (n_nodes - 1) + i
-          index_y = (cell_y - 1) * (n_nodes - 1) + j
-          xy[1, index_x, index_y] = node_coordinates[1, i, j, linear_indices[cell_x, cell_y]]
-          xy[2, index_x, index_y] = node_coordinates[2, i, j, linear_indices[cell_x, cell_y]]
-        end
-      end
-
-      # Compute vertex locations in +x direction
-      for cell_y in axes(mesh, 2), cell_x in Nx
-        for j in Trixi.eachnode(basis)
-          index_y = (cell_y - 1) * (n_nodes - 1) + j
-          xy[1, end, index_y] = node_coordinates[1, end, j, linear_indices[cell_x, cell_y]]
-          xy[2, end, index_y] = node_coordinates[2, end, j, linear_indices[cell_x, cell_y]]
-        end
-      end
-
-      # Compute vertex locations in +y direction
-      for cell_y in Ny, cell_x in axes(mesh, 1)
-        for i in Trixi.eachnode(basis)
-          index_x = (cell_x - 1) * (n_nodes - 1) + i
-          xy[1, index_x, end] = node_coordinates[1, i, end, linear_indices[cell_x, cell_y]]
-          xy[2, index_x, end] = node_coordinates[2, i, end, linear_indices[cell_x, cell_y]]
-        end
-      end
-
-      @timeit "build VTK grid (node data)" vtk_nodedata = vtk_grid(vtk_filename, xy)
+      @timeit "build VTK grid (node data)" vtk_nodedata = vtk_grid(vtk_filename, visu_nodes)
     else
       vtk_nodedata = nothing
     end
@@ -159,6 +123,51 @@ function build_vtk_grids(::Val{:vts}, mesh, n_nodes, n_visnodes, verbose,
     vtk_celldata = nothing
 
   return vtk_nodedata, vtk_celldata
+end
+
+
+function calc_visualization_nodes(mesh, basis, node_coordinates)
+  # Compute mesh coordinates
+  n_nodes=Trixi.nnodes(basis)
+  Nx = size(mesh, 1)
+  Ny = size(mesh, 2)
+  nvisnodes = n_nodes - 1
+  Ni = Nx * nvisnodes
+  Nj = Ny * nvisnodes
+
+  # Create output array
+  xy = Array{Float64}(undef, 2, Ni + 1, Nj + 1)
+
+  # Compute vertex coordinates for all visualization nodes except the last layer of nodex in +x/+y
+  linear_indices = LinearIndices(size(mesh))
+  for cell_y in axes(mesh, 2), cell_x in axes(mesh, 1)
+    for j in Trixi.eachnode(basis), i in Trixi.eachnode(basis)
+      index_x = (cell_x - 1) * (n_nodes - 1) + i
+      index_y = (cell_y - 1) * (n_nodes - 1) + j
+      xy[1, index_x, index_y] = node_coordinates[1, i, j, linear_indices[cell_x, cell_y]]
+      xy[2, index_x, index_y] = node_coordinates[2, i, j, linear_indices[cell_x, cell_y]]
+    end
+  end
+
+  # Compute vertex locations in +x direction
+  for cell_y in axes(mesh, 2), cell_x in Nx
+    for j in Trixi.eachnode(basis)
+      index_y = (cell_y - 1) * (n_nodes - 1) + j
+      xy[1, end, index_y] = node_coordinates[1, end, j, linear_indices[cell_x, cell_y]]
+      xy[2, end, index_y] = node_coordinates[2, end, j, linear_indices[cell_x, cell_y]]
+    end
+  end
+
+  # Compute vertex locations in +y direction
+  for cell_y in Ny, cell_x in axes(mesh, 1)
+    for i in Trixi.eachnode(basis)
+      index_x = (cell_x - 1) * (n_nodes - 1) + i
+      xy[1, index_x, end] = node_coordinates[1, i, end, linear_indices[cell_x, cell_y]]
+      xy[2, index_x, end] = node_coordinates[2, i, end, linear_indices[cell_x, cell_y]]
+    end
+  end
+
+  return xy
 end
 
 
