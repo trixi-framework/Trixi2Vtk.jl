@@ -4,6 +4,8 @@
 *.mp4
 *.mem
 *.vtu
+*.vts
+*.vti
 *.pvd
 *.avi
 *.ogv
