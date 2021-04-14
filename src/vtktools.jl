@@ -96,9 +96,10 @@ function build_vtk_grids(::Val{:vts}, mesh, n_nodes, n_visnodes, verbose,
     node_coordinates = Array{Float64, ndims_+2}(undef, ndims_, n_nodes, n_nodes, nelements)
     basis = Trixi.LobattoLegendreBasis(n_nodes - 1)
     linear_indices = LinearIndices(size(mesh))
+    f(args...; kwargs...) = Base.invokelatest(mesh.mapping, args...; kwargs...)
     @timeit "prepare coordinate information" for cell_y in 1:size(mesh, 2), cell_x in 1:size(mesh, 1)
       element = linear_indices[cell_x, cell_y]
-      Trixi.calc_node_coordinates!(node_coordinates, element, cell_x, cell_y, mesh.mapping, mesh,
+      Trixi.calc_node_coordinates!(node_coordinates, element, cell_x, cell_y, f, mesh,
                                    basis)
     end
 
