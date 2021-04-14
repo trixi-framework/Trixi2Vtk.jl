@@ -189,3 +189,37 @@ function raw2visnodes(data_gl::AbstractArray{Float64}, n_visnodes::Int)
   return reshape(data_vis, n_visnodes^ndims_ * n_elements, n_variables)
 end
 
+
+# Interpolate data from input format to desired output format (vtu version)
+function interpolate_data(::Val{:vts}, input_data, mesh, n_nodes, n_visnodes, verbose)
+  # Calculate sizes and index mappings
+  linear_indices = LinearIndices(size(mesh))
+  Nx = size(mesh, 1)
+  Ny = size(mesh, 2)
+  nvisnodes = n_nodes - 1
+  Ni = Nx * nvisnodes
+  Nj = Ny * nvisnodes
+  n_variables = last(size(input_data))
+
+  # Create output array
+  interpolated = Array{Float64}(undef, Ni, Nj, n_variables)
+  @show size(interpolated)
+
+  # Compute the value for each visualization node (= cell of structured visualization mesh) as the
+  # mean of the four nodal DG values that make up its corners
+  for v in 1:n_variables
+    for cell_y in axes(mesh, 2), cell_x in axes(mesh, 1)
+      for j in 1:nvisnodes, i in 1:nvisnodes
+        index_x = (cell_x - 1) * nvisnodes + i
+        index_y = (cell_y - 1) * nvisnodes + j
+        interpolated[index_x, index_y, v] =
+            (input_data[i,   j,   linear_indices[cell_x, cell_y], v] + 
+             input_data[i+1, j,   linear_indices[cell_x, cell_y], v] + 
+             input_data[i,   j+1, linear_indices[cell_x, cell_y], v] + 
+             input_data[i+1, j+1, linear_indices[cell_x, cell_y], v]) / 4
+      end
+    end
+  end
+
+  return interpolated
+end

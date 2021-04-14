@@ -81,6 +81,88 @@ function build_vtk_grids(::Val{:vti}, coordinates, levels, center_level_0, lengt
 end
 
 
+# Create and return VTK grids that are ready to be filled with data (vts version)
+function build_vtk_grids(::Val{:vts}, mesh, n_nodes, n_visnodes, verbose,
+                         output_directory, is_datafile, filename)
+    # Extract number of spatial dimensions and elements
+    ndims_ = ndims(mesh)
+    nelements = prod(size(mesh))
+
+    # Prepare VTK points and cells for celldata file
+    # @timeit "prepare VTK cells" vtk_celldata_points, vtk_celldata_cells = calc_vtk_points_cells(
+    #     Val(ndims_), coordinates, levels, center_level_0, length_level_0, 1)
+
+    # Compute node coordinates
+    node_coordinates = Array{Float64, ndims_+2}(undef, ndims_, n_nodes, n_nodes, nelements)
+    basis = Trixi.LobattoLegendreBasis(n_nodes - 1)
+    linear_indices = LinearIndices(size(mesh))
+    @timeit "prepare coordinate information" for cell_y in 1:size(mesh, 2), cell_x in 1:size(mesh, 1)
+      element = linear_indices[cell_x, cell_y]
+      Trixi.calc_node_coordinates!(node_coordinates, element, cell_x, cell_y, mesh.mapping, mesh,
+                                   basis)
+    end
+
+    # Determine output file names
+    base, _ = splitext(splitdir(filename)[2])
+    vtk_filename = joinpath(output_directory, base)
+    vtk_celldata_filename = vtk_filename * "_celldata"
+
+    # Open VTK files
+    verbose && println("| Building VTK grid...")
+    if is_datafile
+      # Compute mesh coordinates
+      Nx = size(mesh, 1)
+      Ny = size(mesh, 2)
+      nvisnodes = n_nodes - 1
+      Ni = Nx * nvisnodes
+      Nj = Ny * nvisnodes
+
+      # Create output array
+      xy = Array{Float64}(undef, 2, Ni + 1, Nj + 1)
+
+      # Compute vertex coordinates for all visualization nodes except the last layer of nodex in +x/+y
+      for cell_y in axes(mesh, 2), cell_x in axes(mesh, 1)
+        for j in Trixi.eachnode(basis), i in Trixi.eachnode(basis)
+          index_x = (cell_x - 1) * (n_nodes - 1) + i
+          index_y = (cell_y - 1) * (n_nodes - 1) + j
+          xy[1, index_x, index_y] = node_coordinates[1, i, j, linear_indices[cell_x, cell_y]]
+          xy[2, index_x, index_y] = node_coordinates[2, i, j, linear_indices[cell_x, cell_y]]
+        end
+      end
+
+      # Compute vertex locations in +x direction
+      for cell_y in axes(mesh, 2), cell_x in Nx
+        for j in Trixi.eachnode(basis)
+          index_y = (cell_y - 1) * (n_nodes - 1) + j
+          xy[1, end, index_y] = node_coordinates[1, end, j, linear_indices[cell_x, cell_y]]
+          xy[2, end, index_y] = node_coordinates[2, end, j, linear_indices[cell_x, cell_y]]
+        end
+      end
+
+      # Compute vertex locations in +y direction
+      for cell_y in Ny, cell_x in axes(mesh, 1)
+        for i in Trixi.eachnode(basis)
+          index_x = (cell_x - 1) * (n_nodes - 1) + i
+          xy[1, index_x, end] = node_coordinates[1, i, end, linear_indices[cell_x, cell_y]]
+          xy[2, index_x, end] = node_coordinates[2, i, end, linear_indices[cell_x, cell_y]]
+        end
+      end
+
+      @show size(xy)
+
+      @timeit "build VTK grid (node data)" vtk_nodedata = vtk_grid(vtk_filename, xy)
+    else
+      vtk_nodedata = nothing
+    end
+    # @timeit "build VTK grid (cell data)" vtk_celldata = vtk_grid(vtk_celldata_filename,
+    #                                                     vtk_celldata_points,
+    #                                                     vtk_celldata_cells)
+    vtk_celldata = nothing
+
+  return vtk_nodedata, vtk_celldata
+end
+
+
 # Determine and return filenames for PVD fiels
 function pvd_filenames(filenames, pvd, output_directory)
   # Determine pvd filename

@@ -64,6 +64,23 @@ function read_meshfile(filename::String)
 end
 
 
+# Read in structured mesh file and return relevant data
+function read_meshfile_structured(filename::String; RealT=Float64)
+  # Open file for reading
+  h5open(filename, "r") do file
+    size_ = Tuple(read(attributes(file)["size"]))
+    mapping_as_string = read(attributes(file)["mapping"])
+    # mapping = mapping_as_string |> Meta.parse |> eval
+    s = split(mapping_as_string, ";")
+    mapping_ = join(s[1:end-1], ";") * "; faces=(f1, f2, f3, f4); " * s[end]
+    mapping = mapping_ |> Meta.parse |> eval
+
+    return Trixi.CurvedMesh(size_, mapping; RealT=RealT, unsaved_changes=false,
+                            mapping_as_string=mapping_as_string)
+  end
+end
+
+
 # Read in data file and return all relevant information
 function read_datafile(filename::String)
   # Open file for reading
@@ -79,6 +96,56 @@ function read_datafile(filename::String)
     else
       polydeg = read(attributes(file)["N"])
     end
+    n_elements = read(attributes(file)["n_elements"])
+    n_variables = read(attributes(file)["n_vars"])
+    time = read(attributes(file)["time"])
+
+    # Extract labels for legend
+    labels = Array{String}(undef, 1, n_variables)
+    for v = 1:n_variables
+      labels[1, v] = read(attributes(file["variables_$v"])["name"])
+    end
+
+    # Extract data arrays
+    n_nodes = polydeg + 1
+
+    if ndims_ == 2
+      data = Array{Float64}(undef, n_nodes, n_nodes, n_elements, n_variables)
+      for v = 1:n_variables
+        vardata = read(file["variables_$v"])
+        @views data[:, :, :, v][:] .= vardata
+      end
+    elseif ndims_ == 3
+      data = Array{Float64}(undef, n_nodes, n_nodes, n_nodes, n_elements, n_variables)
+      for v = 1:n_variables
+        vardata = read(file["variables_$v"])
+        @views data[:, :, :, :, v][:] .= vardata
+      end
+    else
+      error("Unsupported number of spatial dimensions: ", ndims_)
+    end
+
+    # Extract element variable arrays
+    element_variables = Dict{String, Union{Vector{Float64}, Vector{Int}}}()
+    index = 1
+    while haskey(file, "element_variables_$index")
+      varname = read(attributes(file["element_variables_$index"])["name"])
+      element_variables[varname] = read(file["element_variables_$index"])
+      index +=1
+    end
+
+    return labels, data, n_elements, n_nodes, element_variables, time
+  end
+end
+
+
+# Read in data file and return all relevant information
+function read_datafile_structured(filename::String)
+  # Open file for reading
+  h5open(filename, "r") do file
+    # Extract basic information
+    ndims_ = read(attributes(file)["ndims"])
+    polydeg = read(attributes(file)["polydeg"])
     n_elements = read(attributes(file)["n_elements"])
     n_variables = read(attributes(file)["n_vars"])
     time = read(attributes(file)["time"])
