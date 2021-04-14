@@ -203,7 +203,6 @@ function interpolate_data(::Val{:vts}, input_data, mesh, n_nodes, n_visnodes, ve
 
   # Create output array
   interpolated = Array{Float64}(undef, Ni, Nj, n_variables)
-  @show size(interpolated)
 
   # Compute the value for each visualization node (= cell of structured visualization mesh) as the
   # mean of the four nodal DG values that make up its corners

@@ -148,8 +148,6 @@ function build_vtk_grids(::Val{:vts}, mesh, n_nodes, n_visnodes, verbose,
         end
       end
 
-      @show size(xy)
-
       @timeit "build VTK grid (node data)" vtk_nodedata = vtk_grid(vtk_filename, xy)
     else
       vtk_nodedata = nothing
