@@ -81,46 +81,56 @@ function build_vtk_grids(::Val{:vti}, coordinates, levels, center_level_0, lengt
 end
 
 
-# Create and return VTK grids that are ready to be filled with data (vts version)
-function build_vtk_grids(::Val{:vts}, mesh, n_nodes, n_visnodes, verbose,
+# Create and return VTK grids that are ready to be filled with data (CurvedMesh version)
+function build_vtk_grids(::Val{:vtu}, mesh::Trixi.CurvedMesh, n_nodes, verbose,
                          output_directory, is_datafile, filename)
-    # Extract number of spatial dimensions and elements
-    ndims_ = ndims(mesh)
-    nelements = prod(size(mesh))
+  # Extract number of spatial dimensions
+  ndims_ = ndims(mesh)
+  n_elements = prod(size(mesh))
 
-    # Prepare VTK points and cells for celldata file
-    # @timeit "prepare VTK cells" vtk_celldata_points, vtk_celldata_cells = calc_vtk_points_cells(
-    #     Val(ndims_), coordinates, levels, center_level_0, length_level_0, 1)
+  # Compute node coordinates
+  node_coordinates = Array{Float64, ndims_+2}(undef, ndims_, n_nodes, n_nodes, n_elements)
+  basis = Trixi.LobattoLegendreBasis(n_nodes - 1)
+  linear_indices = LinearIndices(size(mesh))
+  f(args...; kwargs...) = Base.invokelatest(mesh.mapping, args...; kwargs...)
+  @timeit "prepare coordinate information" for cell_y in 1:size(mesh, 2), cell_x in 1:size(mesh, 1)
+    element = linear_indices[cell_x, cell_y]
+    Trixi.calc_node_coordinates!(node_coordinates, element, cell_x, cell_y, f, mesh, basis)
+  end
 
-    # Compute node coordinates
-    node_coordinates = Array{Float64, ndims_+2}(undef, ndims_, n_nodes, n_nodes, nelements)
-    basis = Trixi.LobattoLegendreBasis(n_nodes - 1)
-    linear_indices = LinearIndices(size(mesh))
-    f(args...; kwargs...) = Base.invokelatest(mesh.mapping, args...; kwargs...)
-    @timeit "prepare coordinate information" for cell_y in 1:size(mesh, 2), cell_x in 1:size(mesh, 1)
-      element = linear_indices[cell_x, cell_y]
-      Trixi.calc_node_coordinates!(node_coordinates, element, cell_x, cell_y, f, mesh,
-                                   basis)
+  # Calculate VTK points and cells
+  verbose && println("| Preparing VTK cells...")
+  if is_datafile
+    @timeit "prepare VTK cells (node data)" begin
+      vtk_points, vtk_cells = calc_vtk_points_cells(node_coordinates)
     end
+  end
 
-    # Determine output file names
-    base, _ = splitext(splitdir(filename)[2])
-    vtk_filename = joinpath(output_directory, base)
-    vtk_celldata_filename = vtk_filename * "_celldata"
+  # # Prepare VTK points and cells for celldata file
+  # @timeit "prepare VTK cells (cell data)" begin
+  #   vtk_celldata_points, vtk_celldata_cells = calc_vtk_points_cells(Val(ndims_), coordinates,
+  #                                                                   levels, center_level_0,
+  #                                                                   length_level_0, 1)
+  # end
 
-    # Open VTK files
-    verbose && println("| Building VTK grid...")
-    if is_datafile
-      visu_nodes = calc_visualization_nodes(mesh, basis, node_coordinates)
+  # Determine output file names
+  base, _ = splitext(splitdir(filename)[2])
+  vtk_filename = joinpath(output_directory, base)
+  vtk_celldata_filename = vtk_filename * "_celldata"
 
-      @timeit "build VTK grid (node data)" vtk_nodedata = vtk_grid(vtk_filename, visu_nodes)
-    else
-      vtk_nodedata = nothing
-    end
-    # @timeit "build VTK grid (cell data)" vtk_celldata = vtk_grid(vtk_celldata_filename,
-    #                                                     vtk_celldata_points,
-    #                                                     vtk_celldata_cells)
-    vtk_celldata = nothing
+  # Open VTK files
+  verbose && println("| Building VTK grid...")
+  if is_datafile
+    @timeit "build VTK grid (node data)" vtk_nodedata = vtk_grid(vtk_filename, vtk_points,
+                                                                 vtk_cells)
+  else
+    vtk_nodedata = nothing
+  end
+  # @timeit "build VTK grid (cell data)" vtk_celldata = vtk_grid(vtk_celldata_filename,
+  #                                                               vtk_celldata_points,
+  #                                                               vtk_celldata_cells)
+  
+  vtk_celldata = nothing
 
   return vtk_nodedata, vtk_celldata
 end
@@ -281,6 +291,40 @@ function calc_vtk_points_cells(::Val{2}, coordinates::AbstractMatrix{Float64},
   for point_id in 1:length(points)
     vtk_points[1, point_id] = points[point_id][1]
     vtk_points[2, point_id] = points[point_id][2]
+  end
+
+  return vtk_points, vtk_cells
+end
+
+
+# Convert coordinates and level information to a list of points and VTK cells (2D version)
+function calc_vtk_points_cells(node_coordinates::AbstractArray{<:Any,4})
+  n_elements = size(node_coordinates, 4)
+  size_ = size(node_coordinates)
+  n_points = prod(size_[2:end])
+  # Linear indices to access points by node indices and element id
+  linear_indices = LinearIndices(size_[2:end])
+
+  # Use lagrange nodes as VTK points
+  vtk_points = reshape(node_coordinates, (2, n_points))
+  vtk_cells = Vector{MeshCell}(undef, n_elements)
+
+  # Create cell for each element
+  for element in 1:n_elements
+    vertices = [linear_indices[1, 1, element],
+                linear_indices[end, 1, element],
+                linear_indices[end, end, element],
+                linear_indices[1, end, element]]
+    
+    edges = vcat(linear_indices[2:end-1, 1, element],
+                 linear_indices[end, 2:end-1, element],
+                 linear_indices[2:end-1, end, element],
+                 linear_indices[1, 2:end-1, element])
+
+    faces = vec(linear_indices[2:end-1, 2:end-1, element])
+
+    point_ids = vcat(vertices, edges, faces)
+    vtk_cells[element] = MeshCell(VTKCellTypes.VTK_LAGRANGE_QUADRILATERAL, point_ids)
   end
 
   return vtk_points, vtk_cells

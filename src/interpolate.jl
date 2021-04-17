@@ -191,66 +191,10 @@ end
 
 
 # Interpolate data from input format to desired output format (vtu version)
-function interpolate_data(::Val{:vts}, input_data, mesh, n_nodes, n_visnodes, verbose)
-  # Calculate sizes and index mappings
-  linear_indices = LinearIndices(size(mesh))
-  Nx = size(mesh, 1)
-  Ny = size(mesh, 2)
-  nvisnodes = n_nodes - 1
-  Ni = Nx * nvisnodes
-  Nj = Ny * nvisnodes
-  n_variables = last(size(input_data))
-  basis = Trixi.LobattoLegendreBasis(n_nodes - 1)
-
-  # Create output array
-  interpolated = Array{Float64}(undef, Ni + 1, Nj + 1, n_variables)
-
-  # OBS! The following algorithm is not symmetric: For all nodes on the element surfaces, the value
-  # from the element with the higher (i,j) index is used, i.e., some of the solution is lost
-
-  for v in 1:n_variables
-    # Compute vertex coordinates for all visualization nodes except the last layer of nodex in +x/+y
-    linear_indices = LinearIndices(size(mesh))
-    for cell_y in axes(mesh, 2), cell_x in axes(mesh, 1)
-      for j in Trixi.eachnode(basis), i in Trixi.eachnode(basis)
-        index_x = (cell_x - 1) * (n_nodes - 1) + i
-        index_y = (cell_y - 1) * (n_nodes - 1) + j
-        interpolated[index_x, index_y, v] = input_data[i, j, linear_indices[cell_x, cell_y], v]
-      end
-    end
-
-    # Compute vertex locations in +x direction
-    for cell_y in axes(mesh, 2), cell_x in Nx
-      for j in Trixi.eachnode(basis)
-        index_y = (cell_y - 1) * (n_nodes - 1) + j
-        interpolated[end, index_y, v] = input_data[end, j, linear_indices[cell_x, cell_y], v]
-      end
-    end
-
-    # Compute vertex locations in +y direction
-    for cell_y in Ny, cell_x in axes(mesh, 1)
-      for i in Trixi.eachnode(basis)
-        index_x = (cell_x - 1) * (n_nodes - 1) + i
-        interpolated[index_x, end, v] = input_data[i, end, linear_indices[cell_x, cell_y], v]
-      end
-    end
-  end
-
-  # Compute the value for each visualization node (= cell of structured visualization mesh) as the
-  # mean of the four nodal DG values that make up its corners
-  # for v in 1:n_variables
-  #   for cell_y in axes(mesh, 2), cell_x in axes(mesh, 1)
-  #     for j in 1:nvisnodes, i in 1:nvisnodes
-  #       index_x = (cell_x - 1) * nvisnodes + i
-  #       index_y = (cell_y - 1) * nvisnodes + j
-  #       interpolated[index_x, index_y, v] =
-  #           (input_data[i,   j,   linear_indices[cell_x, cell_y], v] + 
-  #            input_data[i+1, j,   linear_indices[cell_x, cell_y], v] + 
-  #            input_data[i,   j+1, linear_indices[cell_x, cell_y], v] + 
-  #            input_data[i+1, j+1, linear_indices[cell_x, cell_y], v]) / 4
-  #     end
-  #   end
-  # end
+function interpolate_data(::Val{:vtu}, input_data, mesh, n_nodes, n_visnodes, verbose)
+  n_variables = size(input_data, 4)
+  n_points = prod(size(input_data)[1:3])
+  interpolated = reshape(input_data, (n_points, n_variables))
 
   return interpolated
 end

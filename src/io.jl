@@ -70,10 +70,22 @@ function read_meshfile_structured(filename::String; RealT=Float64)
   h5open(filename, "r") do file
     size_ = Tuple(read(attributes(file)["size"]))
     mapping_as_string = read(attributes(file)["mapping"])
-    # mapping = mapping_as_string |> Meta.parse |> eval
-    s = split(mapping_as_string, ";")
-    mapping_ = join(s[1:end-1], ";") * "; faces=(f1, f2, f3, f4); " * s[end]
-    mapping = mapping_ |> Meta.parse |> eval
+
+    # A temporary workaround to evaluate the code that defines the domain mapping in a local scope.
+    # This prevents errors when multiple restart elixirs are executed in one session, where one
+    # defines `mapping` as a variable, while the other defines it as a function.
+    #
+    # This should be replaced with something more robust and secure,
+    # see https://github.com/trixi-framework/Trixi.jl/issues/541).
+    expr = Meta.parse(mapping_as_string)
+    if expr.head == :toplevel
+      expr.head = :block
+    end
+
+    mapping = @eval function(xi, eta)
+      $expr
+      mapping(xi, eta)
+    end
 
     return Trixi.CurvedMesh(size_, mapping; RealT=RealT, unsaved_changes=false,
                             mapping_as_string=mapping_as_string)

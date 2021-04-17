@@ -216,7 +216,7 @@ function trixi2vtk(filename::AbstractString...;
 end
 
 function trixi2vts(filename::AbstractString...;
-                   format=:vts, verbose=false, hide_progress=false, pvd=nothing,
+                   format=:vtu, verbose=false, hide_progress=false, pvd=nothing,
                    output_directory=".", nvisnodes=nothing)
   # Reset timer
   reset_timer!()
@@ -231,7 +231,7 @@ function trixi2vts(filename::AbstractString...;
   end
 
   # Ensure valid format
-  if !(format in (:vts,))
+  if !(format in (:vtu,))
     error("unsupported output format '$format' (must be 'vts')")
   end
 
@@ -320,7 +320,7 @@ function trixi2vts(filename::AbstractString...;
     mkpath(output_directory)
 
     # Build VTK grids
-    vtk_nodedata, vtk_celldata = build_vtk_grids(Val(format), mesh, n_nodes, n_visnodes, verbose,
+    vtk_nodedata, vtk_celldata = build_vtk_grids(Val(format), mesh, n_nodes, verbose,
                                                  output_directory, is_datafile, filename)
 
     # Interpolate data
@@ -342,7 +342,7 @@ function trixi2vts(filename::AbstractString...;
         # Add solution variables
         for (variable_id, label) in enumerate(labels)
           verbose && println("| | Variable: $label...")
-          @timeit label vtk_nodedata[label] = @views interpolated_data[:, :, variable_id]
+          @timeit label vtk_nodedata[label] = @views interpolated_data[:, variable_id]
         end
 
         # Add element variables
