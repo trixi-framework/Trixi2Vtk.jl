@@ -1,6 +1,8 @@
 # Create and return VTK grids that are ready to be filled with data (vtu version)
-function build_vtk_grids(::Val{:vtu}, coordinates, levels, center_level_0, length_level_0,
-                         n_visnodes, verbose, output_directory, is_datafile, filename)
+function build_vtk_grids(::Val{:vtu}, mesh::Trixi.TreeMesh, n_visnodes, verbose, 
+                         output_directory, is_datafile, filename)
+  coordinates, levels, center_level_0, length_level_0 = extract_mesh_information(mesh)
+  
   # Extract number of spatial dimensions
   ndims_ = size(coordinates, 1)
 
@@ -42,40 +44,43 @@ end
 
 
 # Create and return VTK grids that are ready to be filled with data (vti version)
-function build_vtk_grids(::Val{:vti}, coordinates, levels, center_level_0, length_level_0,
-                         n_visnodes, verbose, output_directory, is_datafile, filename)
-    # Extract number of spatial dimensions
-    ndims_ = size(coordinates, 1)
+function build_vtk_grids(::Val{:vti}, mesh, n_visnodes, verbose, 
+                         output_directory, is_datafile, filename)
+    
+  coordinates, levels, center_level_0, length_level_0 = extract_mesh_information(mesh)
+  
+  # Extract number of spatial dimensions
+  ndims_ = size(coordinates, 1)
 
-    # Prepare VTK points and cells for celldata file
-    @timeit "prepare VTK cells" vtk_celldata_points, vtk_celldata_cells = calc_vtk_points_cells(
-        Val(ndims_), coordinates, levels, center_level_0, length_level_0, 1)
+  # Prepare VTK points and cells for celldata file
+  @timeit "prepare VTK cells" vtk_celldata_points, vtk_celldata_cells = calc_vtk_points_cells(
+      Val(ndims_), coordinates, levels, center_level_0, length_level_0, 1)
 
-    # Determine output file names
-    base, _ = splitext(splitdir(filename)[2])
-    vtk_filename = joinpath(output_directory, base)
-    vtk_celldata_filename = vtk_filename * "_celldata"
+  # Determine output file names
+  base, _ = splitext(splitdir(filename)[2])
+  vtk_filename = joinpath(output_directory, base)
+  vtk_celldata_filename = vtk_filename * "_celldata"
 
-    # Open VTK files
-    verbose && println("| Building VTK grid...")
-    if is_datafile
-      # Determine level-wise resolution
-      max_level = maximum(levels)
-      resolution = n_visnodes * 2^max_level
+  # Open VTK files
+  verbose && println("| Building VTK grid...")
+  if is_datafile
+    # Determine level-wise resolution
+    max_level = maximum(levels)
+    resolution = n_visnodes * 2^max_level
 
-      Nx = Ny = resolution + 1
-      dx = dy = length_level_0/resolution
-      origin = center_level_0 .- 1/2 * length_level_0
-      spacing = [dx, dy]
-      @timeit "build VTK grid (node data)" vtk_nodedata = vtk_grid(vtk_filename, Nx, Ny,
-                                                          origin=origin,
-                                                          spacing=spacing)
-    else
-      vtk_nodedata = nothing
-    end
-    @timeit "build VTK grid (cell data)" vtk_celldata = vtk_grid(vtk_celldata_filename,
-                                                        vtk_celldata_points,
-                                                        vtk_celldata_cells)
+    Nx = Ny = resolution + 1
+    dx = dy = length_level_0/resolution
+    origin = center_level_0 .- 1/2 * length_level_0
+    spacing = [dx, dy]
+    @timeit "build VTK grid (node data)" vtk_nodedata = vtk_grid(vtk_filename, Nx, Ny,
+                                                        origin=origin,
+                                                        spacing=spacing)
+  else
+    vtk_nodedata = nothing
+  end
+  @timeit "build VTK grid (cell data)" vtk_celldata = vtk_grid(vtk_celldata_filename,
+                                                      vtk_celldata_points,
+                                                      vtk_celldata_cells)
 
   return vtk_nodedata, vtk_celldata
 end

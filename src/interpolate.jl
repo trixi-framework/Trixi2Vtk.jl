@@ -1,14 +1,27 @@
 
 # Interpolate data from input format to desired output format (vtu version)
-function interpolate_data(::Val{:vtu}, input_data, coordinates, levels,
-                          center_level_0, length_level_0, n_visnodes, verbose)
-  return raw2visnodes(input_data, n_visnodes)
+function interpolate_data(::Val{:vtu}, input_data, mesh::Trixi.TreeMesh, n_visnodes, verbose)
+  # Calculate equidistant output nodes (visualization nodes)
+  dx = 2 / n_visnodes
+  nodes_out = collect(range(-1 + dx/2, 1 - dx/2, length=n_visnodes))
+
+  return raw2interpolated(input_data, nodes_out)
+end
+
+
+# Interpolate data from input format to desired output format (CurvedMesh version)
+function interpolate_data(::Val{:vtu}, input_data, mesh::Trixi.CurvedMesh, n_visnodes, verbose)
+  # Calculate equidistant output nodes
+  nodes_out = collect(range(-1, 1, length=n_visnodes))
+
+  return raw2interpolated(input_data, nodes_out)
 end
 
 
 # Interpolate data from input format to desired output format (vti version)
-function interpolate_data(::Val{:vti}, input_data, coordinates, levels,
-                          center_level_0, length_level_0, n_visnodes, verbose)
+function interpolate_data(::Val{:vti}, input_data, mesh, n_visnodes, verbose)
+  coordinates, levels, center_level_0, length_level_0 = extract_mesh_information(mesh)
+
   # Normalize element coordinates: move center to (0, 0) and domain size to [-1, 1]²
   normalized_coordinates = similar(coordinates)
   for element_id in axes(coordinates, 2)
@@ -130,16 +143,6 @@ function coordinate2index(coordinate, resolution::Integer)
 end
 
 
-# Interpolate to visualization nodes
-function raw2visnodes(data_gl::AbstractArray{Float64}, n_visnodes::Int)
-  # Calculate equidistant output nodes (visualization nodes)
-  dx = 2 / n_visnodes
-  nodes_out = collect(range(-1 + dx/2, 1 - dx/2, length=n_visnodes))
-
-  return raw2interpolated(data_gl, nodes_out)
-end
-
-
 # Interpolate to specified output nodes
 function raw2interpolated(data_gl::AbstractArray{Float64}, nodes_out)
   # Extract number of spatial dimensions
@@ -196,13 +199,4 @@ function raw2interpolated(data_gl::AbstractArray{Float64}, nodes_out)
 
   # Return as one 1D array for each variable
   return reshape(data_vis, n_nodes_out^ndims_ * n_elements, n_variables)
-end
-
-
-# Interpolate data from input format to desired output format (vtu version)
-function interpolate_data(::Val{:vtu}, input_data, mesh, n_visnodes, verbose)
-  # Calculate equidistant output nodes
-  nodes_out = collect(range(-1, 1, length=n_visnodes))
-
-  return raw2interpolated(input_data, nodes_out)
 end

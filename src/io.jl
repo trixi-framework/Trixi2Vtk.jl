@@ -20,56 +20,28 @@ function extract_mesh_filename(filename::String)
 end
 
 
-# Read in mesh file and return relevant data
-function read_meshfile(filename::String)
-  # Open file for reading
-  h5open(filename, "r") do file
-    # Extract basic information
-    if haskey(attributes(file), "ndims")
-      ndims_ = read(attributes(file)["ndims"])
-    else
-      ndims_ = read(attributes(file)["ndim"]) # FIXME once Trixi's 3D branch is merged & released
-    end
-    n_cells = read(attributes(file)["n_cells"])
-    n_leaf_cells = read(attributes(file)["n_leaf_cells"])
-    center_level_0 = read(attributes(file)["center_level_0"])
-    length_level_0 = read(attributes(file)["length_level_0"])
-
-    # Extract coordinates, levels, child cells
-    coordinates = Array{Float64}(undef, ndims_, n_cells)
-    coordinates .= read(file["coordinates"])
-    levels = Array{Int}(undef, n_cells)
-    levels .= read(file["levels"])
-    child_ids = Array{Int}(undef, 2^ndims_, n_cells)
-    child_ids .= read(file["child_ids"])
-
-    # Extract leaf cells (= cells to be plotted) and contract all other arrays accordingly
-    leaf_cells = similar(levels)
-    n_cells = 0
-    for cell_id in 1:length(levels)
-      if sum(child_ids[:, cell_id]) > 0
-        continue
-      end
-
-      n_cells += 1
-      leaf_cells[n_cells] = cell_id
-    end
-    leaf_cells = leaf_cells[1:n_cells]
-
-    coordinates = coordinates[:, leaf_cells]
-    levels = levels[leaf_cells]
-
-    return center_level_0, length_level_0, leaf_cells, coordinates, levels
+# TODO Trixi needs to be adapted to work with mesh files instead of restart files.
+# Then, these functions can be deleted and the ones from Trixi can be used instead.
+function load_mesh_serial(filename::AbstractString; RealT, n_cells_max=0)
+  ndims, mesh_type = h5open(filename, "r") do file
+    return read(attributes(file)["ndims"]),
+           read(attributes(file)["mesh_type"])
   end
-end
 
+  if mesh_type == "TreeMesh"
+    n_cells = h5open(filename, "r") do file
+      return read(attributes(file)["n_cells"])
+    end
+    n_cells_max = max(n_cells_max, n_cells)
+    mesh = Trixi.TreeMesh(Trixi.SerialTree{ndims}, n_cells_max)
+    load_mesh!(mesh, filename)
+  elseif mesh_type == "CurvedMesh"
+    size_, mapping_as_string = h5open(filename, "r") do file
+      return read(attributes(file)["size"]),
+             read(attributes(file)["mapping"])
+    end
 
-# Read in structured mesh file and return relevant data
-function read_meshfile_structured(filename::String; RealT=Float64)
-  # Open file for reading
-  h5open(filename, "r") do file
-    size_ = Tuple(read(attributes(file)["size"]))
-    mapping_as_string = read(attributes(file)["mapping"])
+    size = Tuple(size_)
 
     # A temporary workaround to evaluate the code that defines the domain mapping in a local scope.
     # This prevents errors when multiple restart elixirs are executed in one session, where one
@@ -87,9 +59,51 @@ function read_meshfile_structured(filename::String; RealT=Float64)
       mapping(xi, eta)
     end
 
-    return Trixi.CurvedMesh(size_, mapping; RealT=RealT, unsaved_changes=false,
-                            mapping_as_string=mapping_as_string)
+    mesh = Trixi.CurvedMesh(size, mapping; RealT=RealT, unsaved_changes=false, mapping_as_string=mapping_as_string)
+  else
+    error("Unknown mesh type!")
   end
+
+  return mesh
+end
+
+
+function load_mesh!(mesh::Trixi.TreeMesh, filename::AbstractString)
+  # Determine mesh filename
+  mesh.current_filename = filename
+  mesh.unsaved_changes = false
+
+  # Read mesh file
+  h5open(filename, "r") do file
+    # Set domain information
+    mesh.tree.center_level_0 = read(attributes(file)["center_level_0"])
+    mesh.tree.length_level_0 = read(attributes(file)["length_level_0"])
+    mesh.tree.periodicity    = Tuple(read(attributes(file)["periodicity"]))
+
+    # Set length
+    n_cells = read(attributes(file)["n_cells"])
+    resize!(mesh.tree, n_cells)
+
+    # Read in data
+    mesh.tree.parent_ids[1:n_cells] = read(file["parent_ids"])
+    mesh.tree.child_ids[:, 1:n_cells] = read(file["child_ids"])
+    mesh.tree.neighbor_ids[:, 1:n_cells] = read(file["neighbor_ids"])
+    mesh.tree.levels[1:n_cells] = read(file["levels"])
+    mesh.tree.coordinates[:, 1:n_cells] = read(file["coordinates"])
+  end
+
+  return mesh
+end
+
+
+function extract_mesh_information(mesh::Trixi.TreeMesh)
+  center_level_0 = mesh.tree.center_level_0
+  length_level_0 = mesh.tree.length_level_0
+
+  coordinates = mesh.tree.coordinates[:, Trixi.leaf_cells(mesh.tree)]
+  levels = mesh.tree.levels[Trixi.leaf_cells(mesh.tree)]
+
+  return coordinates, levels, center_level_0, length_level_0
 end
 
 
