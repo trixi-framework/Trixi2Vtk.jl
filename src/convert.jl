@@ -304,9 +304,7 @@ function trixi2vts(filename::AbstractString...;
       end
 
       # Determine resolution for data interpolation
-      if nvisnodes == nothing
-        n_visnodes = 2 * n_nodes
-      elseif nvisnodes == 0
+      if nvisnodes === nothing || nvisnodes == 0
         n_visnodes = n_nodes
       else
         n_visnodes = nvisnodes
@@ -320,14 +318,14 @@ function trixi2vts(filename::AbstractString...;
     mkpath(output_directory)
 
     # Build VTK grids
-    vtk_nodedata, vtk_celldata = build_vtk_grids(Val(format), mesh, n_nodes, verbose,
+    vtk_nodedata, vtk_celldata = build_vtk_grids(Val(format), mesh, n_visnodes, verbose,
                                                  output_directory, is_datafile, filename)
 
     # Interpolate data
     if is_datafile
       verbose && println("| Interpolating data...")
       @timeit "interpolate data" interpolated_data = interpolate_data(Val(format), data, mesh,
-                                                                      n_nodes, n_visnodes, verbose)
+                                                                      n_visnodes, verbose)
     end
 
     # Add data to file

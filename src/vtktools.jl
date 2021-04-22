@@ -82,20 +82,34 @@ end
 
 
 # Create and return VTK grids that are ready to be filled with data (CurvedMesh version)
-function build_vtk_grids(::Val{:vtu}, mesh::Trixi.CurvedMesh, n_nodes, verbose,
+function build_vtk_grids(::Val{:vtu}, mesh::Trixi.CurvedMesh, n_visnodes, verbose,
                          output_directory, is_datafile, filename)
   # Extract number of spatial dimensions
   ndims_ = ndims(mesh)
   n_elements = prod(size(mesh))
 
   # Compute node coordinates
-  node_coordinates = Array{Float64, ndims_+2}(undef, ndims_, n_nodes, n_nodes, n_elements)
-  basis = Trixi.LobattoLegendreBasis(n_nodes - 1)
+  node_coordinates = Array{Float64, ndims_+2}(undef, ndims_, n_visnodes, n_visnodes, n_elements)
+  nodes = range(-1, 1, length=n_visnodes)
   linear_indices = LinearIndices(size(mesh))
   f(args...; kwargs...) = Base.invokelatest(mesh.mapping, args...; kwargs...)
+
   @timeit "prepare coordinate information" for cell_y in 1:size(mesh, 2), cell_x in 1:size(mesh, 1)
     element = linear_indices[cell_x, cell_y]
-    Trixi.calc_node_coordinates!(node_coordinates, element, cell_x, cell_y, f, mesh, basis)
+
+    # Get cell length in reference mesh
+    dx = 2 / size(mesh, 1)
+    dy = 2 / size(mesh, 2)
+
+    # Calculate node coordinates of reference mesh
+    cell_x_offset = -1 + (cell_x-1) * dx + dx/2
+    cell_y_offset = -1 + (cell_y-1) * dy + dy/2
+
+    for j in eachindex(nodes), i in eachindex(nodes)
+      # node_coordinates are the mapped reference node_coordinates
+      node_coordinates[:, i, j, element] .= f(cell_x_offset + dx/2 * nodes[i],
+                                              cell_y_offset + dy/2 * nodes[j])
+    end
   end
 
   # Calculate VTK points and cells
@@ -133,51 +147,6 @@ function build_vtk_grids(::Val{:vtu}, mesh::Trixi.CurvedMesh, n_nodes, verbose,
   vtk_celldata = nothing
 
   return vtk_nodedata, vtk_celldata
-end
-
-
-function calc_visualization_nodes(mesh, basis, node_coordinates)
-  # Compute mesh coordinates
-  n_nodes=Trixi.nnodes(basis)
-  Nx = size(mesh, 1)
-  Ny = size(mesh, 2)
-  nvisnodes = n_nodes - 1
-  Ni = Nx * nvisnodes
-  Nj = Ny * nvisnodes
-
-  # Create output array
-  xy = Array{Float64}(undef, 2, Ni + 1, Nj + 1)
-
-  # Compute vertex coordinates for all visualization nodes except the last layer of nodex in +x/+y
-  linear_indices = LinearIndices(size(mesh))
-  for cell_y in axes(mesh, 2), cell_x in axes(mesh, 1)
-    for j in Trixi.eachnode(basis), i in Trixi.eachnode(basis)
-      index_x = (cell_x - 1) * (n_nodes - 1) + i
-      index_y = (cell_y - 1) * (n_nodes - 1) + j
-      xy[1, index_x, index_y] = node_coordinates[1, i, j, linear_indices[cell_x, cell_y]]
-      xy[2, index_x, index_y] = node_coordinates[2, i, j, linear_indices[cell_x, cell_y]]
-    end
-  end
-
-  # Compute vertex locations in +x direction
-  for cell_y in axes(mesh, 2), cell_x in Nx
-    for j in Trixi.eachnode(basis)
-      index_y = (cell_y - 1) * (n_nodes - 1) + j
-      xy[1, end, index_y] = node_coordinates[1, end, j, linear_indices[cell_x, cell_y]]
-      xy[2, end, index_y] = node_coordinates[2, end, j, linear_indices[cell_x, cell_y]]
-    end
-  end
-
-  # Compute vertex locations in +y direction
-  for cell_y in Ny, cell_x in axes(mesh, 1)
-    for i in Trixi.eachnode(basis)
-      index_x = (cell_x - 1) * (n_nodes - 1) + i
-      xy[1, index_x, end] = node_coordinates[1, i, end, linear_indices[cell_x, cell_y]]
-      xy[2, index_x, end] = node_coordinates[2, i, end, linear_indices[cell_x, cell_y]]
-    end
-  end
-
-  return xy
 end
 
 

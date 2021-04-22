@@ -132,11 +132,22 @@ end
 
 # Interpolate to visualization nodes
 function raw2visnodes(data_gl::AbstractArray{Float64}, n_visnodes::Int)
+  # Calculate equidistant output nodes (visualization nodes)
+  dx = 2 / n_visnodes
+  nodes_out = collect(range(-1 + dx/2, 1 - dx/2, length=n_visnodes))
+
+  return raw2interpolated(data_gl, nodes_out)
+end
+
+
+# Interpolate to specified output nodes
+function raw2interpolated(data_gl::AbstractArray{Float64}, nodes_out)
   # Extract number of spatial dimensions
   ndims_ = ndims(data_gl) - 2
 
   # Extract data shape information
   n_nodes_in = size(data_gl, 1)
+  n_nodes_out = length(nodes_out)
   n_elements = size(data_gl, ndims_ + 1)
   n_variables = size(data_gl, ndims_ + 2)
 
@@ -144,13 +155,11 @@ function raw2visnodes(data_gl::AbstractArray{Float64}, n_visnodes::Int)
   nodes_in, _ = gauss_lobatto_nodes_weights(n_nodes_in)
 
   # Calculate Vandermonde matrix
-  dx = 2 / n_visnodes
-  nodes_out = collect(range(-1 + dx/2, 1 - dx/2, length=n_visnodes))
   vandermonde = polynomial_interpolation_matrix(nodes_in, nodes_out)
 
   if ndims_ == 2
     # Create output data structure
-    data_vis = Array{Float64}(undef, n_visnodes, n_visnodes, n_elements, n_variables)
+    data_vis = Array{Float64}(undef, n_nodes_out, n_nodes_out, n_elements, n_variables)
 
     # For each variable, interpolate element data and store to global data structure
     for v in 1:n_variables
@@ -161,12 +170,12 @@ function raw2visnodes(data_gl::AbstractArray{Float64}, n_visnodes::Int)
       for element_id in 1:n_elements
         @views data_vis[:, :, element_id, v] .= reshape(
             interpolate_nodes(reshaped_data[:, :, :, element_id], vandermonde, 1),
-            n_visnodes, n_visnodes)
+            n_nodes_out, n_nodes_out)
       end
     end
   elseif ndims_ == 3
     # Create output data structure
-    data_vis = Array{Float64}(undef, n_visnodes, n_visnodes, n_visnodes, n_elements, n_variables)
+    data_vis = Array{Float64}(undef, n_nodes_out, n_nodes_out, n_nodes_out, n_elements, n_variables)
 
     # For each variable, interpolate element data and store to global data structure
     for v in 1:n_variables
@@ -178,7 +187,7 @@ function raw2visnodes(data_gl::AbstractArray{Float64}, n_visnodes::Int)
       for element_id in 1:n_elements
         @views data_vis[:, :, :, element_id, v] .= reshape(
             interpolate_nodes(reshaped_data[:, :, :, :, element_id], vandermonde, 1),
-            n_visnodes, n_visnodes, n_visnodes)
+            n_nodes_out, n_nodes_out, n_nodes_out)
       end
     end
   else
@@ -186,15 +195,14 @@ function raw2visnodes(data_gl::AbstractArray{Float64}, n_visnodes::Int)
   end
 
   # Return as one 1D array for each variable
-  return reshape(data_vis, n_visnodes^ndims_ * n_elements, n_variables)
+  return reshape(data_vis, n_nodes_out^ndims_ * n_elements, n_variables)
 end
 
 
 # Interpolate data from input format to desired output format (vtu version)
-function interpolate_data(::Val{:vtu}, input_data, mesh, n_nodes, n_visnodes, verbose)
-  n_variables = size(input_data, 4)
-  n_points = prod(size(input_data)[1:3])
-  interpolated = reshape(input_data, (n_points, n_variables))
+function interpolate_data(::Val{:vtu}, input_data, mesh, n_visnodes, verbose)
+  # Calculate equidistant output nodes
+  nodes_out = collect(range(-1, 1, length=n_visnodes))
 
-  return interpolated
+  return raw2interpolated(input_data, nodes_out)
 end
