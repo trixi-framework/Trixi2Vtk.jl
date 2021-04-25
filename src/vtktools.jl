@@ -89,33 +89,8 @@ end
 # Create and return VTK grids that are ready to be filled with data (CurvedMesh version)
 function build_vtk_grids(::Val{:vtu}, mesh::Trixi.CurvedMesh, n_visnodes, verbose,
                          output_directory, is_datafile, filename)
-  # Extract number of spatial dimensions
-  ndims_ = ndims(mesh)
-  n_elements = prod(size(mesh))
 
-  # Compute node coordinates
-  node_coordinates = Array{Float64, ndims_+2}(undef, ndims_, n_visnodes, n_visnodes, n_elements)
-  nodes = range(-1, 1, length=n_visnodes)
-  linear_indices = LinearIndices(size(mesh))
-  f(args...; kwargs...) = Base.invokelatest(mesh.mapping, args...; kwargs...)
-
-  @timeit "prepare coordinate information" for cell_y in 1:size(mesh, 2), cell_x in 1:size(mesh, 1)
-    element = linear_indices[cell_x, cell_y]
-
-    # Get cell length in reference mesh
-    dx = 2 / size(mesh, 1)
-    dy = 2 / size(mesh, 2)
-
-    # Calculate node coordinates of reference mesh
-    cell_x_offset = -1 + (cell_x-1) * dx + dx/2
-    cell_y_offset = -1 + (cell_y-1) * dy + dy/2
-
-    for j in eachindex(nodes), i in eachindex(nodes)
-      # node_coordinates are the mapped reference node_coordinates
-      node_coordinates[:, i, j, element] .= f(cell_x_offset + dx/2 * nodes[i],
-                                              cell_y_offset + dy/2 * nodes[j])
-    end
-  end
+  @timeit "prepare coordinate information" node_coordinates = calc_node_coordinates(mesh, n_visnodes)
 
   # Calculate VTK points and cells
   verbose && println("| Preparing VTK cells...")
@@ -152,6 +127,73 @@ function build_vtk_grids(::Val{:vtu}, mesh::Trixi.CurvedMesh, n_visnodes, verbos
   vtk_celldata = nothing
 
   return vtk_nodedata, vtk_celldata
+end
+
+
+function calc_node_coordinates(mesh, n_visnodes)
+  # Extract number of spatial dimensions
+  ndims_ = ndims(mesh)
+  n_elements = prod(size(mesh))
+
+  nodes = range(-1, 1, length=n_visnodes)
+  f(args...; kwargs...) = Base.invokelatest(mesh.mapping, args...; kwargs...)
+
+  node_coordinates = Array{Float64, ndims_+2}(undef, ndims_, ntuple(_ -> n_visnodes, ndims_)..., n_elements)
+
+  return calc_node_coordinates!(node_coordinates, f, nodes, mesh)
+end
+
+
+function calc_node_coordinates!(node_coordinates::AbstractArray{<:Any, 4}, f, nodes, mesh)
+  linear_indices = LinearIndices(size(mesh))
+
+  # Get cell length in reference mesh
+  dx = 2 / size(mesh, 1)
+  dy = 2 / size(mesh, 2)
+
+  for cell_y in 1:size(mesh, 2), cell_x in 1:size(mesh, 1)
+    element = linear_indices[cell_x, cell_y]
+
+    # Calculate node coordinates of reference mesh
+    cell_x_offset = -1 + (cell_x-1) * dx + dx/2
+    cell_y_offset = -1 + (cell_y-1) * dy + dy/2
+
+    for j in eachindex(nodes), i in eachindex(nodes)
+      # node_coordinates are the mapped reference node_coordinates
+      node_coordinates[:, i, j, element] .= f(cell_x_offset + dx/2 * nodes[i],
+                                              cell_y_offset + dy/2 * nodes[j])
+    end
+  end
+
+  return node_coordinates
+end
+
+
+function calc_node_coordinates!(node_coordinates::AbstractArray{<:Any, 5}, f, nodes, mesh)
+  linear_indices = LinearIndices(size(mesh))
+
+  # Get cell length in reference mesh
+  dx = 2 / size(mesh, 1)
+  dy = 2 / size(mesh, 2)
+  dz = 2 / size(mesh, 3)
+
+  for cell_z in 1:size(mesh, 3), cell_y in 1:size(mesh, 2), cell_x in 1:size(mesh, 1)
+    element = linear_indices[cell_x, cell_y, cell_z]
+
+    # Calculate node coordinates of reference mesh
+    cell_x_offset = -1 + (cell_x-1) * dx + dx/2
+    cell_y_offset = -1 + (cell_y-1) * dy + dy/2
+    cell_z_offset = -1 + (cell_z-1) * dz + dz/2
+
+    for k in eachindex(nodes), j in eachindex(nodes), i in eachindex(nodes)
+      # node_coordinates are the mapped reference node_coordinates
+      node_coordinates[:, i, j, k, element] .= f(cell_x_offset + dx/2 * nodes[i],
+                                                 cell_y_offset + dy/2 * nodes[j],
+                                                 cell_z_offset + dz/2 * nodes[k])
+    end
+  end
+
+  return node_coordinates
 end
 
 
@@ -271,40 +313,6 @@ function calc_vtk_points_cells(::Val{2}, coordinates::AbstractMatrix{Float64},
 end
 
 
-# Convert coordinates and level information to a list of points and VTK cells (2D version)
-function calc_vtk_points_cells(node_coordinates::AbstractArray{<:Any,4})
-  n_elements = size(node_coordinates, 4)
-  size_ = size(node_coordinates)
-  n_points = prod(size_[2:end])
-  # Linear indices to access points by node indices and element id
-  linear_indices = LinearIndices(size_[2:end])
-
-  # Use lagrange nodes as VTK points
-  vtk_points = reshape(node_coordinates, (2, n_points))
-  vtk_cells = Vector{MeshCell}(undef, n_elements)
-
-  # Create cell for each element
-  for element in 1:n_elements
-    vertices = [linear_indices[1, 1, element],
-                linear_indices[end, 1, element],
-                linear_indices[end, end, element],
-                linear_indices[1, end, element]]
-    
-    edges = vcat(linear_indices[2:end-1, 1, element],
-                 linear_indices[end, 2:end-1, element],
-                 linear_indices[2:end-1, end, element],
-                 linear_indices[1, 2:end-1, element])
-
-    faces = vec(linear_indices[2:end-1, 2:end-1, element])
-
-    point_ids = vcat(vertices, edges, faces)
-    vtk_cells[element] = MeshCell(VTKCellTypes.VTK_LAGRANGE_QUADRILATERAL, point_ids)
-  end
-
-  return vtk_points, vtk_cells
-end
-
-
 # Convert coordinates and level information to a list of points and VTK cells (3D version)
 function calc_vtk_points_cells(::Val{3}, coordinates::AbstractMatrix{Float64},
                                levels::AbstractVector{Int},
@@ -371,3 +379,94 @@ function calc_vtk_points_cells(::Val{3}, coordinates::AbstractMatrix{Float64},
   return vtk_points, vtk_cells
 end
 
+
+# Convert coordinates and level information to a list of points and VTK cells (2D version)
+function calc_vtk_points_cells(node_coordinates::AbstractArray{<:Any,4})
+  n_elements = size(node_coordinates, 4)
+  size_ = size(node_coordinates)
+  n_points = prod(size_[2:end])
+  # Linear indices to access points by node indices and element id
+  linear_indices = LinearIndices(size_[2:end])
+
+  # Use lagrange nodes as VTK points
+  vtk_points = reshape(node_coordinates, (2, n_points))
+  vtk_cells = Vector{MeshCell}(undef, n_elements)
+
+  # Create cell for each element
+  for element in 1:n_elements
+    vertices = [linear_indices[1, 1, element],
+                linear_indices[end, 1, element],
+                linear_indices[end, end, element],
+                linear_indices[1, end, element]]
+    
+    edges = vcat(linear_indices[2:end-1, 1, element],
+                 linear_indices[end, 2:end-1, element],
+                 linear_indices[2:end-1, end, element],
+                 linear_indices[1, 2:end-1, element])
+
+    faces = vec(linear_indices[2:end-1, 2:end-1, element])
+
+    point_ids = vcat(vertices, edges, faces)
+    vtk_cells[element] = MeshCell(VTKCellTypes.VTK_LAGRANGE_QUADRILATERAL, point_ids)
+  end
+
+  return vtk_points, vtk_cells
+end
+
+
+# Convert coordinates and level information to a list of points and VTK cells (3D version)
+function calc_vtk_points_cells(node_coordinates::AbstractArray{<:Any,5})
+  n_elements = size(node_coordinates, 5)
+  size_ = size(node_coordinates)
+  n_points = prod(size_[2:end])
+  # Linear indices to access points by node indices and element id
+  linear_indices = LinearIndices(size_[2:end])
+
+  # Use lagrange nodes as VTK points
+  vtk_points = reshape(node_coordinates, (3, n_points))
+  vtk_cells = Vector{MeshCell}(undef, n_elements)
+
+  # Create cell for each element
+  for element in 1:n_elements
+    vertices = [linear_indices[1, 1, 1, element],
+                linear_indices[end, 1, 1, element],
+                linear_indices[end, end, 1, element],
+                linear_indices[1, end, 1, element],
+                linear_indices[1, 1, end, element],
+                linear_indices[end, 1, end, element],
+                linear_indices[end, end, end, element],
+                linear_indices[1, end, end, element]]
+    
+    # This order doesn't make any sense. This is completely different
+    # from what is shown in 
+    # https://blog.kitware.com/wp-content/uploads/2018/09/Source_Issue_43.pdf
+    # but this is the way it works.
+    edges = vcat(linear_indices[2:end-1, 1, 1, element],
+                 linear_indices[end, 2:end-1, 1, element],
+                 linear_indices[2:end-1, end, 1, element],
+                 linear_indices[1, 2:end-1, 1, element],
+                 linear_indices[2:end-1, 1, end, element],
+                 linear_indices[end, 2:end-1, end, element],
+                 linear_indices[2:end-1, end, end, element],
+                 linear_indices[1, 2:end-1, end, element],
+                 linear_indices[1, 1, 2:end-1, element],
+                 linear_indices[end, 1, 2:end-1, element],
+                 linear_indices[1, end, 2:end-1, element],
+                 linear_indices[end, end, 2:end-1, element])
+
+    # See above
+    faces = vcat(vec(linear_indices[1, 2:end-1, 2:end-1, element]),
+                 vec(linear_indices[end, 2:end-1, 2:end-1, element]),
+                 vec(linear_indices[2:end-1, 1, 2:end-1, element]),
+                 vec(linear_indices[2:end-1, end, 2:end-1, element]),
+                 vec(linear_indices[2:end-1, 2:end-1, 1, element]),
+                 vec(linear_indices[2:end-1, 2:end-1, end, element]))
+
+    volume = vec(linear_indices[2:end-1, 2:end-1, 2:end-1, element])
+
+    point_ids = vcat(vertices, edges, faces, volume)
+    vtk_cells[element] = MeshCell(VTKCellTypes.VTK_LAGRANGE_HEXAHEDRON, point_ids)
+  end
+
+  return vtk_points, vtk_cells
+end

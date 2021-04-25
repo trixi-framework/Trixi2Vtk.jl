@@ -54,9 +54,21 @@ function load_mesh_serial(filename::AbstractString; RealT, n_cells_max=0)
       expr.head = :block
     end
 
-    mapping = @eval function(xi, eta)
-      $expr
-      mapping(xi, eta)
+    if ndims == 1
+      mapping = @eval function(xi)
+        $expr
+        mapping(xi)
+      end
+    elseif ndims == 2
+      mapping = @eval function(xi, eta)
+        $expr
+        mapping(xi, eta)
+      end
+    else # ndims == 3
+      mapping = @eval function(xi, eta, zeta)
+        $expr
+        mapping(xi, eta, zeta)
+      end
     end
 
     mesh = Trixi.CurvedMesh(size, mapping; RealT=RealT, unsaved_changes=false, mapping_as_string=mapping_as_string)
