@@ -72,6 +72,12 @@ function load_mesh_serial(filename::AbstractString; RealT, n_cells_max=0)
     end
 
     mesh = Trixi.CurvedMesh(size, mapping; RealT=RealT, unsaved_changes=false, mapping_as_string=mapping_as_string)
+  elseif mesh_type == "UnstructuredQuadMesh"
+    mesh_filename = h5open(filename, "r") do file
+      return read(attributes(file)["mesh_filename"])
+    end
+    periodicity = false
+    mesh = Trixi.UnstructuredQuadMesh(mesh_filename, periodicity; RealT=RealT, unsaved_changes=false)
   else
     error("Unknown mesh type!")
   end

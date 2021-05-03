@@ -15,7 +15,7 @@ Convert Trixi-generated output files to VTK files (VTU or VTI).
 - `pvd`: Use this filename to store PVD file (instead of auto-detecting name). Note that
          only the name will be used (directory and file extension are ignored).
 - `output_directory`: Output directory where generated files are stored.
-- `nvisnodes`: Number of visualization nodes per element. 
+- `nvisnodes`: Number of visualization nodes per element.
                (default: number of DG nodes for CurvedMesh, twice the number of DG nodes for TreeMesh).
                A value of `0` (zero) uses the number of nodes in the DG elements.
 - `save_celldata`: Bool to determine if celldata should be saved.
@@ -102,8 +102,8 @@ function trixi2vtk(filename::AbstractString...;
     @timeit "read mesh" mesh = load_mesh_serial(meshfile; RealT=Float64)
 
     if save_celldata === nothing
-      # If no value for `save_celldata` is specified, 
-      # use true for TreeMesh and false for CurvedMesh
+      # If no value for `save_celldata` is specified,
+      # use true for TreeMesh and false for CurvedMesh or UnstructuredQuadMesh
       save_celldata = isa(mesh, Trixi.TreeMesh)
     end
 
@@ -234,6 +234,16 @@ function assert_cells_elements(n_elements, mesh::Trixi.CurvedMesh, filename, mes
 end
 
 
+function assert_cells_elements(n_elements, mesh::Trixi.UnstructuredQuadMesh, filename, meshfile)
+  # Check if dimensions match
+  if length(mesh) != n_elements
+    error("number of elements in '$(filename)' do not match number of cells in " *
+          "'$(meshfile)' " *
+          "(did you forget to clean your 'out/' directory between different runs?)")
+  end
+end
+
+
 function get_default_nvisnodes(nvisnodes, n_nodes, mesh::Trixi.TreeMesh)
   if nvisnodes === nothing
     return 2 * n_nodes
@@ -245,7 +255,7 @@ function get_default_nvisnodes(nvisnodes, n_nodes, mesh::Trixi.TreeMesh)
 end
 
 
-function get_default_nvisnodes(nvisnodes, n_nodes, mesh::Trixi.CurvedMesh)
+function get_default_nvisnodes(nvisnodes, n_nodes, mesh::Union{Trixi.CurvedMesh, Trixi.UnstructuredQuadMesh})
   if nvisnodes === nothing || nvisnodes == 0
     return n_nodes
   else

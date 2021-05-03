@@ -9,8 +9,10 @@ function interpolate_data(::Val{:vtu}, input_data, mesh::Trixi.TreeMesh, n_visno
 end
 
 
-# Interpolate data from input format to desired output format (CurvedMesh version)
-function interpolate_data(::Val{:vtu}, input_data, mesh::Trixi.CurvedMesh, n_visnodes, verbose)
+# Interpolate data from input format to desired output format (CurvedMesh or UnstructuredQuadMesh version)
+function interpolate_data(::Val{:vtu}, input_data,
+                          mesh::Union{Trixi.CurvedMesh, Trixi.UnstructuredQuadMesh},
+                          n_visnodes, verbose)
   # Calculate equidistant output nodes
   nodes_out = collect(range(-1, 1, length=n_visnodes))
 

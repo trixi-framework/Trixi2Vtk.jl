@@ -1,8 +1,8 @@
 # Create and return VTK grids that are ready to be filled with data (vtu version)
-function build_vtk_grids(::Val{:vtu}, mesh::Trixi.TreeMesh, n_visnodes, verbose, 
+function build_vtk_grids(::Val{:vtu}, mesh::Trixi.TreeMesh, n_visnodes, verbose,
                          output_directory, is_datafile, filename)
   coordinates, levels, center_level_0, length_level_0 = extract_mesh_information(mesh)
-  
+
   # Extract number of spatial dimensions
   ndims_ = size(coordinates, 1)
 
@@ -44,11 +44,11 @@ end
 
 
 # Create and return VTK grids that are ready to be filled with data (vti version)
-function build_vtk_grids(::Val{:vti}, mesh, n_visnodes, verbose, 
+function build_vtk_grids(::Val{:vti}, mesh, n_visnodes, verbose,
                          output_directory, is_datafile, filename)
-    
+
   coordinates, levels, center_level_0, length_level_0 = extract_mesh_information(mesh)
-  
+
   # Extract number of spatial dimensions
   ndims_ = size(coordinates, 1)
 
@@ -87,8 +87,8 @@ end
 
 
 # Create and return VTK grids that are ready to be filled with data (CurvedMesh version)
-function build_vtk_grids(::Val{:vtu}, mesh::Trixi.CurvedMesh, n_visnodes, verbose,
-                         output_directory, is_datafile, filename)
+function build_vtk_grids(::Val{:vtu}, mesh::Union{Trixi.CurvedMesh, Trixi.UnstructuredQuadMesh},
+                         n_visnodes, verbose, output_directory, is_datafile, filename)
 
   @timeit "prepare coordinate information" node_coordinates = calc_node_coordinates(mesh, n_visnodes)
 
@@ -123,14 +123,14 @@ function build_vtk_grids(::Val{:vtu}, mesh::Trixi.CurvedMesh, n_visnodes, verbos
   # @timeit "build VTK grid (cell data)" vtk_celldata = vtk_grid(vtk_celldata_filename,
   #                                                               vtk_celldata_points,
   #                                                               vtk_celldata_cells)
-  
+
   vtk_celldata = nothing
 
   return vtk_nodedata, vtk_celldata
 end
 
 
-function calc_node_coordinates(mesh, n_visnodes)
+function calc_node_coordinates(mesh::Trixi.CurvedMesh, n_visnodes)
   # Extract number of spatial dimensions
   ndims_ = ndims(mesh)
   n_elements = prod(size(mesh))
@@ -141,6 +141,37 @@ function calc_node_coordinates(mesh, n_visnodes)
   node_coordinates = Array{Float64, ndims_+2}(undef, ndims_, ntuple(_ -> n_visnodes, ndims_)..., n_elements)
 
   return calc_node_coordinates!(node_coordinates, f, nodes, mesh)
+end
+
+
+function calc_node_coordinates(mesh::Trixi.UnstructuredQuadMesh, n_visnodes)
+  # Extract number of spatial dimensions
+  ndims_ = ndims(mesh)
+  n_elements = length(mesh)
+
+  # get the uniform nodes
+  nodes = range(-1, 1, length=n_visnodes)
+
+  # intialize the container for the node coordinates
+  node_coordinates = Array{Float64, ndims_+2}(undef, ndims_, ntuple(_ -> n_visnodes, ndims_)..., n_elements)
+
+  # work container for the corners of elements
+  four_corners = zeros(eltype(mesh.corners), 4, 2)
+
+  # loop through all elements and call the correct node coordinate constructor based on curved
+  for element = 1:n_elements
+    if mesh.element_is_curved[element]
+      Trixi.calc_node_coordinates!(node_coordinates, element, nodes, view(mesh.surface_curves, :, element))
+    else # straight sided element
+      for i in 1:4, j in 1:2
+        # pull the (x,y) values of these corners out of the global corners array
+        four_corners[i, j] = mesh.corners[j, mesh.element_node_ids[i, element]]
+      end
+      Trixi.calc_node_coordinates!(node_coordinates, element, nodes, four_corners)
+    end
+  end
+
+  return node_coordinates
 end
 
 
@@ -398,7 +429,7 @@ function calc_vtk_points_cells(node_coordinates::AbstractArray{<:Any,4})
                 linear_indices[end, 1, element],
                 linear_indices[end, end, element],
                 linear_indices[1, end, element]]
-    
+
     edges = vcat(linear_indices[2:end-1, 1, element],
                  linear_indices[end, 2:end-1, element],
                  linear_indices[2:end-1, end, element],
@@ -436,9 +467,9 @@ function calc_vtk_points_cells(node_coordinates::AbstractArray{<:Any,5})
                 linear_indices[end, 1, end, element],
                 linear_indices[end, end, end, element],
                 linear_indices[1, end, end, element]]
-    
+
     # This order doesn't make any sense. This is completely different
-    # from what is shown in 
+    # from what is shown in
     # https://blog.kitware.com/wp-content/uploads/2018/09/Source_Issue_43.pdf
     # but this is the way it works.
     edges = vcat(linear_indices[2:end-1, 1, 1, element],
