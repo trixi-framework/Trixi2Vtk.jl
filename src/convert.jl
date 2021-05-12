@@ -99,7 +99,7 @@ function trixi2vtk(filename::AbstractString...;
 
     # Read mesh
     verbose && println("| Reading mesh file...")
-    @timeit "read mesh" mesh = load_mesh_serial(meshfile; RealT=Float64)
+    @timeit "read mesh" mesh = Trixi.load_mesh_serial(meshfile; RealT=Float64, n_cells_max=0)
 
     if save_celldata === nothing
       # If no value for `save_celldata` is specified,
