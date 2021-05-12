@@ -21,7 +21,7 @@ mkdir(artifacts_dir)
   @testset "uniform mesh" begin
     test_trixi2vtk("solution_000000.h5", outdir,
         hashes=[("solution_000000.vtu", "1ec2c93c0c9c4f4992dea54afaf2a348ece0160e"),
-                ("solution_000000_celldata.vtu", "5ad1e681d6d1f4e56020cbf12dc53cbca9d333d9")])
+                ("solution_000000_celldata.vtu", "94e06d4f0773c22c55b9e496ddb5ee9a6b5fba6c")])
 
     # Store output files as artifacts to facilitate debugging of failing tests
     outfiles = ("solution_000000.vtu", "solution_000000_celldata.vtu")
