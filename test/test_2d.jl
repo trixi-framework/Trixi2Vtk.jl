@@ -42,7 +42,7 @@ mkdir(artifacts_dir)
     else
       test_trixi2vtk("restart_000001.h5", outdir,
           hashes=[("restart_000001.vti", "664f25ab018a373774b5aad69ad3f2f5a3b21649"),
-                  ("restart_000001_celldata.vtu", "5ad1e681d6d1f4e56020cbf12dc53cbca9d333d9")],
+                  ("restart_000001_celldata.vtu", "94e06d4f0773c22c55b9e496ddb5ee9a6b5fba6c")],
           format=:vti)
     end
 
