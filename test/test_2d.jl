@@ -21,7 +21,7 @@ mkdir(artifacts_dir)
   @testset "uniform mesh" begin
     test_trixi2vtk("solution_000000.h5", outdir,
         hashes=[("solution_000000.vtu", "1ec2c93c0c9c4f4992dea54afaf2a348ece0160e"),
-                ("solution_000000_celldata.vtu", "e396c3ba63276347966d4264cf0f52d592221830")])
+                ("solution_000000_celldata.vtu", "5ad1e681d6d1f4e56020cbf12dc53cbca9d333d9")])
 
     # Store output files as artifacts to facilitate debugging of failing tests
     outfiles = ("solution_000000.vtu", "solution_000000_celldata.vtu")
@@ -42,7 +42,7 @@ mkdir(artifacts_dir)
     else
       test_trixi2vtk("restart_000001.h5", outdir,
           hashes=[("restart_000001.vti", "664f25ab018a373774b5aad69ad3f2f5a3b21649"),
-                  ("restart_000001_celldata.vtu", "e396c3ba63276347966d4264cf0f52d592221830")],
+                  ("restart_000001_celldata.vtu", "5ad1e681d6d1f4e56020cbf12dc53cbca9d333d9")],
           format=:vti)
     end
 
