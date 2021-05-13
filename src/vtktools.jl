@@ -86,7 +86,7 @@ function build_vtk_grids(::Val{:vti}, mesh, n_visnodes, verbose,
 end
 
 
-# Create and return VTK grids that are ready to be filled with data (CurvedMesh version)
+# Create and return VTK grids that are ready to be filled with data (CurvedMesh/UnstructuredQuadMesh version)
 function build_vtk_grids(::Val{:vtu}, mesh::Union{Trixi.CurvedMesh, Trixi.UnstructuredQuadMesh},
                          n_visnodes, verbose, output_directory, is_datafile, filename)
 

@@ -16,7 +16,8 @@ Convert Trixi-generated output files to VTK files (VTU or VTI).
          only the name will be used (directory and file extension are ignored).
 - `output_directory`: Output directory where generated files are stored.
 - `nvisnodes`: Number of visualization nodes per element.
-               (default: number of DG nodes for CurvedMesh, twice the number of DG nodes for TreeMesh).
+               (default: number of DG nodes for CurvedMesh or UnstructuredQuadMesh,
+                         twice the number of DG nodes for TreeMesh).
                A value of `0` (zero) uses the number of nodes in the DG elements.
 - `save_celldata`: Bool to determine if celldata should be saved.
 
