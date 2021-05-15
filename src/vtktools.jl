@@ -100,17 +100,9 @@ function build_vtk_grids(::Val{:vtu}, mesh::Union{Trixi.CurvedMesh, Trixi.Unstru
     end
   end
 
-  # # Prepare VTK points and cells for celldata file
-  # @timeit "prepare VTK cells (cell data)" begin
-  #   vtk_celldata_points, vtk_celldata_cells = calc_vtk_points_cells(Val(ndims_), coordinates,
-  #                                                                   levels, center_level_0,
-  #                                                                   length_level_0, 1)
-  # end
-
   # Determine output file names
   base, _ = splitext(splitdir(filename)[2])
   vtk_filename = joinpath(output_directory, base)
-  vtk_celldata_filename = vtk_filename * "_celldata"
 
   # Open VTK files
   verbose && println("| Building VTK grid...")
@@ -120,9 +112,6 @@ function build_vtk_grids(::Val{:vtu}, mesh::Union{Trixi.CurvedMesh, Trixi.Unstru
   else
     vtk_nodedata = nothing
   end
-  # @timeit "build VTK grid (cell data)" vtk_celldata = vtk_grid(vtk_celldata_filename,
-  #                                                               vtk_celldata_points,
-  #                                                               vtk_celldata_cells)
 
   vtk_celldata = nothing
 
@@ -175,6 +164,7 @@ function calc_node_coordinates(mesh::Trixi.UnstructuredQuadMesh, n_visnodes)
 end
 
 
+# Calculation of the node coordinates for `CurvedMesh` in 2D
 function calc_node_coordinates!(node_coordinates::AbstractArray{<:Any, 4}, f, nodes, mesh)
   linear_indices = LinearIndices(size(mesh))
 
@@ -200,6 +190,7 @@ function calc_node_coordinates!(node_coordinates::AbstractArray{<:Any, 4}, f, no
 end
 
 
+# Calculation of the node coordinates for `CurvedMesh` in 3D
 function calc_node_coordinates!(node_coordinates::AbstractArray{<:Any, 5}, f, nodes, mesh)
   linear_indices = LinearIndices(size(mesh))
 
@@ -411,7 +402,7 @@ function calc_vtk_points_cells(::Val{3}, coordinates::AbstractMatrix{Float64},
 end
 
 
-# Convert coordinates and level information to a list of points and VTK cells (2D version)
+# Convert coordinates and level information to a list of points and VTK cells for `CurvedMesh` (2D version)
 function calc_vtk_points_cells(node_coordinates::AbstractArray{<:Any,4})
   n_elements = size(node_coordinates, 4)
   size_ = size(node_coordinates)
@@ -445,7 +436,7 @@ function calc_vtk_points_cells(node_coordinates::AbstractArray{<:Any,4})
 end
 
 
-# Convert coordinates and level information to a list of points and VTK cells (3D version)
+# Convert coordinates and level information to a list of points and VTK cells for `CurvedMesh` (3D version)
 function calc_vtk_points_cells(node_coordinates::AbstractArray{<:Any,5})
   n_elements = size(node_coordinates, 5)
   size_ = size(node_coordinates)

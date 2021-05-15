@@ -19,7 +19,9 @@ Convert Trixi-generated output files to VTK files (VTU or VTI).
                (default: number of DG nodes for CurvedMesh or UnstructuredQuadMesh,
                          twice the number of DG nodes for TreeMesh).
                A value of `0` (zero) uses the number of nodes in the DG elements.
-- `save_celldata`: Bool to determine if celldata should be saved.
+- `save_celldata`: Boolean value to determine if cell-based data should be saved.
+                   (the default `nothing` is converted to `false`
+                   for `CurvedMesh`/`UnstructuredQuadMesh` and `true` for `TreeMesh`)
 
 # Examples
 ```julia
@@ -100,8 +102,7 @@ function trixi2vtk(filename::AbstractString...;
 
     # Read mesh
     verbose && println("| Reading mesh file...")
-    # TODO 100_000 could be too small in some cases
-    @timeit "read mesh" mesh = Trixi.load_mesh_serial(meshfile; RealT=Float64, n_cells_max=100_000)
+    @timeit "read mesh" mesh = Trixi.load_mesh_serial(meshfile; n_cells_max=0, RealT=Float64)
 
     if save_celldata === nothing
       # If no value for `save_celldata` is specified,
