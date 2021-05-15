@@ -43,6 +43,9 @@ function trixi2vtk(filename::AbstractString...;
   for pattern in filename
     append!(filenames, glob(pattern))
   end
+  if isempty(filenames)
+    error("no such file(s): ", join(filename, ", "))
+  end
 
   # Ensure valid format
   if !(format in (:vtu, :vti))
