@@ -20,7 +20,7 @@ mkdir(artifacts_dir)
 end
 
 # Clean up afterwards: delete Trixi output directory
-# @test_nowarn rm(outdir, recursive=true)
+@test_skip rm(outdir, recursive=true)
 
 end
 
