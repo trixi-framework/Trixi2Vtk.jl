@@ -11,7 +11,6 @@ using Trixi: Trixi, transfinite_mapping, coordinates2mapping, polynomial_interpo
 using WriteVTK: vtk_grid, MeshCell, VTKCellTypes, vtk_save, paraview_collection
 
 # Include all top-level submodule files
-include("interpolation.jl")
 include("interpolate.jl")
 include("io.jl")
 include("pointlocators.jl")
