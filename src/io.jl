@@ -36,16 +36,8 @@ function read_datafile(filename::String)
   # Open file for reading
   h5open(filename, "r") do file
     # Extract basic information
-    if haskey(attributes(file), "ndims")
-      ndims_ = read(attributes(file)["ndims"])
-    else
-      ndims_ = read(attributes(file)["ndim"])
-    end
-    if haskey(attributes(file), "polydeg")
-      polydeg = read(attributes(file)["polydeg"])
-    else
-      polydeg = read(attributes(file)["N"])
-    end
+    ndims_ = read(attributes(file)["ndims"])
+    polydeg = read(attributes(file)["polydeg"])
     n_elements = read(attributes(file)["n_elements"])
     n_variables = read(attributes(file)["n_vars"])
     time = read(attributes(file)["time"])
