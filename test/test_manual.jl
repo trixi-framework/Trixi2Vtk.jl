@@ -40,7 +40,7 @@ isdir(outdir) && rm(outdir, recursive=true)
   end
 
   @testset "pvd_filenames" begin
-    @test Trixi2Vtk.pvd_filenames("", "manual", "out") == ("out/manual", "out/manual_celldata")
+    @test Trixi2Vtk.pvd_filenames("", "manual", "out") == (joinpath("out", "manual"), joinpath("out", "manual_celldata"))
     @test_throws ErrorException Trixi2Vtk.pvd_filenames(("a", "b"), nothing, "out")
   end
 end
