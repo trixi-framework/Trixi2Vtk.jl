@@ -37,6 +37,26 @@ end
       end
     end
   end
+
+  @testset "CurvedMesh" begin
+    isdir(outdir) && rm(outdir, recursive=true)
+    run_trixi(joinpath("3d", "elixir_advection_basic_curved.jl"), maxiters=1)
+
+    @testset "basic" begin
+      test_trixi2vtk("solution_000000.h5", outdir,
+          hashes=[("solution_000000.vtu", "57c58480d8f99b7e9d365cb3fa71790db42de750")])
+
+      # Store output files as artifacts to facilitate debugging of failing tests
+      outfiles = ("solution_000000.vtu",)
+      testname = "3d-curved-mesh-basic"
+      for outfile in outfiles
+        println("Copying '", abspath(joinpath(outdir, outfile)),
+                "' to '", abspath(joinpath(artifacts_dir, testname * "-" * outfile)),
+                "'...")
+        cp(joinpath(outdir, outfile), joinpath(artifacts_dir, testname * "-" * outfile), force=true)
+      end
+    end
+  end
 end
 
 # Clean up afterwards: delete Trixi output directory
