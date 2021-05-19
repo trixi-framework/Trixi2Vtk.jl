@@ -16,10 +16,11 @@ mkdir(artifacts_dir)
 
 
 @testset "3D" begin
+  @test true
 end
 
 # Clean up afterwards: delete Trixi output directory
-@test_nowarn rm(outdir, recursive=true)
+# @test_nowarn rm(outdir, recursive=true)
 
 end
 
