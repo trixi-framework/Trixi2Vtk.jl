@@ -9,10 +9,11 @@ include("test_trixi2vtk.jl")
 outdir = "out"
 isdir(outdir) && rm(outdir, recursive=true)
 
-# Create empty artifacts directory where all files that should be preserved will be stored
+# Create artifacts directory where all files that should be preserved will be stored
 artifacts_dir = joinpath(pathof(Trixi2Vtk) |> dirname |> dirname, "artifacts")
-isdir(artifacts_dir) && rm(artifacts_dir, recursive=true)
-mkdir(artifacts_dir)
+if !isdir(artifacts_dir)
+  mkdir(artifacts_dir)
+end
 
 
 @testset "3D" begin
