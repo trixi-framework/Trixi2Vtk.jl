@@ -28,12 +28,12 @@ end
 
       # Store output files as artifacts to facilitate debugging of failing tests
       outfiles = ("solution_000000.vtu", "solution_000000_celldata.vtu")
-      testname = "tree-mesh-uniform-mesh"
+      testname = "2d-tree-mesh-uniform-mesh"
       for outfile in outfiles
         println("Copying '", abspath(joinpath(outdir, outfile)),
                 "' to '", abspath(joinpath(artifacts_dir, testname * "-" * outfile)),
                 "'...")
-        cp(joinpath(outdir, outfile), joinpath(artifacts_dir, testname * "-" * outfile))
+        cp(joinpath(outdir, outfile), joinpath(artifacts_dir, testname * "-" * outfile), force=true)
       end
     end
 
@@ -51,12 +51,12 @@ end
 
       # Store output files as artifacts to facilitate debugging of failing tests
       outfiles = ("restart_000001.vti", "restart_000001_celldata.vtu")
-      testname = "tree-mesh-uniform-mesh-with-vti-output"
+      testname = "2d-tree-mesh-uniform-mesh-with-vti-output"
       for outfile in outfiles
         println("Copying '", abspath(joinpath(outdir, outfile)),
                 "' to '", abspath(joinpath(artifacts_dir, testname * "-" * outfile)),
                 "'...")
-        cp(joinpath(outdir, outfile), joinpath(artifacts_dir, testname * "-" * outfile))
+        cp(joinpath(outdir, outfile), joinpath(artifacts_dir, testname * "-" * outfile), force=true)
       end
     end
   end
@@ -71,12 +71,12 @@ end
 
       # Store output files as artifacts to facilitate debugging of failing tests
       outfiles = ("solution_000000.vtu",)
-      testname = "curved-mesh-waving-flag"
+      testname = "2d-curved-mesh-waving-flag"
       for outfile in outfiles
         println("Copying '", abspath(joinpath(outdir, outfile)),
                 "' to '", abspath(joinpath(artifacts_dir, testname * "-" * outfile)),
                 "'...")
-        cp(joinpath(outdir, outfile), joinpath(artifacts_dir, testname * "-" * outfile))
+        cp(joinpath(outdir, outfile), joinpath(artifacts_dir, testname * "-" * outfile), force=true)
       end
     end
 
@@ -86,12 +86,12 @@ end
 
       # Store output files as artifacts to facilitate debugging of failing tests
       outfiles = ("solution_000000.vtu",)
-      testname = "curved-mesh-waving-flag-supersampling"
+      testname = "2d-curved-mesh-waving-flag-supersampling"
       for outfile in outfiles
         println("Copying '", abspath(joinpath(outdir, outfile)),
                 "' to '", abspath(joinpath(artifacts_dir, testname * "-" * outfile)),
                 "'...")
-        cp(joinpath(outdir, outfile), joinpath(artifacts_dir, testname * "-" * outfile))
+        cp(joinpath(outdir, outfile), joinpath(artifacts_dir, testname * "-" * outfile), force=true)
       end
     end
   end
@@ -106,12 +106,12 @@ end
 
       # Store output files as artifacts to facilitate debugging of failing tests
       outfiles = ("solution_000000.vtu",)
-      testname = "unstructured-quad-basic"
+      testname = "2d-unstructured-quad-basic"
       for outfile in outfiles
         println("Copying '", abspath(joinpath(outdir, outfile)),
                 "' to '", abspath(joinpath(artifacts_dir, testname * "-" * outfile)),
                 "'...")
-        cp(joinpath(outdir, outfile), joinpath(artifacts_dir, testname * "-" * outfile))
+        cp(joinpath(outdir, outfile), joinpath(artifacts_dir, testname * "-" * outfile), force=true)
       end
     end
   end
