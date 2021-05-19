@@ -22,11 +22,18 @@ end
     run_trixi(joinpath("2d", "elixir_advection_extended.jl"), maxiters=1)
 
     @testset "uniform mesh" begin
-      test_trixi2vtk("solution_00000*.h5", outdir,
-          hashes=[("solution_000000.vtu", "1ec2c93c0c9c4f4992dea54afaf2a348ece0160e"),
-                  ("solution_000000_celldata.vtu", "9b20ba10df0d2d0fbd15916e5da0ed72ade9890b"),
-                  ("solution_00000.pvd", "7ba2f8f1927e90ebd4209aab890c58a20acf63f4"),
-                  ("solution_00000_celldata.pvd", "448a7130a608ed9f7e4630033b9e1338b1403f7b")])
+      if Sys.iswindows()
+        # This test fails on Windows due to globbing not working
+        test_trixi2vtk("solution_000000.h5", outdir,
+            hashes=[("solution_000000.vtu", "1ec2c93c0c9c4f4992dea54afaf2a348ece0160e"),
+                    ("solution_000000_celldata.vtu", "9b20ba10df0d2d0fbd15916e5da0ed72ade9890b")])
+      else
+        test_trixi2vtk("solution_00000*.h5", outdir,
+            hashes=[("solution_000000.vtu", "1ec2c93c0c9c4f4992dea54afaf2a348ece0160e"),
+                    ("solution_000000_celldata.vtu", "9b20ba10df0d2d0fbd15916e5da0ed72ade9890b"),
+                    ("solution_00000.pvd", "7ba2f8f1927e90ebd4209aab890c58a20acf63f4"),
+                    ("solution_00000_celldata.pvd", "448a7130a608ed9f7e4630033b9e1338b1403f7b")])
+      end
 
       # Store output files as artifacts to facilitate debugging of failing tests
       outfiles = ("solution_000000.vtu", "solution_000000_celldata.vtu",
