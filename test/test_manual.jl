@@ -21,7 +21,7 @@ isdir(outdir) && rm(outdir, recursive=true)
     run_trixi(joinpath("2d", "elixir_advection_extended.jl"), maxiters=1)
 
     @testset "no input file" begin
-      @test_throws ErrorException trixi2vtk("")
+      @test_throws ErrorException trixi2vtk()
     end
 
     @testset "no such files" begin
@@ -37,6 +37,11 @@ isdir(outdir) && rm(outdir, recursive=true)
 
   @testset "trixi2vtk for mesh file" begin
     @test_nowarn trixi2vtk(joinpath(outdir, "mesh.h5"); output_directory=outdir)
+  end
+
+  @testset "pvd_filenames" begin
+    @test Trixi2Vtk.pvd_filenames("", "manual", "out") == ("out/manual", "out/manual_celldata")
+    @test_throws ErrorException Trixi2Vtk.pvd_filenames(("a", "b"), nothing, "out")
   end
 end
 

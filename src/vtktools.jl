@@ -248,7 +248,7 @@ end
 
 
 # Determine filename for PVD file based on common name
-function get_pvd_filename(filenames::AbstractArray)
+function get_pvd_filename(filenames)
   filenames = getindex.(splitdir.(filenames), 2)
   bases = getindex.(splitext.(filenames), 1)
   pvd_filename = longest_common_prefix(bases)
@@ -257,7 +257,7 @@ end
 
 
 # Determine longest common prefix
-function longest_common_prefix(strings::AbstractArray)
+function longest_common_prefix(strings)
   # Return early if array is empty
   if isempty(strings)
     return ""
