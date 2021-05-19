@@ -29,7 +29,7 @@ To update an existing installation of Trixi2Vtk to the
 [latest release](https://github.com/trixi-framework/Trixi2Vtk.jl/releases/latest),
 execute
 ```julia
-julia> import Pkg; Pkg.update("Trixi"); Pkg.status("Trixi")
+julia> import Pkg; Pkg.update("Trixi2Vtk"); Pkg.status("Trixi2Vtk")
 ```
 in the Julia REPL. A brief list of notable changes to Trixi2Vtk is available in
 [`NEWS.md`](NEWS.md).
