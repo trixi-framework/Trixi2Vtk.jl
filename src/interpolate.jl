@@ -1,14 +1,29 @@
 
 # Interpolate data from input format to desired output format (vtu version)
-function interpolate_data(::Val{:vtu}, input_data, coordinates, levels,
-                          center_level_0, length_level_0, n_visnodes, verbose)
-  return raw2visnodes(input_data, n_visnodes)
+function interpolate_data(::Val{:vtu}, input_data, mesh::Trixi.TreeMesh, n_visnodes, verbose)
+  # Calculate equidistant output nodes (visualization nodes)
+  dx = 2 / n_visnodes
+  nodes_out = collect(range(-1 + dx/2, 1 - dx/2, length=n_visnodes))
+
+  return raw2interpolated(input_data, nodes_out)
+end
+
+
+# Interpolate data from input format to desired output format (CurvedMesh or UnstructuredQuadMesh version)
+function interpolate_data(::Val{:vtu}, input_data,
+                          mesh::Union{Trixi.CurvedMesh, Trixi.UnstructuredQuadMesh},
+                          n_visnodes, verbose)
+  # Calculate equidistant output nodes
+  nodes_out = collect(range(-1, 1, length=n_visnodes))
+
+  return raw2interpolated(input_data, nodes_out)
 end
 
 
 # Interpolate data from input format to desired output format (vti version)
-function interpolate_data(::Val{:vti}, input_data, coordinates, levels,
-                          center_level_0, length_level_0, n_visnodes, verbose)
+function interpolate_data(::Val{:vti}, input_data, mesh, n_visnodes, verbose)
+  coordinates, levels, center_level_0, length_level_0 = extract_mesh_information(mesh)
+
   # Normalize element coordinates: move center to (0, 0) and domain size to [-1, 1]²
   normalized_coordinates = similar(coordinates)
   for element_id in axes(coordinates, 2)
@@ -130,13 +145,14 @@ function coordinate2index(coordinate, resolution::Integer)
 end
 
 
-# Interpolate to visualization nodes
-function raw2visnodes(data_gl::AbstractArray{Float64}, n_visnodes::Int)
+# Interpolate to specified output nodes
+function raw2interpolated(data_gl::AbstractArray{Float64}, nodes_out)
   # Extract number of spatial dimensions
   ndims_ = ndims(data_gl) - 2
 
   # Extract data shape information
   n_nodes_in = size(data_gl, 1)
+  n_nodes_out = length(nodes_out)
   n_elements = size(data_gl, ndims_ + 1)
   n_variables = size(data_gl, ndims_ + 2)
 
@@ -144,13 +160,11 @@ function raw2visnodes(data_gl::AbstractArray{Float64}, n_visnodes::Int)
   nodes_in, _ = gauss_lobatto_nodes_weights(n_nodes_in)
 
   # Calculate Vandermonde matrix
-  dx = 2 / n_visnodes
-  nodes_out = collect(range(-1 + dx/2, 1 - dx/2, length=n_visnodes))
   vandermonde = polynomial_interpolation_matrix(nodes_in, nodes_out)
 
   if ndims_ == 2
     # Create output data structure
-    data_vis = Array{Float64}(undef, n_visnodes, n_visnodes, n_elements, n_variables)
+    data_vis = Array{Float64}(undef, n_nodes_out, n_nodes_out, n_elements, n_variables)
 
     # For each variable, interpolate element data and store to global data structure
     for v in 1:n_variables
@@ -161,12 +175,12 @@ function raw2visnodes(data_gl::AbstractArray{Float64}, n_visnodes::Int)
       for element_id in 1:n_elements
         @views data_vis[:, :, element_id, v] .= reshape(
             interpolate_nodes(reshaped_data[:, :, :, element_id], vandermonde, 1),
-            n_visnodes, n_visnodes)
+            n_nodes_out, n_nodes_out)
       end
     end
   elseif ndims_ == 3
     # Create output data structure
-    data_vis = Array{Float64}(undef, n_visnodes, n_visnodes, n_visnodes, n_elements, n_variables)
+    data_vis = Array{Float64}(undef, n_nodes_out, n_nodes_out, n_nodes_out, n_elements, n_variables)
 
     # For each variable, interpolate element data and store to global data structure
     for v in 1:n_variables
@@ -178,7 +192,7 @@ function raw2visnodes(data_gl::AbstractArray{Float64}, n_visnodes::Int)
       for element_id in 1:n_elements
         @views data_vis[:, :, :, element_id, v] .= reshape(
             interpolate_nodes(reshaped_data[:, :, :, :, element_id], vandermonde, 1),
-            n_visnodes, n_visnodes, n_visnodes)
+            n_nodes_out, n_nodes_out, n_nodes_out)
       end
     end
   else
@@ -186,6 +200,62 @@ function raw2visnodes(data_gl::AbstractArray{Float64}, n_visnodes::Int)
   end
 
   # Return as one 1D array for each variable
-  return reshape(data_vis, n_visnodes^ndims_ * n_elements, n_variables)
+  return reshape(data_vis, n_nodes_out^ndims_ * n_elements, n_variables)
 end
 
+# Interpolate data using the given Vandermonde matrix and return interpolated values (2D version).
+function interpolate_nodes(data_in::AbstractArray{T, 3},
+                           vandermonde, n_vars) where T
+  n_nodes_out = size(vandermonde, 1)
+  data_out = zeros(eltype(data_in), n_vars, n_nodes_out, n_nodes_out)
+  interpolate_nodes!(data_out, data_in, vandermonde, n_vars)
+end
+
+function interpolate_nodes!(data_out::AbstractArray{T, 3}, data_in::AbstractArray{T, 3},
+                            vandermonde, n_vars) where T
+  n_nodes_out = size(vandermonde, 1)
+  n_nodes_in  = size(vandermonde, 2)
+
+  for j in 1:n_nodes_out
+    for i in 1:n_nodes_out
+      for v in 1:n_vars
+        acc = zero(eltype(data_out))
+        for jj in 1:n_nodes_in
+          for ii in 1:n_nodes_in
+            acc += vandermonde[i, ii] * data_in[v, ii, jj] * vandermonde[j, jj]
+          end
+        end
+        data_out[v, i, j] = acc
+      end
+    end
+  end
+
+  return data_out
+end
+
+
+# Interpolate data using the given Vandermonde matrix and return interpolated values (3D version).
+function interpolate_nodes(data_in::AbstractArray{T, 4},
+                           vandermonde, n_vars) where T
+  n_nodes_out = size(vandermonde, 1)
+  data_out = zeros(eltype(data_in), n_vars, n_nodes_out, n_nodes_out, n_nodes_out)
+  interpolate_nodes!(data_out, data_in, vandermonde, n_vars)
+end
+
+function interpolate_nodes!(data_out::AbstractArray{T, 4}, data_in::AbstractArray{T, 4},
+                            vandermonde, n_vars) where T
+  n_nodes_out = size(vandermonde, 1)
+  n_nodes_in  = size(vandermonde, 2)
+
+  for k in 1:n_nodes_out, j in 1:n_nodes_out, i in 1:n_nodes_out
+    for v in 1:n_vars
+      acc = zero(eltype(data_out))
+      for kk in 1:n_nodes_in, jj in 1:n_nodes_in, ii in 1:n_nodes_in
+        acc += vandermonde[i, ii] * vandermonde[j, jj] * vandermonde[k, kk] * data_in[v, ii, jj, kk]
+      end
+      data_out[v, i, j, k] = acc
+    end
+  end
+
+  return data_out
+end

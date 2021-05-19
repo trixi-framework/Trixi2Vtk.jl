@@ -15,8 +15,13 @@ Convert Trixi-generated output files to VTK files (VTU or VTI).
 - `pvd`: Use this filename to store PVD file (instead of auto-detecting name). Note that
          only the name will be used (directory and file extension are ignored).
 - `output_directory`: Output directory where generated files are stored.
-- `nvisnodes`: Number of visualization nodes per element (default: twice the number of DG nodes).
+- `nvisnodes`: Number of visualization nodes per element.
+               (default: number of DG nodes for CurvedMesh or UnstructuredQuadMesh,
+                         twice the number of DG nodes for TreeMesh).
                A value of `0` (zero) uses the number of nodes in the DG elements.
+- `save_celldata`: Boolean value to determine if cell-based data should be saved.
+                   (the default `nothing` is converted to `false`
+                   for `CurvedMesh`/`UnstructuredQuadMesh` and `true` for `TreeMesh`)
 
 # Examples
 ```julia
@@ -26,7 +31,7 @@ julia> trixi2vtk("out/solution_000*.h5")
 """
 function trixi2vtk(filename::AbstractString...;
                    format=:vtu, verbose=false, hide_progress=false, pvd=nothing,
-                   output_directory=".", nvisnodes=nothing)
+                   output_directory=".", nvisnodes=nothing, save_celldata=nothing)
   # Reset timer
   reset_timer!()
 
@@ -37,6 +42,9 @@ function trixi2vtk(filename::AbstractString...;
   filenames = String[]
   for pattern in filename
     append!(filenames, glob(pattern))
+  end
+  if isempty(filenames)
+    error("no such file(s): ", join(filename, ", "))
   end
 
   # Ensure valid format
@@ -97,8 +105,13 @@ function trixi2vtk(filename::AbstractString...;
 
     # Read mesh
     verbose && println("| Reading mesh file...")
-    @timeit "read mesh" (center_level_0, length_level_0,
-                         leaf_cells, coordinates, levels) = read_meshfile(meshfile)
+    @timeit "read mesh" mesh = Trixi.load_mesh_serial(meshfile; n_cells_max=0, RealT=Float64)
+
+    if save_celldata === nothing
+      # If no value for `save_celldata` is specified,
+      # use true for TreeMesh and false for CurvedMesh or UnstructuredQuadMesh
+      save_celldata = isa(mesh, Trixi.TreeMesh)
+    end
 
     # Read data only if it is a data file
     if is_datafile
@@ -106,21 +119,10 @@ function trixi2vtk(filename::AbstractString...;
       @timeit "read data" (labels, data, n_elements, n_nodes,
                            element_variables, time) = read_datafile(filename)
 
-      # Check if dimensions match
-      if length(leaf_cells) != n_elements
-        error("number of elements in '$(filename)' do not match number of leaf cells in " *
-              "'$(meshfile)' " *
-              "(did you forget to clean your 'out/' directory between different runs?)")
-      end
+      assert_cells_elements(n_elements, mesh, filename, meshfile)
 
       # Determine resolution for data interpolation
-      if nvisnodes == nothing
-        n_visnodes = 2 * n_nodes
-      elseif nvisnodes == 0
-        n_visnodes = n_nodes
-      else
-        n_visnodes = nvisnodes
-      end
+      n_visnodes = get_default_nvisnodes(nvisnodes, n_nodes, mesh)
     else
       # If file is a mesh file, do not interpolate data
       n_visnodes = 1
@@ -130,30 +132,23 @@ function trixi2vtk(filename::AbstractString...;
     mkpath(output_directory)
 
     # Build VTK grids
-    vtk_nodedata, vtk_celldata = build_vtk_grids(Val(format), coordinates, levels, center_level_0,
-                                                 length_level_0, n_visnodes, verbose,
+    vtk_nodedata, vtk_celldata = build_vtk_grids(Val(format), mesh, n_visnodes, verbose,
                                                  output_directory, is_datafile, filename)
 
     # Interpolate data
     if is_datafile
       verbose && println("| Interpolating data...")
       @timeit "interpolate data" interpolated_data = interpolate_data(Val(format),
-                                                                      data, coordinates, levels,
-                                                                      center_level_0,
-                                                                      length_level_0,
+                                                                      data, mesh,
                                                                       n_visnodes, verbose)
     end
 
     # Add data to file
     verbose && println("| Adding data to VTK file...")
     @timeit "add data to VTK file" begin
-      # Add cell/element data to celldata VTK file
-      verbose && println("| | cell_ids...")
-      @timeit "cell_ids" vtk_celldata["cell_ids"] = leaf_cells
-      verbose && println("| | element_ids...")
-      @timeit "element_ids" vtk_celldata["element_ids"] = collect(1:length(leaf_cells))
-      verbose && println("| | levels...")
-      @timeit "levels" vtk_celldata["levels"] = levels
+      if save_celldata
+        add_celldata!(vtk_celldata, mesh, verbose)
+      end
 
       # Only add data if it is a data file
       if is_datafile
@@ -163,10 +158,12 @@ function trixi2vtk(filename::AbstractString...;
           @timeit label vtk_nodedata[label] = @views interpolated_data[:, variable_id]
         end
 
-        # Add element variables
-        for (label, variable) in element_variables
-          verbose && println("| | Element variable: $label...")
-          @timeit label vtk_celldata[label] = variable
+        if save_celldata
+          # Add element variables
+          for (label, variable) in element_variables
+            verbose && println("| | Element variable: $label...")
+            @timeit label vtk_celldata[label] = variable
+          end
         end
       end
     end
@@ -177,8 +174,10 @@ function trixi2vtk(filename::AbstractString...;
       @timeit "save VTK file" vtk_save(vtk_nodedata)
     end
 
-    verbose && println("| Saving VTK file '$(vtk_celldata.path)'...")
-    @timeit "save VTK file" vtk_save(vtk_celldata)
+    if save_celldata
+      verbose && println("| Saving VTK file '$(vtk_celldata.path)'...")
+      @timeit "save VTK file" vtk_save(vtk_celldata)
+    end
 
     # Add to PVD file only if it is a datafile
     if !is_single_file
@@ -186,7 +185,9 @@ function trixi2vtk(filename::AbstractString...;
         verbose && println("| Adding to PVD file...")
         @timeit "add VTK to PVD file" begin
           pvd[time] = vtk_nodedata
-          pvd_celldata[time] = vtk_celldata
+          if save_celldata
+            pvd_celldata[time] = vtk_celldata
+          end
         end
         has_data = true
       else
@@ -206,8 +207,11 @@ function trixi2vtk(filename::AbstractString...;
       verbose && println("| Saving PVD file '$(pvd_filename).pvd'...")
       @timeit "save PVD files" vtk_save(pvd)
     end
-    verbose && println("| Saving PVD file '$(pvd_celldata_filename).pvd'...")
-    @timeit "save PVD files" vtk_save(pvd_celldata)
+
+    if save_celldata
+      verbose && println("| Saving PVD file '$(pvd_celldata_filename).pvd'...")
+      @timeit "save PVD files" vtk_save(pvd_celldata)
+    end
   end
 
   verbose && println("| done.\n")
@@ -215,3 +219,68 @@ function trixi2vtk(filename::AbstractString...;
   println()
 end
 
+
+function assert_cells_elements(n_elements, mesh::Trixi.TreeMesh, filename, meshfile)
+  # Check if dimensions match
+  if length(Trixi.leaf_cells(mesh.tree)) != n_elements
+    error("number of elements in '$(filename)' do not match number of leaf cells in " *
+          "'$(meshfile)' " *
+          "(did you forget to clean your 'out/' directory between different runs?)")
+  end
+end
+
+
+function assert_cells_elements(n_elements, mesh::Trixi.CurvedMesh, filename, meshfile)
+  # Check if dimensions match
+  if prod(size(mesh)) != n_elements
+    error("number of elements in '$(filename)' do not match number of cells in " *
+          "'$(meshfile)' " *
+          "(did you forget to clean your 'out/' directory between different runs?)")
+  end
+end
+
+
+function assert_cells_elements(n_elements, mesh::Trixi.UnstructuredQuadMesh, filename, meshfile)
+  # Check if dimensions match
+  if length(mesh) != n_elements
+    error("number of elements in '$(filename)' do not match number of cells in " *
+          "'$(meshfile)' " *
+          "(did you forget to clean your 'out/' directory between different runs?)")
+  end
+end
+
+
+function get_default_nvisnodes(nvisnodes, n_nodes, mesh::Trixi.TreeMesh)
+  if nvisnodes === nothing
+    return 2 * n_nodes
+  elseif nvisnodes == 0
+    return n_nodes
+  else
+    return nvisnodes
+  end
+end
+
+
+function get_default_nvisnodes(nvisnodes, n_nodes, mesh::Union{Trixi.CurvedMesh, Trixi.UnstructuredQuadMesh})
+  if nvisnodes === nothing || nvisnodes == 0
+    return n_nodes
+  else
+    return nvisnodes
+  end
+end
+
+
+function add_celldata!(vtk_celldata, mesh::Trixi.TreeMesh, verbose)
+  @timeit "add data to VTK file" begin
+    leaf_cells = Trixi.leaf_cells(mesh.tree)
+    # Add cell/element data to celldata VTK file
+    verbose && println("| | cell_ids...")
+    @timeit "cell_ids" vtk_celldata["cell_ids"] = leaf_cells
+    verbose && println("| | element_ids...")
+    @timeit "element_ids" vtk_celldata["element_ids"] = collect(1:length(leaf_cells))
+    verbose && println("| | levels...")
+    @timeit "levels" vtk_celldata["levels"] = mesh.tree.levels
+  end
+
+  return vtk_celldata
+end
