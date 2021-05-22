@@ -250,6 +250,16 @@ function assert_cells_elements(n_elements, mesh::Trixi.UnstructuredQuadMesh, fil
 end
 
 
+function assert_cells_elements(n_elements, mesh::Trixi.P4estMesh, filename, meshfile)
+  # Check if dimensions match
+  if Trixi.ncells(mesh) != n_elements
+    error("number of elements in '$(filename)' do not match number of cells in " *
+          "'$(meshfile)' " *
+          "(did you forget to clean your 'out/' directory between different runs?)")
+  end
+end
+
+
 function get_default_nvisnodes(nvisnodes, n_nodes, mesh::Trixi.TreeMesh)
   if nvisnodes === nothing
     return 2 * n_nodes
@@ -261,7 +271,8 @@ function get_default_nvisnodes(nvisnodes, n_nodes, mesh::Trixi.TreeMesh)
 end
 
 
-function get_default_nvisnodes(nvisnodes, n_nodes, mesh::Union{Trixi.CurvedMesh, Trixi.UnstructuredQuadMesh})
+function get_default_nvisnodes(nvisnodes, n_nodes,
+                               mesh::Union{Trixi.CurvedMesh, Trixi.UnstructuredQuadMesh, Trixi.P4estMesh})
   if nvisnodes === nothing || nvisnodes == 0
     return n_nodes
   else

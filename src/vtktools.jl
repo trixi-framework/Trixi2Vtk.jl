@@ -86,8 +86,10 @@ function build_vtk_grids(::Val{:vti}, mesh, n_visnodes, verbose,
 end
 
 
-# Create and return VTK grids that are ready to be filled with data (CurvedMesh/UnstructuredQuadMesh version)
-function build_vtk_grids(::Val{:vtu}, mesh::Union{Trixi.CurvedMesh, Trixi.UnstructuredQuadMesh},
+# Create and return VTK grids that are ready to be filled with data
+# (CurvedMesh/UnstructuredQuadMesh/P4estMesh version)
+function build_vtk_grids(::Val{:vtu},
+                         mesh::Union{Trixi.CurvedMesh, Trixi.UnstructuredQuadMesh, Trixi.P4estMesh},
                          n_visnodes, verbose, output_directory, is_datafile, filename)
 
   @timeit "prepare coordinate information" node_coordinates = calc_node_coordinates(mesh, n_visnodes)
@@ -161,6 +163,20 @@ function calc_node_coordinates(mesh::Trixi.UnstructuredQuadMesh, n_visnodes)
   end
 
   return node_coordinates
+end
+
+
+function calc_node_coordinates(mesh::Trixi.P4estMesh, n_visnodes)
+  # Extract number of spatial dimensions
+  ndims_ = ndims(mesh)
+
+  nodes = range(-1, 1, length=n_visnodes)
+
+  node_coordinates = Array{Float64, ndims_+2}(undef, ndims_,
+                                              ntuple(_ -> n_visnodes, ndims_)...,
+                                              Trixi.ncells(mesh))
+
+  return Trixi.calc_node_coordinates!(node_coordinates, mesh, nodes)
 end
 
 
