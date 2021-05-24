@@ -28,7 +28,7 @@ end
             hashes=[("solution_000000.vtu", "1ec2c93c0c9c4f4992dea54afaf2a348ece0160e"),
                     ("solution_000000_celldata.vtu", "9b20ba10df0d2d0fbd15916e5da0ed72ade9890b")])
         outfiles = ("solution_000000.vtu", "solution_000000_celldata.vtu")
-        
+
       else
         test_trixi2vtk("solution_00000*.h5", outdir,
             hashes=[("solution_000000.vtu", "1ec2c93c0c9c4f4992dea54afaf2a348ece0160e"),
@@ -119,6 +119,26 @@ end
       # Store output files as artifacts to facilitate debugging of failing tests
       outfiles = ("solution_000000.vtu",)
       testname = "2d-unstructured-quad-basic"
+      for outfile in outfiles
+        println("Copying '", abspath(joinpath(outdir, outfile)),
+                "' to '", abspath(joinpath(artifacts_dir, testname * "-" * outfile)),
+                "'...")
+        cp(joinpath(outdir, outfile), joinpath(artifacts_dir, testname * "-" * outfile), force=true)
+      end
+    end
+  end
+
+  @testset "P4estMesh" begin
+    isdir(outdir) && rm(outdir, recursive=true)
+    run_trixi(joinpath("2d", "elixir_euler_nonperiodic_p4est.jl"), initial_refinement_level=1, maxiters=1)
+
+    @testset "nonperiodic" begin
+      test_trixi2vtk("solution_000000.h5", outdir,
+          hashes=[("solution_000000.vtu", "71e4a52aee49e447f79bfb84a042fc5d63ea24ca")])
+
+      # Store output files as artifacts to facilitate debugging of failing tests
+      outfiles = ("solution_000000.vtu",)
+      testname = "2d-p4est-mesh-nonperiodic"
       for outfile in outfiles
         println("Copying '", abspath(joinpath(outdir, outfile)),
                 "' to '", abspath(joinpath(artifacts_dir, testname * "-" * outfile)),

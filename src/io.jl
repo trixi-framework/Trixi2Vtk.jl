@@ -20,7 +20,7 @@ function extract_mesh_filename(filename::String)
 end
 
 
-function extract_mesh_information(mesh::Trixi.TreeMesh)
+function extract_mesh_information(mesh::TreeMesh)
   center_level_0 = mesh.tree.center_level_0
   length_level_0 = mesh.tree.length_level_0
 
