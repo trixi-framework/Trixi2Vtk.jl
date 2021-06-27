@@ -57,6 +57,26 @@ end
       end
     end
   end
+
+  @testset "P4estMesh" begin
+    isdir(outdir) && rm(outdir, recursive=true)
+    run_trixi(joinpath("3d", "elixir_advection_p4est_unstructured_curved.jl"), maxiters=1)
+
+    @testset "unstructured curved" begin
+      test_trixi2vtk("solution_000000.h5", outdir,
+          hashes=[("solution_000000.vtu", "a08288d98d867926a5dd03bd2353383d8f07072e")])
+
+      # Store output files as artifacts to facilitate debugging of failing tests
+      outfiles = ("solution_000000.vtu",)
+      testname = "3d-p4est-mesh-unstructured-curved"
+      for outfile in outfiles
+        println("Copying '", abspath(joinpath(outdir, outfile)),
+                "' to '", abspath(joinpath(artifacts_dir, testname * "-" * outfile)),
+                "'...")
+        cp(joinpath(outdir, outfile), joinpath(artifacts_dir, testname * "-" * outfile), force=true)
+      end
+    end
+  end
 end
 
 # Clean up afterwards: delete Trixi output directory

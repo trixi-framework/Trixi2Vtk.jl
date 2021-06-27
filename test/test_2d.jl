@@ -134,7 +134,7 @@ end
 
     @testset "nonperiodic" begin
       test_trixi2vtk("solution_000000.h5", outdir,
-          hashes=[("solution_000000.vtu", "71e4a52aee49e447f79bfb84a042fc5d63ea24ca")])
+          hashes=[("solution_000000.vtu", "0aca9d5a7b112d0469fa76b215e6c2d48b038af4")])
 
       # Store output files as artifacts to facilitate debugging of failing tests
       outfiles = ("solution_000000.vtu",)
