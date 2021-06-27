@@ -60,11 +60,11 @@ end
 
   @testset "P4estMesh" begin
     isdir(outdir) && rm(outdir, recursive=true)
-    run_trixi(joinpath("3d", "elixir_advection_p4est_unstructured_curved.jl"), maxiters=1)
+    run_trixi(joinpath("3d", "elixir_advection_amr_p4est_unstructured_curved.jl"), maxiters=1)
 
     @testset "unstructured curved" begin
       test_trixi2vtk("solution_000000.h5", outdir,
-          hashes=[("solution_000000.vtu", "a08288d98d867926a5dd03bd2353383d8f07072e")])
+          hashes=[("solution_000000.vtu", "d1249f2839589b22774d699bda1bfabde7b8c571")])
 
       # Store output files as artifacts to facilitate debugging of failing tests
       outfiles = ("solution_000000.vtu",)
@@ -80,7 +80,7 @@ end
 end
 
 # Clean up afterwards: delete Trixi output directory
-@test_skip rm(outdir, recursive=true)
+# @test_skip rm(outdir, recursive=true)
 
 end
 
