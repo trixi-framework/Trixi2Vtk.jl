@@ -16,12 +16,12 @@ Convert Trixi-generated output files to VTK files (VTU or VTI).
          only the name will be used (directory and file extension are ignored).
 - `output_directory`: Output directory where generated files are stored.
 - `nvisnodes`: Number of visualization nodes per element.
-               (default: number of DG nodes for CurvedMesh or UnstructuredQuadMesh,
+               (default: number of DG nodes for StructuredMesh or UnstructuredMesh2D,
                          twice the number of DG nodes for TreeMesh).
                A value of `0` (zero) uses the number of nodes in the DG elements.
 - `save_celldata`: Boolean value to determine if cell-based data should be saved.
                    (the default `nothing` is converted to `false`
-                   for `CurvedMesh`/`UnstructuredQuadMesh` and `true` for `TreeMesh`)
+                   for `StructuredMesh`/`UnstructuredMesh2D` and `true` for `TreeMesh`)
 
 # Examples
 ```julia
@@ -109,7 +109,7 @@ function trixi2vtk(filename::AbstractString...;
 
     if save_celldata === nothing
       # If no value for `save_celldata` is specified,
-      # use true for TreeMesh and false for CurvedMesh or UnstructuredQuadMesh
+      # use true for TreeMesh and false for StructuredMesh or UnstructuredMesh2D
       save_celldata = isa(mesh, Trixi.TreeMesh)
     end
 
@@ -230,7 +230,7 @@ function assert_cells_elements(n_elements, mesh::Trixi.TreeMesh, filename, meshf
 end
 
 
-function assert_cells_elements(n_elements, mesh::Trixi.CurvedMesh, filename, meshfile)
+function assert_cells_elements(n_elements, mesh::Trixi.StructuredMesh, filename, meshfile)
   # Check if dimensions match
   if prod(size(mesh)) != n_elements
     error("number of elements in '$(filename)' do not match number of cells in " *
@@ -240,7 +240,7 @@ function assert_cells_elements(n_elements, mesh::Trixi.CurvedMesh, filename, mes
 end
 
 
-function assert_cells_elements(n_elements, mesh::Trixi.UnstructuredQuadMesh, filename, meshfile)
+function assert_cells_elements(n_elements, mesh::Trixi.UnstructuredMesh2D, filename, meshfile)
   # Check if dimensions match
   if length(mesh) != n_elements
     error("number of elements in '$(filename)' do not match number of cells in " *
@@ -261,7 +261,7 @@ function get_default_nvisnodes(nvisnodes, n_nodes, mesh::Trixi.TreeMesh)
 end
 
 
-function get_default_nvisnodes(nvisnodes, n_nodes, mesh::Union{Trixi.CurvedMesh, Trixi.UnstructuredQuadMesh})
+function get_default_nvisnodes(nvisnodes, n_nodes, mesh::Union{Trixi.StructuredMesh, Trixi.UnstructuredMesh2D})
   if nvisnodes === nothing || nvisnodes == 0
     return n_nodes
   else

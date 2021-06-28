@@ -28,7 +28,7 @@ end
             hashes=[("solution_000000.vtu", "1ec2c93c0c9c4f4992dea54afaf2a348ece0160e"),
                     ("solution_000000_celldata.vtu", "9b20ba10df0d2d0fbd15916e5da0ed72ade9890b")])
         outfiles = ("solution_000000.vtu", "solution_000000_celldata.vtu")
-        
+
       else
         test_trixi2vtk("solution_00000*.h5", outdir,
             hashes=[("solution_000000.vtu", "1ec2c93c0c9c4f4992dea54afaf2a348ece0160e"),
@@ -73,7 +73,7 @@ end
     end
   end
 
-  @testset "CurvedMesh" begin
+  @testset "StructuredMesh" begin
     isdir(outdir) && rm(outdir, recursive=true)
     run_trixi(joinpath("2d", "elixir_advection_waving_flag.jl"), maxiters=1)
 
@@ -108,7 +108,7 @@ end
     end
   end
 
-  @testset "UnstructuredQuadMesh" begin
+  @testset "UnstructuredMesh2D" begin
     isdir(outdir) && rm(outdir, recursive=true)
     run_trixi(joinpath("2d", "elixir_euler_unstructured_quad_basic.jl"), maxiters=1)
 

@@ -86,8 +86,8 @@ function build_vtk_grids(::Val{:vti}, mesh, n_visnodes, verbose,
 end
 
 
-# Create and return VTK grids that are ready to be filled with data (CurvedMesh/UnstructuredQuadMesh version)
-function build_vtk_grids(::Val{:vtu}, mesh::Union{Trixi.CurvedMesh, Trixi.UnstructuredQuadMesh},
+# Create and return VTK grids that are ready to be filled with data (StructuredMesh/UnstructuredMesh2D version)
+function build_vtk_grids(::Val{:vtu}, mesh::Union{Trixi.StructuredMesh, Trixi.UnstructuredMesh2D},
                          n_visnodes, verbose, output_directory, is_datafile, filename)
 
   @timeit "prepare coordinate information" node_coordinates = calc_node_coordinates(mesh, n_visnodes)
@@ -119,7 +119,7 @@ function build_vtk_grids(::Val{:vtu}, mesh::Union{Trixi.CurvedMesh, Trixi.Unstru
 end
 
 
-function calc_node_coordinates(mesh::Trixi.CurvedMesh, n_visnodes)
+function calc_node_coordinates(mesh::Trixi.StructuredMesh, n_visnodes)
   # Extract number of spatial dimensions
   ndims_ = ndims(mesh)
   n_elements = prod(size(mesh))
@@ -133,7 +133,7 @@ function calc_node_coordinates(mesh::Trixi.CurvedMesh, n_visnodes)
 end
 
 
-function calc_node_coordinates(mesh::Trixi.UnstructuredQuadMesh, n_visnodes)
+function calc_node_coordinates(mesh::Trixi.UnstructuredMesh2D, n_visnodes)
   # Extract number of spatial dimensions
   ndims_ = ndims(mesh)
   n_elements = length(mesh)
@@ -164,7 +164,7 @@ function calc_node_coordinates(mesh::Trixi.UnstructuredQuadMesh, n_visnodes)
 end
 
 
-# Calculation of the node coordinates for `CurvedMesh` in 2D
+# Calculation of the node coordinates for `StructuredMesh` in 2D
 function calc_node_coordinates!(node_coordinates::AbstractArray{<:Any, 4}, f, nodes, mesh)
   linear_indices = LinearIndices(size(mesh))
 
@@ -190,7 +190,7 @@ function calc_node_coordinates!(node_coordinates::AbstractArray{<:Any, 4}, f, no
 end
 
 
-# Calculation of the node coordinates for `CurvedMesh` in 3D
+# Calculation of the node coordinates for `StructuredMesh` in 3D
 function calc_node_coordinates!(node_coordinates::AbstractArray{<:Any, 5}, f, nodes, mesh)
   linear_indices = LinearIndices(size(mesh))
 
@@ -402,7 +402,7 @@ function calc_vtk_points_cells(::Val{3}, coordinates::AbstractMatrix{Float64},
 end
 
 
-# Convert coordinates and level information to a list of points and VTK cells for `CurvedMesh` (2D version)
+# Convert coordinates and level information to a list of points and VTK cells for `StructuredMesh` (2D version)
 function calc_vtk_points_cells(node_coordinates::AbstractArray{<:Any,4})
   n_elements = size(node_coordinates, 4)
   size_ = size(node_coordinates)
@@ -436,7 +436,7 @@ function calc_vtk_points_cells(node_coordinates::AbstractArray{<:Any,4})
 end
 
 
-# Convert coordinates and level information to a list of points and VTK cells for `CurvedMesh` (3D version)
+# Convert coordinates and level information to a list of points and VTK cells for `StructuredMesh` (3D version)
 function calc_vtk_points_cells(node_coordinates::AbstractArray{<:Any,5})
   n_elements = size(node_coordinates, 5)
   size_ = size(node_coordinates)

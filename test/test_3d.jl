@@ -38,7 +38,7 @@ end
     end
   end
 
-  @testset "CurvedMesh" begin
+  @testset "StructuredMesh" begin
     isdir(outdir) && rm(outdir, recursive=true)
     run_trixi(joinpath("3d", "elixir_advection_basic_curved.jl"), maxiters=1)
 
