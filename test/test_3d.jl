@@ -19,7 +19,7 @@ end
 @testset "3D" begin
   @testset "TreeMesh" begin
     isdir(outdir) && rm(outdir, recursive=true)
-    run_trixi(joinpath("3d", "elixir_advection_extended.jl"), maxiters=1)
+    run_trixi(joinpath("tree_3d_dgsem", "elixir_advection_extended.jl"), maxiters=1)
 
     @testset "uniform mesh" begin
       test_trixi2vtk("solution_000000.h5", outdir,
@@ -38,9 +38,9 @@ end
     end
   end
 
-  @testset "CurvedMesh" begin
+  @testset "StructuredMesh" begin
     isdir(outdir) && rm(outdir, recursive=true)
-    run_trixi(joinpath("3d", "elixir_advection_basic_curved.jl"), maxiters=1)
+    run_trixi(joinpath("structured_3d_dgsem", "elixir_advection_basic.jl"), maxiters=1)
 
     @testset "basic" begin
       test_trixi2vtk("solution_000000.h5", outdir,
@@ -60,7 +60,7 @@ end
 
   @testset "P4estMesh" begin
     isdir(outdir) && rm(outdir, recursive=true)
-    run_trixi(joinpath("3d", "elixir_advection_basic_p4est.jl"), maxiters=1)
+    run_trixi(joinpath("p4est_3d_dgsem", "elixir_advection_basic.jl"), maxiters=1)
 
     @testset "unstructured curved" begin
       test_trixi2vtk("solution_000000.h5", outdir,

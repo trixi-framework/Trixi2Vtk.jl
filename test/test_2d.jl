@@ -19,7 +19,7 @@ end
 @testset "2D" begin
   @testset "TreeMesh" begin
     isdir(outdir) && rm(outdir, recursive=true)
-    run_trixi(joinpath("2d", "elixir_advection_extended.jl"), maxiters=1)
+    run_trixi(joinpath("tree_2d_dgsem", "elixir_advection_extended.jl"), maxiters=1)
 
     @testset "uniform mesh" begin
       if Sys.iswindows()
@@ -73,9 +73,9 @@ end
     end
   end
 
-  @testset "CurvedMesh" begin
+  @testset "StructuredMesh" begin
     isdir(outdir) && rm(outdir, recursive=true)
-    run_trixi(joinpath("2d", "elixir_advection_waving_flag.jl"), maxiters=1)
+    run_trixi(joinpath("structured_2d_dgsem", "elixir_advection_waving_flag.jl"), maxiters=1)
 
     @testset "waving flag" begin
       test_trixi2vtk("solution_000000.h5", outdir,
@@ -108,9 +108,9 @@ end
     end
   end
 
-  @testset "UnstructuredQuadMesh" begin
+  @testset "UnstructuredMesh2D" begin
     isdir(outdir) && rm(outdir, recursive=true)
-    run_trixi(joinpath("2d", "elixir_euler_unstructured_quad_basic.jl"), maxiters=1)
+    run_trixi(joinpath("unstructured_2d_dgsem", "elixir_euler_basic.jl"), maxiters=1)
 
     @testset "basic" begin
       test_trixi2vtk("solution_000000.h5", outdir,
@@ -130,7 +130,7 @@ end
 
   @testset "P4estMesh" begin
     isdir(outdir) && rm(outdir, recursive=true)
-    run_trixi(joinpath("2d", "elixir_euler_nonperiodic_p4est.jl"), initial_refinement_level=1, maxiters=1)
+    run_trixi(joinpath("p4est_2d_dgsem", "elixir_euler_source_terms_nonperiodic.jl"), initial_refinement_level=1, maxiters=1)
 
     @testset "nonperiodic" begin
       test_trixi2vtk("solution_000000.h5", outdir,
