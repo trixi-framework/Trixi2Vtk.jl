@@ -9,6 +9,7 @@ for human readability.
 ## Changes in the v0.3 lifecycle
 
 #### Added
+- Visualize solutions obtained on 2D/3D unstructured, curvilinear, adaptive meshes (`P4estMesh`)
 
 
 #### Changed
