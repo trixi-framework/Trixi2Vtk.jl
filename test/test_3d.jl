@@ -79,7 +79,7 @@ end
   end
 end
 
-Clean up afterwards: delete Trixi output directory
+# Clean up afterwards: delete Trixi output directory
 @test_skip rm(outdir, recursive=true)
 
 end
