@@ -24,8 +24,8 @@ for human readability.
 
 #### Added
 
-- Visualize solutions obtained on 2D unstructured quadrilateral meshes (`UnstructuredQuadMesh`)
-- Visualize solutions obtained on 2D and 3D structured curved meshes (`CurvedMesh`)
+- Visualize solutions obtained on 2D unstructured quadrilateral meshes (`UnstructuredMesh2D`)
+- Visualize solutions obtained on 2D and 3D structured curved meshes (`StructuredMesh`)
 
 #### Changed
 
