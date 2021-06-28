@@ -66,7 +66,7 @@ end
       if Sys.isapple()
         # This file has a different hash on macOS for some reason
         test_trixi2vtk("solution_000000.h5", outdir,
-          hashes=[("solution_000000.vtu", "9050e4d141bf4099db907ef2c55768cff98a7291")])
+          hashes=[("solution_000000.vtu", "08121c3246caf55e9fa30a2e09ca0e2d6711c16d")])
       else
         test_trixi2vtk("solution_000000.h5", outdir,
           hashes=[("solution_000000.vtu", "d1249f2839589b22774d699bda1bfabde7b8c571")])
