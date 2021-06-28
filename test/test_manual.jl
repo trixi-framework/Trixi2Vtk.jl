@@ -18,7 +18,7 @@ isdir(outdir) && rm(outdir, recursive=true)
 
   @testset "trixi2vtk error triggers" begin
     isdir(outdir) && rm(outdir, recursive=true)
-    run_trixi(joinpath("2d", "elixir_advection_extended.jl"), maxiters=1)
+    run_trixi(joinpath("tree_2d_dgsem", "elixir_advection_extended.jl"), maxiters=1)
 
     @testset "no input file" begin
       @test_throws ErrorException trixi2vtk()

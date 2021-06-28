@@ -19,7 +19,7 @@ end
 @testset "2D" begin
   @testset "TreeMesh" begin
     isdir(outdir) && rm(outdir, recursive=true)
-    run_trixi(joinpath("2d", "elixir_advection_extended.jl"), maxiters=1)
+    run_trixi(joinpath("tree_2d_dgsem", "elixir_advection_extended.jl"), maxiters=1)
 
     @testset "uniform mesh" begin
       if Sys.iswindows()
@@ -75,7 +75,7 @@ end
 
   @testset "StructuredMesh" begin
     isdir(outdir) && rm(outdir, recursive=true)
-    run_trixi(joinpath("2d", "elixir_advection_waving_flag.jl"), maxiters=1)
+    run_trixi(joinpath("structured_2d_dgsem", "elixir_advection_waving_flag.jl"), maxiters=1)
 
     @testset "waving flag" begin
       test_trixi2vtk("solution_000000.h5", outdir,
@@ -110,7 +110,7 @@ end
 
   @testset "UnstructuredMesh2D" begin
     isdir(outdir) && rm(outdir, recursive=true)
-    run_trixi(joinpath("2d", "elixir_euler_unstructured_quad_basic.jl"), maxiters=1)
+    run_trixi(joinpath("unstructured_2d_dgsem", "elixir_euler_basic.jl"), maxiters=1)
 
     @testset "basic" begin
       test_trixi2vtk("solution_000000.h5", outdir,
