@@ -127,6 +127,32 @@ end
       end
     end
   end
+
+  @testset "P4estMesh" begin
+    isdir(outdir) && rm(outdir, recursive=true)
+    run_trixi(joinpath("p4est_2d_dgsem", "elixir_euler_source_terms_nonperiodic.jl"), initial_refinement_level=1, maxiters=1)
+
+    @testset "nonperiodic" begin
+      if Sys.isapple()
+        # This file has a different hash on macOS for some reason
+        test_trixi2vtk("solution_000000.h5", outdir,
+          hashes=[("solution_000000.vtu", "9050e4d141bf4099db907ef2c55768cff98a7291")])
+      else
+        test_trixi2vtk("solution_000000.h5", outdir,
+          hashes=[("solution_000000.vtu", "0aca9d5a7b112d0469fa76b215e6c2d48b038af4")])
+      end
+
+      # Store output files as artifacts to facilitate debugging of failing tests
+      outfiles = ("solution_000000.vtu",)
+      testname = "2d-p4est-mesh-nonperiodic"
+      for outfile in outfiles
+        println("Copying '", abspath(joinpath(outdir, outfile)),
+                "' to '", abspath(joinpath(artifacts_dir, testname * "-" * outfile)),
+                "'...")
+        cp(joinpath(outdir, outfile), joinpath(artifacts_dir, testname * "-" * outfile), force=true)
+      end
+    end
+  end
 end
 
 # Clean up afterwards: delete Trixi output directory

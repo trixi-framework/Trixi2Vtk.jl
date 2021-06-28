@@ -1,6 +1,6 @@
 
 # Interpolate data from input format to desired output format (vtu version)
-function interpolate_data(::Val{:vtu}, input_data, mesh::Trixi.TreeMesh, n_visnodes, verbose)
+function interpolate_data(::Val{:vtu}, input_data, mesh::TreeMesh, n_visnodes, verbose)
   # Calculate equidistant output nodes (visualization nodes)
   dx = 2 / n_visnodes
   nodes_out = collect(range(-1 + dx/2, 1 - dx/2, length=n_visnodes))
@@ -11,7 +11,7 @@ end
 
 # Interpolate data from input format to desired output format (StructuredMesh or UnstructuredMesh2D version)
 function interpolate_data(::Val{:vtu}, input_data,
-                          mesh::Union{Trixi.StructuredMesh, Trixi.UnstructuredMesh2D},
+                          mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh},
                           n_visnodes, verbose)
   # Calculate equidistant output nodes
   nodes_out = collect(range(-1, 1, length=n_visnodes))

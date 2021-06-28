@@ -110,7 +110,7 @@ function trixi2vtk(filename::AbstractString...;
     if save_celldata === nothing
       # If no value for `save_celldata` is specified,
       # use true for TreeMesh and false for StructuredMesh or UnstructuredMesh2D
-      save_celldata = isa(mesh, Trixi.TreeMesh)
+      save_celldata = isa(mesh, TreeMesh)
     end
 
     # Read data only if it is a data file
@@ -220,7 +220,7 @@ function trixi2vtk(filename::AbstractString...;
 end
 
 
-function assert_cells_elements(n_elements, mesh::Trixi.TreeMesh, filename, meshfile)
+function assert_cells_elements(n_elements, mesh::TreeMesh, filename, meshfile)
   # Check if dimensions match
   if length(Trixi.leaf_cells(mesh.tree)) != n_elements
     error("number of elements in '$(filename)' do not match number of leaf cells in " *
@@ -230,7 +230,7 @@ function assert_cells_elements(n_elements, mesh::Trixi.TreeMesh, filename, meshf
 end
 
 
-function assert_cells_elements(n_elements, mesh::Trixi.StructuredMesh, filename, meshfile)
+function assert_cells_elements(n_elements, mesh::StructuredMesh, filename, meshfile)
   # Check if dimensions match
   if prod(size(mesh)) != n_elements
     error("number of elements in '$(filename)' do not match number of cells in " *
@@ -240,7 +240,7 @@ function assert_cells_elements(n_elements, mesh::Trixi.StructuredMesh, filename,
 end
 
 
-function assert_cells_elements(n_elements, mesh::Trixi.UnstructuredMesh2D, filename, meshfile)
+function assert_cells_elements(n_elements, mesh::UnstructuredMesh2D, filename, meshfile)
   # Check if dimensions match
   if length(mesh) != n_elements
     error("number of elements in '$(filename)' do not match number of cells in " *
@@ -250,7 +250,17 @@ function assert_cells_elements(n_elements, mesh::Trixi.UnstructuredMesh2D, filen
 end
 
 
-function get_default_nvisnodes(nvisnodes, n_nodes, mesh::Trixi.TreeMesh)
+function assert_cells_elements(n_elements, mesh::P4estMesh, filename, meshfile)
+  # Check if dimensions match
+  if Trixi.ncells(mesh) != n_elements
+    error("number of elements in '$(filename)' do not match number of cells in " *
+          "'$(meshfile)' " *
+          "(did you forget to clean your 'out/' directory between different runs?)")
+  end
+end
+
+
+function get_default_nvisnodes(nvisnodes, n_nodes, mesh::TreeMesh)
   if nvisnodes === nothing
     return 2 * n_nodes
   elseif nvisnodes == 0
@@ -261,7 +271,8 @@ function get_default_nvisnodes(nvisnodes, n_nodes, mesh::Trixi.TreeMesh)
 end
 
 
-function get_default_nvisnodes(nvisnodes, n_nodes, mesh::Union{Trixi.StructuredMesh, Trixi.UnstructuredMesh2D})
+function get_default_nvisnodes(nvisnodes, n_nodes,
+                               mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh})
   if nvisnodes === nothing || nvisnodes == 0
     return n_nodes
   else
@@ -270,7 +281,7 @@ function get_default_nvisnodes(nvisnodes, n_nodes, mesh::Union{Trixi.StructuredM
 end
 
 
-function add_celldata!(vtk_celldata, mesh::Trixi.TreeMesh, verbose)
+function add_celldata!(vtk_celldata, mesh::TreeMesh, verbose)
   @timeit "add data to VTK file" begin
     leaf_cells = Trixi.leaf_cells(mesh.tree)
     # Add cell/element data to celldata VTK file

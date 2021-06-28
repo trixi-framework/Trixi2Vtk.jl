@@ -57,6 +57,32 @@ end
       end
     end
   end
+
+  @testset "P4estMesh" begin
+    isdir(outdir) && rm(outdir, recursive=true)
+    run_trixi(joinpath("p4est_3d_dgsem", "elixir_advection_amr_unstructured_curved.jl"), maxiters=1)
+
+    @testset "unstructured curved" begin
+      if Sys.isapple()
+        # This file has a different hash on macOS for some reason
+        test_trixi2vtk("solution_000000.h5", outdir,
+          hashes=[("solution_000000.vtu", "08121c3246caf55e9fa30a2e09ca0e2d6711c16d")])
+      else
+        test_trixi2vtk("solution_000000.h5", outdir,
+          hashes=[("solution_000000.vtu", "d1249f2839589b22774d699bda1bfabde7b8c571")])
+      end
+
+      # Store output files as artifacts to facilitate debugging of failing tests
+      outfiles = ("solution_000000.vtu",)
+      testname = "3d-p4est-mesh-unstructured-curved"
+      for outfile in outfiles
+        println("Copying '", abspath(joinpath(outdir, outfile)),
+                "' to '", abspath(joinpath(artifacts_dir, testname * "-" * outfile)),
+                "'...")
+        cp(joinpath(outdir, outfile), joinpath(artifacts_dir, testname * "-" * outfile), force=true)
+      end
+    end
+  end
 end
 
 # Clean up afterwards: delete Trixi output directory

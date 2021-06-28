@@ -1,5 +1,5 @@
 # Create and return VTK grids that are ready to be filled with data (vtu version)
-function build_vtk_grids(::Val{:vtu}, mesh::Trixi.TreeMesh, n_visnodes, verbose,
+function build_vtk_grids(::Val{:vtu}, mesh::TreeMesh, n_visnodes, verbose,
                          output_directory, is_datafile, filename)
   coordinates, levels, center_level_0, length_level_0 = extract_mesh_information(mesh)
 
@@ -86,8 +86,10 @@ function build_vtk_grids(::Val{:vti}, mesh, n_visnodes, verbose,
 end
 
 
-# Create and return VTK grids that are ready to be filled with data (StructuredMesh/UnstructuredMesh2D version)
-function build_vtk_grids(::Val{:vtu}, mesh::Union{Trixi.StructuredMesh, Trixi.UnstructuredMesh2D},
+# Create and return VTK grids that are ready to be filled with data
+# (StructuredMesh/UnstructuredMesh2D/P4estMesh version)
+function build_vtk_grids(::Val{:vtu},
+                         mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh},
                          n_visnodes, verbose, output_directory, is_datafile, filename)
 
   @timeit "prepare coordinate information" node_coordinates = calc_node_coordinates(mesh, n_visnodes)
@@ -119,7 +121,7 @@ function build_vtk_grids(::Val{:vtu}, mesh::Union{Trixi.StructuredMesh, Trixi.Un
 end
 
 
-function calc_node_coordinates(mesh::Trixi.StructuredMesh, n_visnodes)
+function calc_node_coordinates(mesh::StructuredMesh, n_visnodes)
   # Extract number of spatial dimensions
   ndims_ = ndims(mesh)
   n_elements = prod(size(mesh))
@@ -133,7 +135,7 @@ function calc_node_coordinates(mesh::Trixi.StructuredMesh, n_visnodes)
 end
 
 
-function calc_node_coordinates(mesh::Trixi.UnstructuredMesh2D, n_visnodes)
+function calc_node_coordinates(mesh::UnstructuredMesh2D, n_visnodes)
   # Extract number of spatial dimensions
   ndims_ = ndims(mesh)
   n_elements = length(mesh)
@@ -161,6 +163,20 @@ function calc_node_coordinates(mesh::Trixi.UnstructuredMesh2D, n_visnodes)
   end
 
   return node_coordinates
+end
+
+
+function calc_node_coordinates(mesh::P4estMesh, n_visnodes)
+  # Extract number of spatial dimensions
+  ndims_ = ndims(mesh)
+
+  nodes = range(-1, 1, length=n_visnodes)
+
+  node_coordinates = Array{Float64, ndims_+2}(undef, ndims_,
+                                              ntuple(_ -> n_visnodes, ndims_)...,
+                                              Trixi.ncells(mesh))
+
+  return Trixi.calc_node_coordinates!(node_coordinates, mesh, nodes)
 end
 
 
