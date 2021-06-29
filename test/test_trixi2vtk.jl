@@ -1,4 +1,4 @@
-using Test: @test_nowarn, @test
+using Test: @test_nowarn, @test, @testset
 using SHA
 using Trixi
 using Trixi2Vtk
@@ -27,5 +27,23 @@ function test_trixi2vtk(filenames, outdir; hashes=nothing, kwargs...)
       hash_measured = sha1file(joinpath(outdir, filename))
       @test hash_expected == hash_measured
     end
+  end
+end
+
+
+
+"""
+    @timed_testset "name of the testset" #= code to test #=
+
+Similar to `@testset`, but wraps the execution of the testset using `@time`
+and prints the name of the testset after execution.
+"""
+macro timed_testset(name, expr)
+  @assert name isa String
+  quote
+    @time @testset $name $expr
+    flush(stdout)
+    @info("Testset " * $name * " finished.\n")
+    flush(stdout)
   end
 end

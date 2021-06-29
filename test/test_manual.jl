@@ -11,12 +11,12 @@ outdir = "out"
 isdir(outdir) && rm(outdir, recursive=true)
 
 @testset "Manual" begin
-  @testset "Documenter" begin
+  @timed_testset "Documenter" begin
     DocMeta.setdocmeta!(Trixi2Vtk, :DocTestSetup, :(using Trixi2Vtk); recursive=true)
     doctest(Trixi2Vtk, manual=false)
   end
 
-  @testset "trixi2vtk error triggers" begin
+  @timed_testset "trixi2vtk error triggers" begin
     isdir(outdir) && rm(outdir, recursive=true)
     run_trixi(joinpath("tree_2d_dgsem", "elixir_advection_extended.jl"), maxiters=1)
 
@@ -35,11 +35,11 @@ isdir(outdir) && rm(outdir, recursive=true)
     end
   end
 
-  @testset "trixi2vtk for mesh file" begin
+  @timed_testset "trixi2vtk for mesh file" begin
     @test_nowarn trixi2vtk(joinpath(outdir, "mesh.h5"); output_directory=outdir)
   end
 
-  @testset "pvd_filenames" begin
+  @timed_testset "pvd_filenames" begin
     @test Trixi2Vtk.pvd_filenames("", "manual", "out") == (joinpath("out", "manual"), joinpath("out", "manual_celldata"))
     @test_throws ErrorException Trixi2Vtk.pvd_filenames(("a", "b"), nothing, "out")
   end
