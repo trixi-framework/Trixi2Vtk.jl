@@ -21,7 +21,7 @@ end
     isdir(outdir) && rm(outdir, recursive=true)
     run_trixi(joinpath("tree_3d_dgsem", "elixir_advection_extended.jl"), maxiters=1)
 
-    @testset "uniform mesh" begin
+    @timed_testset "uniform mesh" begin
       test_trixi2vtk("solution_000000.h5", outdir,
           hashes=[("solution_000000.vtu", "6ab3aa525851187ee0839e1d670a254a66be4ad7"),
                   ("solution_000000_celldata.vtu", "99c782d732a4d1f6764013c3fba2cdaddf3927ab")])
@@ -42,7 +42,7 @@ end
     isdir(outdir) && rm(outdir, recursive=true)
     run_trixi(joinpath("structured_3d_dgsem", "elixir_advection_basic.jl"), maxiters=1)
 
-    @testset "basic" begin
+    @timed_testset "basic" begin
       test_trixi2vtk("solution_000000.h5", outdir,
           hashes=[("solution_000000.vtu", "57c58480d8f99b7e9d365cb3fa71790db42de750")])
 
@@ -62,7 +62,7 @@ end
     isdir(outdir) && rm(outdir, recursive=true)
     run_trixi(joinpath("p4est_3d_dgsem", "elixir_advection_amr_unstructured_curved.jl"), maxiters=1)
 
-    @testset "unstructured curved" begin
+    @timed_testset "unstructured curved" begin
       if Sys.isapple()
         # This file has a different hash on macOS for some reason
         test_trixi2vtk("solution_000000.h5", outdir,

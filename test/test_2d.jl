@@ -21,7 +21,7 @@ end
     isdir(outdir) && rm(outdir, recursive=true)
     run_trixi(joinpath("tree_2d_dgsem", "elixir_advection_extended.jl"), maxiters=1)
 
-    @testset "uniform mesh" begin
+    @timed_testset "uniform mesh" begin
       if Sys.iswindows()
         # This test fails on Windows due to globbing not working
         test_trixi2vtk("solution_000000.h5", outdir,
@@ -49,7 +49,7 @@ end
       end
     end
 
-    @testset "uniform mesh with vti output" begin
+    @timed_testset "uniform mesh with vti output" begin
       if Sys.isapple()
         # This test fails on MacOS due to differing binary VTI files (even though the contents match)
         test_trixi2vtk("restart_000001.h5", outdir,
@@ -77,7 +77,7 @@ end
     isdir(outdir) && rm(outdir, recursive=true)
     run_trixi(joinpath("structured_2d_dgsem", "elixir_advection_waving_flag.jl"), maxiters=1)
 
-    @testset "waving flag" begin
+    @timed_testset "waving flag" begin
       test_trixi2vtk("solution_000000.h5", outdir,
           hashes=[("solution_000000.vtu", "a93dbd393647627a861d890568e65598be0062f9")])
 
@@ -92,7 +92,7 @@ end
       end
     end
 
-    @testset "waving flag (supersampling)" begin
+    @timed_testset "waving flag (supersampling)" begin
       test_trixi2vtk("solution_000000.h5", outdir, nvisnodes=6,
           hashes=[("solution_000000.vtu", "c6d74ab831bf4b6de2ba8cf537b6653ad611cfe7")])
 
@@ -112,7 +112,7 @@ end
     isdir(outdir) && rm(outdir, recursive=true)
     run_trixi(joinpath("unstructured_2d_dgsem", "elixir_euler_basic.jl"), maxiters=1)
 
-    @testset "basic" begin
+    @timed_testset "basic" begin
       test_trixi2vtk("solution_000000.h5", outdir,
           hashes=[("solution_000000.vtu", "0daedeea99d03d53b925ce5691bd7924abe88861")])
 
@@ -132,7 +132,7 @@ end
     isdir(outdir) && rm(outdir, recursive=true)
     run_trixi(joinpath("p4est_2d_dgsem", "elixir_euler_source_terms_nonperiodic.jl"), initial_refinement_level=1, maxiters=1)
 
-    @testset "nonperiodic" begin
+    @timed_testset "nonperiodic" begin
       if Sys.isapple()
         # This file has a different hash on macOS for some reason
         test_trixi2vtk("solution_000000.h5", outdir,
