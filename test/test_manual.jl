@@ -45,7 +45,7 @@ isdir(outdir) && rm(outdir, recursive=true)
   end
 
   @timed_testset "expand_filename_patterns" begin
-    @test expand_filename_patterns(["/*"]) isa Vector{String}
+    @test Trixi2Vtk.expand_filename_patterns(["/*"]) isa Vector{String}
   end
 end
 
