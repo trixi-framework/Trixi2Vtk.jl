@@ -43,6 +43,10 @@ isdir(outdir) && rm(outdir, recursive=true)
     @test Trixi2Vtk.pvd_filenames("", "manual", "out") == (joinpath("out", "manual"), joinpath("out", "manual_celldata"))
     @test_throws ErrorException Trixi2Vtk.pvd_filenames(("a", "b"), nothing, "out")
   end
+
+  @timed_testset "expand_filename_patterns" begin
+    @test expand_filename_patterns(["/*"]) isa Vector{String}
+  end
 end
 
 # Clean up afterwards: delete Trixi output directory
