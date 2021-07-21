@@ -45,7 +45,11 @@ isdir(outdir) && rm(outdir, recursive=true)
   end
 
   @timed_testset "expand_filename_patterns" begin
-    @test Trixi2Vtk.expand_filename_patterns(["/*"]) isa Vector{String}
+    mktemp() do path, _
+      patterns = [joinpath(dirname(path), "*")]
+      expanded = Trixi2Vtk.expand_filename_patterns(patterns)
+      @test basename(expanded[1]) == basename(path)
+    end
   end
 end
 
