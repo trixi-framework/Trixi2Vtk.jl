@@ -44,7 +44,7 @@ end
 
     @timed_testset "basic" begin
       test_trixi2vtk("solution_000000.h5", outdir,
-          hashes=[("solution_000000.vtu", "57c58480d8f99b7e9d365cb3fa71790db42de750")])
+          hashes=[("solution_000000.vtu", "81935b295d3bf5ba706ba49f6397272de4364c2a")])
 
       # Store output files as artifacts to facilitate debugging of failing tests
       outfiles = ("solution_000000.vtu",)

@@ -56,7 +56,7 @@ end
             format=:vti)
       else
         test_trixi2vtk("restart_000001.h5", outdir,
-            hashes=[("restart_000001.vti", "664f25ab018a373774b5aad69ad3f2f5a3b21649"),
+            hashes=[("restart_000001.vti", "49525c8f798f6a388218f92f624f80474471544f"),
                     ("restart_000001_celldata.vtu", "9b20ba10df0d2d0fbd15916e5da0ed72ade9890b")],
             format=:vti)
       end
@@ -114,7 +114,7 @@ end
 
     @timed_testset "basic" begin
       test_trixi2vtk("solution_000000.h5", outdir,
-          hashes=[("solution_000000.vtu", "0daedeea99d03d53b925ce5691bd7924abe88861")])
+          hashes=[("solution_000000.vtu", "acc03f295d2b7daee2cb0b4e29b90035c5e92bd7")])
 
       # Store output files as artifacts to facilitate debugging of failing tests
       outfiles = ("solution_000000.vtu",)
@@ -139,7 +139,7 @@ end
           hashes=[("solution_000000.vtu", "9050e4d141bf4099db907ef2c55768cff98a7291")])
       else
         test_trixi2vtk("solution_000000.h5", outdir,
-          hashes=[("solution_000000.vtu", "0aca9d5a7b112d0469fa76b215e6c2d48b038af4")])
+          hashes=[("solution_000000.vtu", "468b5bac95b1a1bbbfcd5e6519a8bd87763996e4")])
       end
 
       # Store output files as artifacts to facilitate debugging of failing tests
