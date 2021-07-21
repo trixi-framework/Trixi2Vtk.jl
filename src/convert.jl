@@ -301,7 +301,7 @@ function expand_filename_patterns(patterns)
     if startswith(pattern, '/') && !Sys.iswindows()
       # Glob.glob does not support absolute paths; this workaround should enable this at least on
       # non-Windows platforms
-      append!(filenames, glob(lstrip(pattern, '/')), "/")
+      append!(filenames, glob(lstrip(pattern, '/'), "/"))
     else
       append!(filenames, glob(pattern))
     end
