@@ -41,7 +41,13 @@ function trixi2vtk(filename::AbstractString...;
   end
   filenames = String[]
   for pattern in filename
-    append!(filenames, glob(pattern))
+    if startswith(pattern, '/') && !Sys.iswindows()
+      # Glob.glob does not support absolute paths; this workaround should enable this at least on
+      # non-Windows platforms
+      append!(filenames, glob(lstrip(pattern, '/')), "/")
+    else
+      append!(filenames, glob(pattern))
+    end
   end
   if isempty(filenames)
     error("no such file(s): ", join(filename, ", "))
