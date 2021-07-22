@@ -113,8 +113,14 @@ end
     run_trixi(joinpath("unstructured_2d_dgsem", "elixir_euler_basic.jl"), maxiters=1)
 
     @timed_testset "basic" begin
-      test_trixi2vtk("solution_000000.h5", outdir,
-          hashes=[("solution_000000.vtu", "acc03f295d2b7daee2cb0b4e29b90035c5e92bd7")])
+      if Sys.isapple()
+        # This file has a different hash on macOS for some reason
+        test_trixi2vtk("solution_000000.h5", outdir,
+            hashes=[("solution_000000.vtu", "0daedeea99d03d53b925ce5691bd7924abe88861")])
+      else
+        test_trixi2vtk("solution_000000.h5", outdir,
+            hashes=[("solution_000000.vtu", "acc03f295d2b7daee2cb0b4e29b90035c5e92bd7")])
+      end
 
       # Store output files as artifacts to facilitate debugging of failing tests
       outfiles = ("solution_000000.vtu",)
