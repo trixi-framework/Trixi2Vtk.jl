@@ -39,10 +39,7 @@ function trixi2vtk(filename::AbstractString...;
   if isempty(filename)
     error("no input file was provided")
   end
-  filenames = String[]
-  for pattern in filename
-    append!(filenames, glob(pattern))
-  end
+  filenames = expand_filename_patterns(filename)
   if isempty(filenames)
     error("no such file(s): ", join(filename, ", "))
   end
@@ -294,4 +291,20 @@ function add_celldata!(vtk_celldata, mesh::TreeMesh, verbose)
   end
 
   return vtk_celldata
+end
+
+
+function expand_filename_patterns(patterns)
+  filenames = String[]
+
+  for pattern in patterns
+    if startswith(pattern, '/')
+      # Glob.glob does not support absolute paths
+      append!(filenames, glob(relpath(pattern)))
+    else
+      append!(filenames, glob(pattern))
+    end
+  end
+
+  return filenames
 end
