@@ -298,10 +298,9 @@ function expand_filename_patterns(patterns)
   filenames = String[]
 
   for pattern in patterns
-    if startswith(pattern, '/') && !Sys.iswindows()
-      # Glob.glob does not support absolute paths; this workaround should enable this at least on
-      # non-Windows platforms
-      append!(filenames, glob(lstrip(pattern, '/'), "/"))
+    if startswith(pattern, '/')
+      # Glob.glob does not support absolute paths
+      append!(filenames, glob(relpath(pattern)))
     else
       append!(filenames, glob(pattern))
     end
