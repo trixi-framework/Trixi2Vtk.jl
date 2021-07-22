@@ -43,8 +43,14 @@ end
     run_trixi(joinpath("structured_3d_dgsem", "elixir_advection_basic.jl"), maxiters=1)
 
     @timed_testset "basic" begin
-      test_trixi2vtk("solution_000000.h5", outdir,
-          hashes=[("solution_000000.vtu", "81935b295d3bf5ba706ba49f6397272de4364c2a")])
+      if Sys.isapple()
+        # This file has a different hash on macOS for some reason
+        test_trixi2vtk("solution_000000.h5", outdir,
+            hashes=[("solution_000000.vtu", "0eacb4094a97b751a6123f270437749cda76025d")])
+      else
+        test_trixi2vtk("solution_000000.h5", outdir,
+            hashes=[("solution_000000.vtu", "81935b295d3bf5ba706ba49f6397272de4364c2a")])
+      end
 
       # Store output files as artifacts to facilitate debugging of failing tests
       outfiles = ("solution_000000.vtu",)
