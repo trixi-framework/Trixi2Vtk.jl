@@ -46,8 +46,8 @@ isdir(outdir) && rm(outdir, recursive=true)
 
   @timed_testset "expand_filename_patterns" begin
     mktemp() do path, _
-      patterns = [joinpath(dirname(path), "*")]
-      expanded = Trixi2Vtk.expand_filename_patterns(patterns)
+      # Test that absolute filepaths work
+      expanded = Trixi2Vtk.expand_filename_patterns([path])
       @test basename(expanded[1]) == basename(path)
     end
   end
