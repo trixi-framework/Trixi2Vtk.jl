@@ -4,7 +4,7 @@
 [![Build Status](https://github.com/trixi-framework/Trixi2Vtk.jl/workflows/CI/badge.svg)](https://github.com/trixi-framework/Trixi2Vtk.jl/actions?query=workflow%3ACI)
 [![Coveralls](https://coveralls.io/repos/github/trixi-framework/Trixi2Vtk.jl/badge.svg?branch=main)](https://coveralls.io/github/trixi-framework/Trixi2Vtk.jl?branch=main)
 [![License: MIT](https://img.shields.io/badge/License-MIT-success.svg)](https://opensource.org/licenses/MIT)
-[![GitHub commits since tagged version](https://img.shields.io/github/commits-since/trixi-framework/Trixi2Vtk.jl/v0.3.3.svg?style=social&logo=github)](https://github.com/trixi-framework/Trixi2Vtk.jl)
+[![GitHub commits since tagged version](https://img.shields.io/github/commits-since/trixi-framework/Trixi2Vtk.jl/v0.3.4.svg?style=social&logo=github)](https://github.com/trixi-framework/Trixi2Vtk.jl)
 
 With **Trixi2Vtk.jl** you can convert the HDF5-based output files created by
 [Trixi.jl](https://github.com/trixi-framework/Trixi.jl) (solution or restart
