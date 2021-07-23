@@ -10,7 +10,7 @@ for human readability.
 
 #### Added
 - Visualize solutions obtained on 2D/3D unstructured, curvilinear, adaptive meshes (`P4estMesh`)
-
+- Support absolute paths for input filenames
 
 #### Changed
 
