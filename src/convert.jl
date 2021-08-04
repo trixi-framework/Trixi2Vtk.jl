@@ -287,7 +287,7 @@ function add_celldata!(vtk_celldata, mesh::TreeMesh, verbose)
     verbose && println("| | element_ids...")
     @timeit "element_ids" vtk_celldata["element_ids"] = collect(1:length(leaf_cells))
     verbose && println("| | levels...")
-    @timeit "levels" vtk_celldata["levels"] = mesh.tree.levels
+    @timeit "levels" vtk_celldata["levels"] = mesh.tree.levels[leaf_cells]
   end
 
   return vtk_celldata

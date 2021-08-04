@@ -24,7 +24,7 @@ end
     @timed_testset "uniform mesh" begin
       test_trixi2vtk("solution_000000.h5", outdir,
           hashes=[("solution_000000.vtu", "6ab3aa525851187ee0839e1d670a254a66be4ad7"),
-                  ("solution_000000_celldata.vtu", "99c782d732a4d1f6764013c3fba2cdaddf3927ab")])
+                  ("solution_000000_celldata.vtu", "fdfee2d4200ecdad08067b37908412813016f4e7")])
 
       # Store output files as artifacts to facilitate debugging of failing tests
       outfiles = ("solution_000000.vtu", "solution_000000_celldata.vtu")
