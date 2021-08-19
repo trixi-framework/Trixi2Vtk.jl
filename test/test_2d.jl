@@ -101,7 +101,7 @@ end
     @timed_testset "waving flag (supersampling)" begin
       if Sys.isapple()
         # This file has a different hash on macOS for some reason
-        test_trixi2vtk("solution_000000.h5", outdir,
+        test_trixi2vtk("solution_000000.h5", outdir, nvisnodes=6,
             hashes=[("solution_000000.vtu", "c6d74ab831bf4b6de2ba8cf537b6653ad611cfe7")])
       else
         test_trixi2vtk("solution_000000.h5", outdir, nvisnodes=6,
