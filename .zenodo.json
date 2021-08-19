@@ -1,0 +1,19 @@
+{
+    "description": "Convert output files generated with Trixi.jl to VTK",
+    "license": "MIT",
+    "title": "Trixi2Vtk.jl",
+    "upload_type": "software",
+    "creators": [
+        {
+            "affiliation": "Department of Mathematics and Computer Science, University of Cologne, Germany",
+            "name": "Schlottke-Lakemper, Michael",
+            "orcid": "0000-0002-3195-2536"
+        },
+        {
+            "affiliation": "Applied Mathematics Münster, University of Münster, Germany",
+            "name": "Ranocha, Hendrik",
+            "orcid": "0000-0002-3456-2277"
+        }
+    ],
+    "access_right": "open"
+}
