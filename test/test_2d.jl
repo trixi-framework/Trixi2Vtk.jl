@@ -79,7 +79,7 @@ end
 
     @timed_testset "waving flag" begin
       test_trixi2vtk("solution_000000.h5", outdir,
-          hashes=[("solution_000000.vtu", "a93dbd393647627a861d890568e65598be0062f9")])
+          hashes=[("solution_000000.vtu", "564701ed0a9a90230f3a67f8bddd0616c818319b")])
 
       # Store output files as artifacts to facilitate debugging of failing tests
       outfiles = ("solution_000000.vtu",)
@@ -94,7 +94,7 @@ end
 
     @timed_testset "waving flag (supersampling)" begin
       test_trixi2vtk("solution_000000.h5", outdir, nvisnodes=6,
-          hashes=[("solution_000000.vtu", "c6d74ab831bf4b6de2ba8cf537b6653ad611cfe7")])
+          hashes=[("solution_000000.vtu", "ae8c059c110aaabe2ed7dcfa8516d336c15ba618")])
 
       # Store output files as artifacts to facilitate debugging of failing tests
       outfiles = ("solution_000000.vtu",)
