@@ -26,13 +26,13 @@ end
         # This test fails on Windows due to globbing not working
         test_trixi2vtk("solution_000000.h5", outdir,
             hashes=[("solution_000000.vtu", "1ec2c93c0c9c4f4992dea54afaf2a348ece0160e"),
-                    ("solution_000000_celldata.vtu", "9b20ba10df0d2d0fbd15916e5da0ed72ade9890b")])
+                    ("solution_000000_celldata.vtu", "e396c3ba63276347966d4264cf0f52d592221830")])
         outfiles = ("solution_000000.vtu", "solution_000000_celldata.vtu")
 
       else
         test_trixi2vtk("solution_00000*.h5", outdir,
             hashes=[("solution_000000.vtu", "1ec2c93c0c9c4f4992dea54afaf2a348ece0160e"),
-                    ("solution_000000_celldata.vtu", "9b20ba10df0d2d0fbd15916e5da0ed72ade9890b"),
+                    ("solution_000000_celldata.vtu", "e396c3ba63276347966d4264cf0f52d592221830"),
                     ("solution_00000.pvd", "7ba2f8f1927e90ebd4209aab890c58a20acf63f4"),
                     ("solution_00000_celldata.pvd", "448a7130a608ed9f7e4630033b9e1338b1403f7b")])
         outfiles = ("solution_000000.vtu", "solution_000000_celldata.vtu",
@@ -57,7 +57,7 @@ end
       else
         test_trixi2vtk("restart_000001.h5", outdir,
             hashes=[("restart_000001.vti", "49525c8f798f6a388218f92f624f80474471544f"),
-                    ("restart_000001_celldata.vtu", "9b20ba10df0d2d0fbd15916e5da0ed72ade9890b")],
+                    ("restart_000001_celldata.vtu", "e396c3ba63276347966d4264cf0f52d592221830")],
             format=:vti)
       end
 
@@ -78,8 +78,14 @@ end
     run_trixi(joinpath("structured_2d_dgsem", "elixir_advection_waving_flag.jl"), maxiters=1)
 
     @timed_testset "waving flag" begin
-      test_trixi2vtk("solution_000000.h5", outdir,
-          hashes=[("solution_000000.vtu", "a93dbd393647627a861d890568e65598be0062f9")])
+      if Sys.isapple()
+        # This file has a different hash on macOS for some reason
+        test_trixi2vtk("solution_000000.h5", outdir,
+            hashes=[("solution_000000.vtu", "a93dbd393647627a861d890568e65598be0062f9")])
+      else
+        test_trixi2vtk("solution_000000.h5", outdir,
+            hashes=[("solution_000000.vtu", "564701ed0a9a90230f3a67f8bddd0616c818319b")])
+      end
 
       # Store output files as artifacts to facilitate debugging of failing tests
       outfiles = ("solution_000000.vtu",)
@@ -93,8 +99,14 @@ end
     end
 
     @timed_testset "waving flag (supersampling)" begin
-      test_trixi2vtk("solution_000000.h5", outdir, nvisnodes=6,
-          hashes=[("solution_000000.vtu", "c6d74ab831bf4b6de2ba8cf537b6653ad611cfe7")])
+      if Sys.isapple()
+        # This file has a different hash on macOS for some reason
+        test_trixi2vtk("solution_000000.h5", outdir, nvisnodes=6,
+            hashes=[("solution_000000.vtu", "c6d74ab831bf4b6de2ba8cf537b6653ad611cfe7")])
+      else
+        test_trixi2vtk("solution_000000.h5", outdir, nvisnodes=6,
+            hashes=[("solution_000000.vtu", "ae8c059c110aaabe2ed7dcfa8516d336c15ba618")])
+      end
 
       # Store output files as artifacts to facilitate debugging of failing tests
       outfiles = ("solution_000000.vtu",)
