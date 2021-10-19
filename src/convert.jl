@@ -310,14 +310,14 @@ end
 
 
 function add_celldata!(vtk_celldata, mesh::P4estMesh, verbose)
-  # Create temporary storage for the tree_ids and levels
+  # Create temporary storage for the tree_ids and levels.
   tree_ids = zeros( Trixi.ncells(mesh) )
   cell_levels = zeros( Trixi.ncells(mesh) )
-  # Set global counters
+  # Set global counters.
   tree_counter = 1
   cell_counter = 1
   # Iterate through the p4est trees and each of their quadrants.
-  # Assigns the tree index values. Also, grab and assign the level value
+  # Assigns the tree index values. Also, grab and assign the level value.
   for tree in Trixi.unsafe_wrap_sc(Trixi.P4est.p4est_tree_t, mesh.p4est.trees)
     for quadrant in Trixi.unsafe_wrap_sc(Trixi.P4est.p4est_quadrant_t, tree.quadrants)
       tree_ids[cell_counter] = tree_counter
@@ -329,7 +329,7 @@ function add_celldata!(vtk_celldata, mesh::P4estMesh, verbose)
   @timeit "add data to VTK file" begin
     # Add tree/element data to celldata VTK file
     verbose && println("| | tree_ids...")
-    @timeit "tree_ids" vtk_celldata["tree_ids"] = tree_ids # collect(1:Trixi.ntrees(mesh))
+    @timeit "tree_ids" vtk_celldata["tree_ids"] = tree_ids
     verbose && println("| | element_ids...")
     @timeit "element_ids" vtk_celldata["element_ids"] = collect(1:Trixi.ncells(mesh))
     verbose && println("| | levels...")
