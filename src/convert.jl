@@ -20,8 +20,7 @@ Convert Trixi-generated output files to VTK files (VTU or VTI).
                          twice the number of DG nodes for TreeMesh).
                A value of `0` (zero) uses the number of nodes in the DG elements.
 - `save_celldata`: Boolean value to determine if cell-based data should be saved.
-                   (the default `nothing` is converted to `false`
-                   for `StructuredMesh`/`UnstructuredMesh2D` and `true` for `TreeMesh`)
+                   (default: `true`)
 
 # Examples
 ```julia
@@ -31,7 +30,7 @@ julia> trixi2vtk("out/solution_000*.h5")
 """
 function trixi2vtk(filename::AbstractString...;
                    format=:vtu, verbose=false, hide_progress=false, pvd=nothing,
-                   output_directory=".", nvisnodes=nothing, save_celldata=nothing)
+                   output_directory=".", nvisnodes=nothing, save_celldata=true)
   # Reset timer
   reset_timer!()
 
@@ -103,12 +102,6 @@ function trixi2vtk(filename::AbstractString...;
     # Read mesh
     verbose && println("| Reading mesh file...")
     @timeit "read mesh" mesh = Trixi.load_mesh_serial(meshfile; n_cells_max=0, RealT=Float64)
-
-    if save_celldata === nothing
-      # If no value for `save_celldata` is specified,
-      # use true for TreeMesh and false for StructuredMesh or UnstructuredMesh2D
-      save_celldata = isa(mesh, TreeMesh)
-    end
 
     # Read data only if it is a data file
     if is_datafile
@@ -288,6 +281,59 @@ function add_celldata!(vtk_celldata, mesh::TreeMesh, verbose)
     @timeit "element_ids" vtk_celldata["element_ids"] = collect(1:length(leaf_cells))
     verbose && println("| | levels...")
     @timeit "levels" vtk_celldata["levels"] = mesh.tree.levels[leaf_cells]
+  end
+
+  return vtk_celldata
+end
+
+
+function add_celldata!(vtk_celldata, mesh::StructuredMesh, verbose)
+  @timeit "add data to VTK file" begin
+    # Add element data to celldata VTK file
+    verbose && println("| | element_ids...")
+    @timeit "element_ids" vtk_celldata["element_ids"] = collect(1:prod(mesh.cells_per_dimension))
+  end
+
+  return vtk_celldata
+end
+
+
+function add_celldata!(vtk_celldata, mesh::UnstructuredMesh2D, verbose)
+  @timeit "add data to VTK file" begin
+    # Add element data to celldata VTK file
+    verbose && println("| | element_ids...")
+    @timeit "element_ids" vtk_celldata["element_ids"] = collect(1:length(mesh))
+  end
+
+  return vtk_celldata
+end
+
+
+function add_celldata!(vtk_celldata, mesh::P4estMesh, verbose)
+  # Create temporary storage for the tree_ids and levels
+  tree_ids = zeros( Trixi.ncells(mesh) )
+  cell_levels = zeros( Trixi.ncells(mesh) )
+  # Set global counters
+  tree_counter = 1
+  cell_counter = 1
+  # Iterate through the p4est trees and each of their quadrants.
+  # Assigns the tree index values. Also, grab and assign the level value
+  for tree in Trixi.unsafe_wrap_sc(Trixi.P4est.p4est_tree_t, mesh.p4est.trees)
+    for quadrant in Trixi.unsafe_wrap_sc(Trixi.P4est.p4est_quadrant_t, tree.quadrants)
+      tree_ids[cell_counter] = tree_counter
+      cell_levels[cell_counter] = quadrant.level
+      cell_counter += 1
+    end
+    tree_counter += 1
+  end
+  @timeit "add data to VTK file" begin
+    # Add tree/element data to celldata VTK file
+    verbose && println("| | tree_ids...")
+    @timeit "tree_ids" vtk_celldata["tree_ids"] = tree_ids # collect(1:Trixi.ntrees(mesh))
+    verbose && println("| | element_ids...")
+    @timeit "element_ids" vtk_celldata["element_ids"] = collect(1:Trixi.ncells(mesh))
+    verbose && println("| | levels...")
+    @timeit "levels" vtk_celldata["levels"] = cell_levels
   end
 
   return vtk_celldata

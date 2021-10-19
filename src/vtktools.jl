@@ -102,9 +102,15 @@ function build_vtk_grids(::Val{:vtu},
     end
   end
 
+  # Prepare VTK points and cells for celldata file
+  @timeit "prepare VTK cells (cell data)" begin
+    vtk_celldata_points, vtk_celldata_cells = calc_vtk_points_cells(node_coordinates)
+  end
+
   # Determine output file names
   base, _ = splitext(splitdir(filename)[2])
   vtk_filename = joinpath(output_directory, base)
+  vtk_celldata_filename = vtk_filename * "_celldata"
 
   # Open VTK files
   verbose && println("| Building VTK grid...")
@@ -114,8 +120,9 @@ function build_vtk_grids(::Val{:vtu},
   else
     vtk_nodedata = nothing
   end
-
-  vtk_celldata = nothing
+  @timeit "build VTK grid (cell data)" vtk_celldata = vtk_grid(vtk_celldata_filename,
+                                                                vtk_celldata_points,
+                                                                vtk_celldata_cells)
 
   return vtk_nodedata, vtk_celldata
 end
