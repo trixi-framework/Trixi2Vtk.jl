@@ -46,10 +46,10 @@ end
       if Sys.isapple()
         # This file has a different hash on macOS for some reason
         test_trixi2vtk("solution_000000.h5", outdir,
-            hashes=[("solution_000000.vtu", "0eacb4094a97b751a6123f270437749cda76025d")])
+            hashes=[("solution_000000.vtu", "58e07f981fd6c005ea17e47054bd509c2c66d771")])
       else
         test_trixi2vtk("solution_000000.h5", outdir,
-            hashes=[("solution_000000.vtu", "81935b295d3bf5ba706ba49f6397272de4364c2a")])
+            hashes=[("solution_000000.vtu", "58e07f981fd6c005ea17e47054bd509c2c66d771")])
       end
 
       # Store output files as artifacts to facilitate debugging of failing tests
@@ -72,10 +72,10 @@ end
       if Sys.isapple()
         # This file has a different hash on macOS for some reason
         test_trixi2vtk("solution_000000.h5", outdir,
-          hashes=[("solution_000000.vtu", "08121c3246caf55e9fa30a2e09ca0e2d6711c16d")])
+          hashes=[("solution_000000.vtu", "fe0f45809ef6f3f0c1b7f5331198585f406923c9")])
       else
         test_trixi2vtk("solution_000000.h5", outdir,
-          hashes=[("solution_000000.vtu", "d1249f2839589b22774d699bda1bfabde7b8c571")])
+          hashes=[("solution_000000.vtu", "0fa5a099378d153aa3a1bb7dcf3559ea5d6bf9c5")])
       end
 
       # Store output files as artifacts to facilitate debugging of failing tests
