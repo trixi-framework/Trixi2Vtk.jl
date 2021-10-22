@@ -33,8 +33,8 @@ end
         test_trixi2vtk("solution_00000*.h5", outdir,
             hashes=[("solution_000000.vtu", "1ec2c93c0c9c4f4992dea54afaf2a348ece0160e"),
                     ("solution_000000_celldata.vtu", "e396c3ba63276347966d4264cf0f52d592221830"),
-                    ("solution_00000.pvd", "7ba2f8f1927e90ebd4209aab890c58a20acf63f4"),
-                    ("solution_00000_celldata.pvd", "448a7130a608ed9f7e4630033b9e1338b1403f7b")])
+                    ("solution_00000.pvd", "b9e6742dc2b397b14d8d3964e90dcfadea5d98cb"),
+                    ("solution_00000_celldata.pvd", "c12004714a980581450cd4bad16a2541c5ec8f26")])
         outfiles = ("solution_000000.vtu", "solution_000000_celldata.vtu",
                     "solution_00000.pvd", "solution_00000_celldata.pvd")
       end
@@ -56,7 +56,7 @@ end
             format=:vti)
       else
         test_trixi2vtk("restart_000001.h5", outdir,
-            hashes=[("restart_000001.vti", "49525c8f798f6a388218f92f624f80474471544f"),
+            hashes=[("restart_000001.vti", "9ade067c71f1f6492242a8aa215bd0d633caf9bc"),
                     ("restart_000001_celldata.vtu", "e396c3ba63276347966d4264cf0f52d592221830")],
             format=:vti)
       end
@@ -148,7 +148,7 @@ end
 
   @testset "P4estMesh" begin
     isdir(outdir) && rm(outdir, recursive=true)
-    run_trixi(joinpath("p4est_2d_dgsem", "elixir_euler_source_terms_nonperiodic.jl"), initial_refinement_level=1, maxiters=1)
+    run_trixi(joinpath("p4est_2d_dgsem", "elixir_euler_source_terms_nonconforming_unstructured_flag.jl"), initial_refinement_level=0, maxiters=1)
 
     @timed_testset "nonperiodic" begin
       if Sys.isapple()
