@@ -61,8 +61,8 @@ For further information on how to use Trixi with Trixi2Vtk, please refer to the
 Trixi2Vtk is maintained by the
 [Trixi authors](https://github.com/trixi-framework/Trixi.jl/blob/main/AUTHORS.md).
 Its principal developers are
-[Michael Schlottke-Lakemper](https://www.mi.uni-koeln.de/NumSim/schlottke-lakemper)
-(University of Cologne, Germany) and [Hendrik Ranocha](https://ranocha.de)
+[Michael Schlottke-Lakemper](https://www.hlrs.de/people/schlottke-lakemper)
+(University of Stuttgart, Germany) and [Hendrik Ranocha](https://ranocha.de)
 (University of Hamburg, Germany).
 
 
