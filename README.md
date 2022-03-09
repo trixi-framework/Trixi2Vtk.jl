@@ -63,7 +63,7 @@ Trixi2Vtk is maintained by the
 Its principal developers are
 [Michael Schlottke-Lakemper](https://www.mi.uni-koeln.de/NumSim/schlottke-lakemper)
 (University of Cologne, Germany) and [Hendrik Ranocha](https://ranocha.de)
-(University of Münster, Germany).
+(University of Hamburg, Germany).
 
 
 ## License and contributing
