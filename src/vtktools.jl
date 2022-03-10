@@ -71,9 +71,9 @@ function build_vtk_grids(::Val{:vti}, mesh, n_visnodes, verbose,
     Nx = Ny = resolution + 1
     dx = dy = length_level_0/resolution
     origin = center_level_0 .- 1/2 * length_level_0
-    spacing = [dx, dy]
+    spacing = (dx, dy)
     @timeit "build VTK grid (node data)" vtk_nodedata = vtk_grid(vtk_filename, Nx, Ny,
-                                                        origin=origin,
+                                                        origin=tuple(origin...),
                                                         spacing=spacing)
   else
     vtk_nodedata = nothing
