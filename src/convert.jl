@@ -107,7 +107,7 @@ function trixi2vtk(filename::AbstractString...;
     if is_datafile
       verbose && println("| Reading data file...")
       @timeit "read data" (labels, data, n_elements, n_nodes,
-                           element_variables, time) = read_datafile(filename)
+                           element_variables, node_variables, time) = read_datafile(filename)
 
       assert_cells_elements(n_elements, mesh, filename, meshfile)
 
@@ -153,6 +153,16 @@ function trixi2vtk(filename::AbstractString...;
           for (label, variable) in element_variables
             verbose && println("| | Element variable: $label...")
             @timeit label vtk_celldata[label] = variable
+          end
+
+          # Add node variables
+          for (label, variable) in node_variables
+            verbose && println("| | Node variable: $label...")
+            @timeit "interpolate cell data" interpolated_cell_data = interpolate_cell_data(Val(format),
+                                                                        variable, mesh,
+                                                                        n_visnodes, verbose)
+            # Add the "interpolated" cell_data to celldata, not node_data
+            @timeit label vtk_nodedata[label] = interpolated_cell_data
           end
         end
       end
