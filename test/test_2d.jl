@@ -38,6 +38,7 @@ end
         outfiles = ("solution_000000.vtu", "solution_000000_celldata.vtu",
                     "solution_00000.pvd", "solution_00000_celldata.pvd")
       end
+      @test_nowarn trixi2vtk("mesh.h5")
 
       # Store output files as artifacts to facilitate debugging of failing tests
       testname = "2d-tree-mesh-uniform-mesh"
@@ -86,6 +87,7 @@ end
         test_trixi2vtk("solution_000000.h5", outdir,
             hashes=[("solution_000000.vtu", "564701ed0a9a90230f3a67f8bddd0616c818319b")])
       end
+      @test_nowarn trixi2vtk("mesh.h5")
 
       # Store output files as artifacts to facilitate debugging of failing tests
       outfiles = ("solution_000000.vtu",)
@@ -133,6 +135,7 @@ end
         test_trixi2vtk("solution_000000.h5", outdir,
             hashes=[("solution_000000.vtu", "acc03f295d2b7daee2cb0b4e29b90035c5e92bd7")])
       end
+      @test_nowarn trixi2vtk("mesh.h5")
 
       # Store output files as artifacts to facilitate debugging of failing tests
       outfiles = ("solution_000000.vtu",)
@@ -159,6 +162,7 @@ end
         test_trixi2vtk("solution_000000.h5", outdir,
           hashes=[("solution_000000.vtu", "a80aadb353ce6ec40baa1b94d278c480f17d0419")])
       end
+      @test_nowarn trixi2vtk("mesh.h5")
 
       # Store output files as artifacts to facilitate debugging of failing tests
       outfiles = ("solution_000000.vtu",)
