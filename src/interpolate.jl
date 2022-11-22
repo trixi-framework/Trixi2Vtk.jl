@@ -8,7 +8,7 @@ function interpolate_data(::Val{:vtu}, input_data, mesh::TreeMesh, n_visnodes, v
   return raw2interpolated(input_data, nodes_out)
 end
 
-function interpolate_cell_data(::Val{:vtu}, input_data, mesh::TreeMesh, n_visnodes, verbose)
+function interpolate_cell_data(::Val{:vtu}, input_data, mesh::Union{TreeMesh, StructuredMesh}, n_visnodes, verbose)
   # Calculate equidistant output nodes (visualization nodes)
   nodes_out = collect(range(-1, 1, length=n_visnodes))
 
