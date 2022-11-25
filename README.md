@@ -18,7 +18,7 @@ generate publication-quality visualizations. Trixi2Vtk is part of the
 ## Installation
 If you have not yet installed Julia, please [follow the instructions for your
 operating system](https://julialang.org/downloads/platform/). Trixi2Vtk works
-with Julia v1.5.
+with Julia v1.7.
 
 Trixi2Vtk is a registered Julia package. Hence, you can install it by executing
 the following commands in the Julia REPL:
