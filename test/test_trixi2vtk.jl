@@ -1,14 +1,12 @@
-using Test: @test_nowarn, @test, @testset
+using Test: @test_nowarn, @test, @testset, @test_skip
 using SHA
 using Trixi
 using Trixi2Vtk
 
-# pathof(Trixi) returns /path/to/Trixi/src/Trixi.jl, dirname gives the parent directory
-const EXAMPLES_DIR = joinpath(pathof(Trixi) |> dirname |> dirname, "examples")
 
-
-function run_trixi(elixir; parameters...)
-  @test_nowarn trixi_include(joinpath(EXAMPLES_DIR, elixir); parameters...)
+function run_trixi(elixir; kwargs...)
+  # evaluate examples in the scope of the module they're called from
+  trixi_include(@__MODULE__, elixir; kwargs...)
 end
 
 

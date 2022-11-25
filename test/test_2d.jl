@@ -19,7 +19,7 @@ end
 @testset "2D" begin
   @testset "TreeMesh" begin
     isdir(outdir) && rm(outdir, recursive=true)
-    run_trixi(joinpath("tree_2d_dgsem", "elixir_advection_extended.jl"), maxiters=1)
+    run_trixi(joinpath(examples_dir(), "tree_2d_dgsem", "elixir_advection_extended.jl"), maxiters=1)
 
     @timed_testset "uniform mesh" begin
       if Sys.iswindows()
@@ -75,7 +75,7 @@ end
 
   @testset "StructuredMesh" begin
     isdir(outdir) && rm(outdir, recursive=true)
-    run_trixi(joinpath("structured_2d_dgsem", "elixir_advection_waving_flag.jl"), maxiters=1)
+    run_trixi(joinpath(examples_dir(), "structured_2d_dgsem", "elixir_advection_waving_flag.jl"), maxiters=1)
 
     @timed_testset "waving flag" begin
       if Sys.isapple()
@@ -122,7 +122,7 @@ end
 
   @testset "UnstructuredMesh2D" begin
     isdir(outdir) && rm(outdir, recursive=true)
-    run_trixi(joinpath("unstructured_2d_dgsem", "elixir_euler_basic.jl"), maxiters=1)
+    run_trixi(joinpath(examples_dir(), "unstructured_2d_dgsem", "elixir_euler_basic.jl"), maxiters=1)
 
     @timed_testset "basic" begin
       if Sys.isapple()
@@ -148,7 +148,7 @@ end
 
   @testset "P4estMesh" begin
     isdir(outdir) && rm(outdir, recursive=true)
-    run_trixi(joinpath("p4est_2d_dgsem", "elixir_euler_source_terms_nonconforming_unstructured_flag.jl"), initial_refinement_level=0, maxiters=1)
+    run_trixi(joinpath(examples_dir(), "p4est_2d_dgsem", "elixir_euler_source_terms_nonconforming_unstructured_flag.jl"), initial_refinement_level=0, maxiters=1)
 
     @timed_testset "nonperiodic" begin
       if Sys.isapple()
