@@ -115,7 +115,7 @@ function trixi2vtk(filename::AbstractString...;
       n_visnodes = get_default_nvisnodes_solution(nvisnodes, n_nodes, mesh)
     else
       # If file is a mesh file, do not interpolate data as detailed
-      n_visnodes = get_default_nvisnodes_mesh(nvisnodes, n_nodes, mesh)
+      n_visnodes = get_default_nvisnodes_mesh(nvisnodes, mesh)
     end
 
     # Create output directory if it does not exist
@@ -272,24 +272,20 @@ end
 
 
 # default number of visualization nodes if only the mesh should be visualized
-function get_default_nvisnodes_mesh(nvisnodes, n_nodes, mesh::TreeMesh)
+function get_default_nvisnodes_mesh(nvisnodes, mesh::TreeMesh)
   if nvisnodes === nothing
-    # for a mesh file, we do not need to interpolate
+    # for a Cartesian mesh, we do not need to interpolate
     return 1
-  elseif nvisnodes == 0
-    return n_nodes
   else
     return nvisnodes
   end
 end
 
-function get_default_nvisnodes_mesh(nvisnodes, n_nodes,
+function get_default_nvisnodes_mesh(nvisnodes,
                                     mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh})
   if nvisnodes === nothing
     # for curved meshes, we need to get at least the vertices
     return 2
-  elseif nvisnodes == 0
-    return n_nodes
   else
     return nvisnodes
   end
