@@ -112,6 +112,9 @@ function trixi2vtk(filename::AbstractString...;
     verbose && println("| Reading mesh file...")
     @timeit "read mesh" mesh = Trixi.load_mesh_serial(meshfile; n_cells_max=0, RealT=Float64)
 
+    # Create an empty `node_set` such that converting a mesh.h5 file also works
+    node_set = []
+
     # Read data only if it is a data file
     if is_datafile
       verbose && println("| Reading data file...")
@@ -121,12 +124,25 @@ function trixi2vtk(filename::AbstractString...;
       assert_cells_elements(n_elements, mesh, filename, meshfile)
 
       # Determine resolution for data interpolation
-      n_visnodes = get_default_nvisnodes(nvisnodes, n_nodes, mesh)
+      n_visnodes = get_default_nvisnodes_solution(nvisnodes, n_nodes, mesh)
 
       # If a user requests that no reinterpolation is done automatically set
       # `n_visnodes` to be the same as the number of nodes in the raw data.
       if !reinterpolate
         n_visnodes = n_nodes
+      end
+
+      # Check if the raw data is uniform (finite difference) or not (dg)
+      # and create the corresponding node set for reinterpolation / copying.
+      if (reinterpolate & !data_is_uniform) | (!reinterpolate & data_is_uniform)
+        # (1) Default settings; presumably the most common
+        # (2) Finite difference data
+        node_set = collect(range(-1, 1, length=n_visnodes))
+      elseif !reinterpolate & !data_is_uniform
+        # raw data is on a set of LGL nodes
+        node_set, _ = gauss_lobatto_nodes_weights(n_visnodes)
+      else # reinterpolate & data_is_uniform
+        error("uniform data should not be reinterpolated! Set reinterpolate=false and try again.")
       end
     else
       # If file is a mesh file, do not interpolate data as detailed
@@ -135,19 +151,6 @@ function trixi2vtk(filename::AbstractString...;
 
     # Create output directory if it does not exist
     mkpath(output_directory)
-
-    # Check if the raw data is uniform (finite difference) or not (dg)
-    # and create the corresponding node set for reinterpolation / copying.
-    if (reinterpolate & !data_is_uniform) | (!reinterpolate & data_is_uniform)
-      # (1) Default settings; presumably the most common
-      # (2) Finite difference data
-      node_set = collect(range(-1, 1, length=n_visnodes))
-    elseif !reinterpolate & !data_is_uniform
-      # raw data is on a set of LGL nodes
-      node_set, _ = gauss_lobatto_nodes_weights(n_visnodes)
-    else # reinterpolate & data_is_uniform
-      error("uniform data should not be reinterpolated! Set reinterpolate=false and try again.")
-    end
 
     # Build VTK grids
     vtk_nodedata, vtk_celldata = build_vtk_grids(Val(format), mesh, node_set, n_visnodes, verbose,
