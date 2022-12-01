@@ -15,6 +15,9 @@ if !isdir(artifacts_dir)
   mkdir(artifacts_dir)
 end
 
+# Point to the directory containing the reference VTK files
+# TODO: Not sure how to get these files
+refdir = joinpath(pathof(Trixi2Vtk) |> dirname |> dirname, "test", "reference_files")
 
 @testset "2D" begin
   @testset "TreeMesh" begin
@@ -50,28 +53,29 @@ end
       end
     end
 
-    @timed_testset "uniform mesh with vti output" begin
-      if Sys.isapple()
-        # This test fails on MacOS due to differing binary VTI files (even though the contents match)
-        test_trixi2vtk("restart_000001.h5", outdir,
-            format=:vti)
-      else
-        test_trixi2vtk("restart_000001.h5", outdir,
-            hashes=[("restart_000001.vti", "9ade067c71f1f6492242a8aa215bd0d633caf9bc"),
-                    ("restart_000001_celldata.vtu", "e396c3ba63276347966d4264cf0f52d592221830")],
-            format=:vti)
-      end
+    # TODO: Decide whether or not to keep VTI format available.
+    # @timed_testset "uniform mesh with vti output" begin
+    #   if Sys.isapple()
+    #     # This test fails on MacOS due to differing binary VTI files (even though the contents match)
+    #     test_trixi2vtk("restart_000001.h5", outdir,
+    #         format=:vti)
+    #   else
+    #     test_trixi2vtk("restart_000001.h5", outdir,
+    #         hashes=[("restart_000001.vti", "9ade067c71f1f6492242a8aa215bd0d633caf9bc"),
+    #                 ("restart_000001_celldata.vtu", "e396c3ba63276347966d4264cf0f52d592221830")],
+    #         format=:vti)
+    #   end
 
-      # Store output files as artifacts to facilitate debugging of failing tests
-      outfiles = ("restart_000001.vti", "restart_000001_celldata.vtu")
-      testname = "2d-tree-mesh-uniform-mesh-with-vti-output"
-      for outfile in outfiles
-        println("Copying '", abspath(joinpath(outdir, outfile)),
-                "' to '", abspath(joinpath(artifacts_dir, testname * "-" * outfile)),
-                "'...")
-        cp(joinpath(outdir, outfile), joinpath(artifacts_dir, testname * "-" * outfile), force=true)
-      end
-    end
+    #   # Store output files as artifacts to facilitate debugging of failing tests
+    #   outfiles = ("restart_000001.vti", "restart_000001_celldata.vtu")
+    #   testname = "2d-tree-mesh-uniform-mesh-with-vti-output"
+    #   for outfile in outfiles
+    #     println("Copying '", abspath(joinpath(outdir, outfile)),
+    #             "' to '", abspath(joinpath(artifacts_dir, testname * "-" * outfile)),
+    #             "'...")
+    #     cp(joinpath(outdir, outfile), joinpath(artifacts_dir, testname * "-" * outfile), force=true)
+    #   end
+    # end
   end
 
   @testset "StructuredMesh" begin
@@ -173,6 +177,49 @@ end
                 "'...")
         cp(joinpath(outdir, outfile), joinpath(artifacts_dir, testname * "-" * outfile), force=true)
       end
+    end
+  end
+end
+
+@testset "new 2D tests" begin
+  @testset "TreeMesh with DGSEM" begin
+    isdir(outdir) && rm(outdir, recursive=true)
+    run_trixi(joinpath(examples_dir(), "tree_2d_dgsem", "elixir_euler_sedov_blast_wave.jl"), maxiters=10)
+
+    ##
+    # Create and test output with reinterpolation (default options: `reinterpolate=true, data_is_uniform=false`)
+    @test_nowarn trixi2vtk(joinpath(outdir, "solution_000010.h5"), output_directory=outdir)
+
+    # Note, this filename is always the same for all tests in this block
+    out_file = joinpath(outdir,"solution_000010.vtu")
+
+    ref_file = joinpath(refdir, "2d", "treemesh", "dgsem_sedov_amr_reinterp_10.vtu")
+    compare_cell_info(out_file, ref_file)
+
+    ##
+    # Create and test output without reinterpolation on LGL nodes
+    @test_nowarn trixi2vtk(joinpath(outdir, "solution_000010.h5"), output_directory=outdir, reinterpolate=false)
+
+    ref_file = joinpath(refdir, "2d", "treemesh", "dgsem_sedov_amr_no_reinterp_10.vtu")
+    compare_point_info(out_file, ref_file)
+
+    ##
+    # Create and test output without reinterpolation on uniform nodes
+    # OBS! This is a dummy test just to exercise code. The resulting plot will look weird.
+    @test_nowarn trixi2vtk(joinpath(outdir, "solution_000010.h5"), output_directory=outdir, reinterpolate=false, data_is_uniform=true)
+
+    ref_file = joinpath(refdir, "2d", "treemesh", "dgsem_sedov_amr_no_reinterp_uniform_10.vtu")
+    compare_point_info(out_file, ref_file)
+
+    ##
+    # Purposely request a bad configuration and check that an error message gets thrown
+    let err = nothing
+      try
+        trixi2vtk(joinpath(outdir, "solution_000010.h5"), output_directory=outdir, data_is_uniform=true)
+      catch err
+      end
+      @test err isa Exception
+      @test sprint(showerror, err) == "uniform data should not be reinterpolated! Set reinterpolate=false and try again."
     end
   end
 end
