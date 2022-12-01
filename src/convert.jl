@@ -2,7 +2,7 @@
     trixi2vtk(filename::AbstractString...;
               format=:vtu, verbose=false, hide_progress=false, pvd=nothing,
               output_directory=".", nvisnodes=nothing, save_celldata=true,
-              do_reinterpolation=true, data_is_uniform=false)
+              reinterpolate=true, data_is_uniform=false)
 
 Convert Trixi-generated output files to VTK files (VTU or VTI).
 
@@ -22,10 +22,10 @@ Convert Trixi-generated output files to VTK files (VTU or VTI).
                A value of `0` (zero) uses the number of nodes in the DG elements.
 - `save_celldata`: Boolean value to determine if cell-based data should be saved.
                    (default: `true`)
-- `do_reinterpolation`: Boolean value to determine if data should be reinterpolated
-                        onto uniform points. When `false` the raw data at the compute nodes
-                        is copied into the appropriate format.
-                        (default: `true`)
+- `reinterpolate`: Boolean value to determine if data should be reinterpolated
+                   onto uniform points. When `false` the raw data at the compute nodes
+                   is copied into the appropriate format.
+                   (default: `true`)
 - `data_is_uniform`: Boolean to indicate if the data to be converted is from a finite difference
                      method on a uniform grid of points.
                      (default: `false`)
@@ -39,7 +39,7 @@ julia> trixi2vtk("out/solution_000*.h5")
 function trixi2vtk(filename::AbstractString...;
                    format=:vtu, verbose=false, hide_progress=false, pvd=nothing,
                    output_directory=".", nvisnodes=nothing, save_celldata=true,
-                   do_reinterpolation=true, data_is_uniform=false)
+                   reinterpolate=true, data_is_uniform=false)
   # Reset timer
   reset_timer!()
 
@@ -122,6 +122,12 @@ function trixi2vtk(filename::AbstractString...;
 
       # Determine resolution for data interpolation
       n_visnodes = get_default_nvisnodes(nvisnodes, n_nodes, mesh)
+
+      # If a user requests that no reinterpolation is done automatically set
+      # `n_visnodes` to be the same as the number of nodes in the raw data.
+      if !reinterpolate
+        n_visnodes = n_nodes
+      end
     else
       # If file is a mesh file, do not interpolate data
       n_visnodes = 1
@@ -130,31 +136,38 @@ function trixi2vtk(filename::AbstractString...;
     # Create output directory if it does not exist
     mkpath(output_directory)
 
+    # Check if the raw data is uniform (finite difference) or not (dg)
+    # and create the corresponding node set for reinterpolation / copying.
+    if (reinterpolate & !data_is_uniform) | (!reinterpolate & data_is_uniform)
+      # (1) Default settings; presumably the most common
+      # (2) Finite difference data
+      node_set = collect(range(-1, 1, length=n_visnodes))
+    elseif !reinterpolate & !data_is_uniform
+      # raw data is on a set of LGL nodes
+      node_set, _ = gauss_lobatto_nodes_weights(n_visnodes)
+    else # reinterpolate & data_is_uniform
+      error("uniform data should not be reinterpolated! Set reinterpolate=false and try again.")
+    end
+
     # Build VTK grids
-    vtk_nodedata, vtk_celldata = build_vtk_grids(Val(format), mesh, n_visnodes, verbose,
-                                                 output_directory, is_datafile, filename)
+    vtk_nodedata, vtk_celldata = build_vtk_grids(Val(format), mesh, node_set, n_visnodes, verbose,
+                                                 output_directory, is_datafile, filename, Val(reinterpolate))
 
     # Interpolate data
     if is_datafile
       verbose && println("| Interpolating data...")
-      if do_reinterpolation
+      if reinterpolate
         @timeit "interpolate data" interpolated_data = interpolate_data(Val(format),
                                                                         data, mesh,
                                                                         n_visnodes, verbose)
-      else # Convert the raw solution data
-        # Check to ensure that `n_visnodes` will equal the `n_nodes`
-        if n_visnodes != n_nodes
-          error("For copying raw data set nvisnodes=0 and try again")
-        end
-        # Check if the raw data is uniform (finite difference) or not (dg)
-        if data_is_uniform
-          nodes_input = collect(range(-1, 1, length=n_visnodes))
-        else # raw data is on a set of LGL nodes
-          nodes_input, _ = gauss_lobatto_nodes_weights(n_visnodes)
-        end
-        @timeit "interpolate data" interpolated_data = copy_raw_data(Val(format),
-                                                                     data, mesh,
-                                                                     nodes_input, verbose)
+      else # Copy the raw solution data; only works for `vtu` format
+        # Extract data shape information
+        ndims_ = ndims(data) - 2
+        n_variables = length(labels)
+        # Save raw data as one 1D array for each variable
+        @timeit "interpolate data" interpolated_data = reshape(data,
+                                                               n_visnodes^ndims_ * n_elements,
+                                                               n_variables)
       end
     end
 

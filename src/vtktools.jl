@@ -1,6 +1,7 @@
-# Create and return VTK grids that are ready to be filled with data (vtu version)
-function build_vtk_grids(::Val{:vtu}, mesh::TreeMesh, n_visnodes, verbose,
-                         output_directory, is_datafile, filename)
+# Create and return VTK grids on enriched uniform nodes
+# that are ready to be filled with reinterpolated data (vtu version)
+function build_vtk_grids(::Val{:vtu}, mesh::TreeMesh, nodes, n_visnodes, verbose,
+                         output_directory, is_datafile, filename, reinterpolate::Val{true})
   coordinates, levels, center_level_0, length_level_0 = extract_mesh_information(mesh)
 
   # Extract number of spatial dimensions
@@ -43,18 +44,27 @@ function build_vtk_grids(::Val{:vtu}, mesh::TreeMesh, n_visnodes, verbose,
 end
 
 
-# Create and return VTK grids that are ready to be filled with data (vti version)
-function build_vtk_grids(::Val{:vti}, mesh, n_visnodes, verbose,
-                         output_directory, is_datafile, filename)
+# Create and return VTK grids with nodes on which the raw was created
+# ready to be filled with raw data (vtu version)
+function build_vtk_grids(::Val{:vtu}, mesh::TreeMesh,
+                         nodes, n_visnodes, verbose,
+                         output_directory, is_datafile, filename, reinterpolate::Val{false})
 
-  coordinates, levels, center_level_0, length_level_0 = extract_mesh_information(mesh)
+  @timeit "prepare coordinate information" node_coordinates = calc_node_coordinates(mesh, nodes, n_visnodes)
 
-  # Extract number of spatial dimensions
-  ndims_ = size(coordinates, 1)
+  # Calculate VTK points and cells
+  verbose && println("| Preparing VTK cells...")
+  if is_datafile
+    @timeit "prepare VTK cells (node data)" begin
+      vtk_points, vtk_cells = calc_vtk_points_cells(node_coordinates)
+    end
+  end
 
   # Prepare VTK points and cells for celldata file
-  @timeit "prepare VTK cells" vtk_celldata_points, vtk_celldata_cells = calc_vtk_points_cells(
-      Val(ndims_), coordinates, levels, center_level_0, length_level_0, 1)
+  @timeit "prepare VTK cells (cell data)" begin
+    vtk_celldata_points, vtk_celldata_cells = calc_vtk_points_cells(node_coordinates)
+  end
+
 
   # Determine output file names
   base, _ = splitext(splitdir(filename)[2])
@@ -64,35 +74,74 @@ function build_vtk_grids(::Val{:vti}, mesh, n_visnodes, verbose,
   # Open VTK files
   verbose && println("| Building VTK grid...")
   if is_datafile
-    # Determine level-wise resolution
-    max_level = maximum(levels)
-    resolution = n_visnodes * 2^max_level
-
-    Nx = Ny = resolution + 1
-    dx = dy = length_level_0/resolution
-    origin = center_level_0 .- 1/2 * length_level_0
-    spacing = (dx, dy)
-    @timeit "build VTK grid (node data)" vtk_nodedata = vtk_grid(vtk_filename, Nx, Ny,
-                                                        origin=tuple(origin...),
-                                                        spacing=spacing)
+    @timeit "build VTK grid (node data)" vtk_nodedata = vtk_grid(vtk_filename, vtk_points,
+                                                                 vtk_cells)
   else
     vtk_nodedata = nothing
   end
   @timeit "build VTK grid (cell data)" vtk_celldata = vtk_grid(vtk_celldata_filename,
-                                                      vtk_celldata_points,
-                                                      vtk_celldata_cells)
+                                                                vtk_celldata_points,
+                                                                vtk_celldata_cells)
 
   return vtk_nodedata, vtk_celldata
 end
 
 
+# # Create and return VTK grids on enriched uniform nodes
+# # that are ready to be filled with reinterpolated data (vti version)
+# # TODO: Decide whether or not to keep this format. Appears to be broken...
+# #       OBS! Requires modifications to structure and docs here as well as the Trixi docs
+# function build_vtk_grids(::Val{:vti}, mesh, nodes, n_visnodes, verbose,
+#                          output_directory, is_datafile, filename, reinterpolate::Val{true})
+
+#   coordinates, levels, center_level_0, length_level_0 = extract_mesh_information(mesh)
+
+#   # Extract number of spatial dimensions
+#   ndims_ = size(coordinates, 1)
+
+#   # Prepare VTK points and cells for celldata file
+#   @timeit "prepare VTK cells" vtk_celldata_points, vtk_celldata_cells = calc_vtk_points_cells(
+#       Val(ndims_), coordinates, levels, center_level_0, length_level_0, 1)
+
+#   # Determine output file names
+#   base, _ = splitext(splitdir(filename)[2])
+#   vtk_filename = joinpath(output_directory, base)
+#   vtk_celldata_filename = vtk_filename * "_celldata"
+
+#   # Open VTK files
+#   verbose && println("| Building VTK grid...")
+#   if is_datafile
+#     # Determine level-wise resolution
+#     max_level = maximum(levels)
+#     resolution = n_visnodes * 2^max_level
+
+#     Nx = Ny = resolution + 1
+#     dx = dy = length_level_0/resolution
+#     origin = center_level_0 .- 1/2 * length_level_0
+#     spacing = (dx, dy)
+#     @timeit "build VTK grid (node data)" vtk_nodedata = vtk_grid(vtk_filename, Nx, Ny,
+#                                                         origin=tuple(origin...),
+#                                                         spacing=spacing)
+#   else
+#     vtk_nodedata = nothing
+#   end
+#   @timeit "build VTK grid (cell data)" vtk_celldata = vtk_grid(vtk_celldata_filename,
+#                                                       vtk_celldata_points,
+#                                                       vtk_celldata_cells)
+
+#   return vtk_nodedata, vtk_celldata
+# end
+
+
 # Create and return VTK grids that are ready to be filled with data
-# (StructuredMesh/UnstructuredMesh2D/P4estMesh version)
+# (StructuredMesh/UnstructuredMesh2D/P4estMesh version).
+# Routine is agnostic with respect to reinterpolation.
 function build_vtk_grids(::Val{:vtu},
                          mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh},
-                         n_visnodes, verbose, output_directory, is_datafile, filename)
+                         nodes, n_visnodes, verbose, output_directory, is_datafile, filename,
+                         reinterpolate::Union{Val{true}, Val{false}})
 
-  @timeit "prepare coordinate information" node_coordinates = calc_node_coordinates(mesh, n_visnodes)
+  @timeit "prepare coordinate information" node_coordinates = calc_node_coordinates(mesh, nodes, n_visnodes)
 
   # Calculate VTK points and cells
   verbose && println("| Preparing VTK cells...")
@@ -128,12 +177,24 @@ function build_vtk_grids(::Val{:vtu},
 end
 
 
-function calc_node_coordinates(mesh::StructuredMesh, n_visnodes)
+function calc_node_coordinates(mesh::TreeMesh, nodes, n_visnodes)
+  coordinates, levels, _, _ = extract_mesh_information(mesh)
+
+  # Extract number of spatial dimensions
+  ndims_ = size(coordinates, 1)
+  n_elements = length(levels)
+
+  node_coordinates = Array{Float64, ndims_+2}(undef, ndims_, ntuple(_ -> n_visnodes, ndims_)..., n_elements)
+
+  return calc_node_coordinates!(node_coordinates, nodes, mesh)
+end
+
+
+function calc_node_coordinates(mesh::StructuredMesh, nodes, n_visnodes)
   # Extract number of spatial dimensions
   ndims_ = ndims(mesh)
   n_elements = prod(size(mesh))
 
-  nodes = range(-1, 1, length=n_visnodes)
   f(args...; kwargs...) = Base.invokelatest(mesh.mapping, args...; kwargs...)
 
   node_coordinates = Array{Float64, ndims_+2}(undef, ndims_, ntuple(_ -> n_visnodes, ndims_)..., n_elements)
@@ -142,13 +203,10 @@ function calc_node_coordinates(mesh::StructuredMesh, n_visnodes)
 end
 
 
-function calc_node_coordinates(mesh::UnstructuredMesh2D, n_visnodes)
+function calc_node_coordinates(mesh::UnstructuredMesh2D, nodes, n_visnodes)
   # Extract number of spatial dimensions
   ndims_ = ndims(mesh)
   n_elements = length(mesh)
-
-  # get the uniform nodes
-  nodes = range(-1, 1, length=n_visnodes)
 
   # intialize the container for the node coordinates
   node_coordinates = Array{Float64, ndims_+2}(undef, ndims_, ntuple(_ -> n_visnodes, ndims_)..., n_elements)
@@ -173,17 +231,105 @@ function calc_node_coordinates(mesh::UnstructuredMesh2D, n_visnodes)
 end
 
 
-function calc_node_coordinates(mesh::P4estMesh, n_visnodes)
+function calc_node_coordinates(mesh::P4estMesh, nodes, n_visnodes)
   # Extract number of spatial dimensions
   ndims_ = ndims(mesh)
-
-  nodes = range(-1, 1, length=n_visnodes)
 
   node_coordinates = Array{Float64, ndims_+2}(undef, ndims_,
                                               ntuple(_ -> n_visnodes, ndims_)...,
                                               Trixi.ncells(mesh))
 
   return Trixi.calc_node_coordinates!(node_coordinates, mesh, nodes)
+end
+
+
+# Calculation of the node coordinates for `TreeMesh` in 2D
+function calc_node_coordinates!(node_coordinates::AbstractArray{<:Any, 4}, nodes, mesh)
+  _, levels, _, length_level_0 = extract_mesh_information(mesh)
+
+  # Extract number of spatial dimensions
+  n_elements = length(levels)
+
+  # Set the reference length
+  # TODO: Is this ever different from 2?
+  reference_length = 2.0
+  # Compute the offset of the midpoint of the 1D reference interval
+  # (its difference from zero)
+  reference_offset = first(nodes) + reference_length / 2
+
+  # Recompute the cell ids
+  cell_ids = Trixi.local_leaf_cells(mesh.tree)
+
+  # Calculate inverse Jacobian and node coordinates
+  for element in 1:n_elements
+    # Get cell id
+    cell_id = cell_ids[element]
+
+    # Get cell length
+    dx = length_level_0 / 2^levels[element]
+
+    # Get Jacobian value
+    jacobian = dx / reference_length
+
+    # Calculate node coordinates
+    # Note that the `tree_coordinates` are the midpoints of the cells.
+    # Hence, we need to add an offset for `nodes` with a midpoint
+    # different from zero.
+    for j in eachindex(nodes), i in eachindex(nodes)
+      node_coordinates[1, i, j, element] = (
+          mesh.tree.coordinates[1, cell_id] + jacobian * (nodes[i] - reference_offset))
+      node_coordinates[2, i, j, element] = (
+          mesh.tree.coordinates[2, cell_id] + jacobian * (nodes[j] - reference_offset))
+    end
+  end
+
+  return node_coordinates
+end
+
+
+# Calculation of the node coordinates for `TreeMesh` in 3D
+function calc_node_coordinates!(node_coordinates::AbstractArray{<:Any, 5}, nodes, mesh)
+  _, levels, _, length_level_0 = extract_mesh_information(mesh)
+
+  # Extract number of spatial dimensions
+  n_elements = length(levels)
+
+  # Set the reference length
+  # TODO: Is this ever different from 2?
+  reference_length = 2.0
+  # Compute the offset of the midpoint of the 1D reference interval
+  # (its difference from zero)
+  reference_offset = first(nodes) + reference_length / 2
+
+  # Recompute the cell ids
+  cell_ids = Trixi.local_leaf_cells(mesh.tree)
+
+  # Calculate inverse Jacobian and node coordinates
+  for element in 1:n_elements
+    # Get cell id
+    cell_id = cell_ids[element]
+
+    # Get cell length
+    dx = length_level_0 / 2^levels[element]
+
+    # Get Jacobian value
+    jacobian = dx / reference_length
+
+    # Calculate node coordinates
+    # Note that the `tree_coordinates` are the midpoints of the cells.
+    # Hence, we need to add an offset for `nodes` with a midpoint
+    # different from zero.
+    for k in eachindex(nodes), j in eachindex(nodes), i in eachindex(nodes)
+      node_coordinates[1, i, j, k, element] = (
+          mesh.tree.coordinates[1, cell_id] + jacobian * (nodes[i] - reference_offset))
+      node_coordinates[2, i, j, k, element] = (
+          mesh.tree.coordinates[2, cell_id] + jacobian * (nodes[j] - reference_offset))
+      node_coordinates[3, i, j, k, element] = (
+          mesh.tree.coordinates[3, cell_id] + jacobian * (nodes[k] - reference_offset))
+    end
+  end
+
+  return node_coordinates
 end
 
 
