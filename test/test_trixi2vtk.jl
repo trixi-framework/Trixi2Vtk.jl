@@ -91,10 +91,6 @@ function compare_point_info(out_filename, ref_filename; atol=500*eps(), rtol=sqr
 end
 
 
-# function compare_mesh_info(out_filename, ref_filename; atol=500*eps(), rtol=sqrt(eps()))
-
-# end
-
 """
     @timed_testset "name of the testset" #= code to test #=
 
