@@ -12,7 +12,7 @@ end
 
 
 """
-    get_reference_file(filename; head="main", output_directory=".", force=false)
+    get_reference_file(filename, remotename; head="main", output_directory=".", force=false)
 
 Retrieve an reference file from the
 [`Trixi2Vtk_reference_files` repository](https://github.com/trixi-framework/Trixi2Vtk_reference_files)
