@@ -131,22 +131,22 @@ function trixi2vtk(filename::AbstractString...;
       if !reinterpolate
         n_visnodes = n_nodes
       end
-
-      # Check if the raw data is uniform (finite difference) or not (dg)
-      # and create the corresponding node set for reinterpolation / copying.
-      if (reinterpolate & !data_is_uniform) | (!reinterpolate & data_is_uniform)
-        # (1) Default settings; presumably the most common
-        # (2) Finite difference data
-        node_set = collect(range(-1, 1, length=n_visnodes))
-      elseif !reinterpolate & !data_is_uniform
-        # raw data is on a set of LGL nodes
-        node_set, _ = gauss_lobatto_nodes_weights(n_visnodes)
-      else # reinterpolate & data_is_uniform
-        error("uniform data should not be reinterpolated! Set reinterpolate=false and try again.")
-      end
     else
       # If file is a mesh file, do not interpolate data as detailed
       n_visnodes = get_default_nvisnodes_mesh(nvisnodes, mesh)
+    end
+
+    # Check if the raw data is uniform (finite difference) or not (dg)
+    # and create the corresponding node set for reinterpolation / copying.
+    if (reinterpolate & !data_is_uniform) | (!reinterpolate & data_is_uniform)
+      # (1) Default settings; presumably the most common
+      # (2) Finite difference data
+      node_set = range(-1, 1, length=n_visnodes)
+    elseif !reinterpolate & !data_is_uniform
+      # raw data is on a set of LGL nodes
+      node_set, _ = gauss_lobatto_nodes_weights(n_visnodes)
+    else # reinterpolate & data_is_uniform
+      error("uniform data should not be reinterpolated! Set reinterpolate=false and try again.")
     end
 
     # Create output directory if it does not exist
@@ -313,19 +313,10 @@ end
 
 
 # default number of visualization nodes if only the mesh should be visualized
-function get_default_nvisnodes_mesh(nvisnodes, mesh::TreeMesh)
-  if nvisnodes === nothing
-    # for a Cartesian mesh, we do not need to interpolate
-    return 1
-  else
-    return nvisnodes
-  end
-end
-
 function get_default_nvisnodes_mesh(nvisnodes,
-                                    mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh})
+                                    mesh::Union{TreeMesh, StructuredMesh, UnstructuredMesh2D, P4estMesh})
   if nvisnodes === nothing
-    # for curved meshes, we need to get at least the vertices
+    # we need to get at least the vertices
     return 2
   else
     return nvisnodes
