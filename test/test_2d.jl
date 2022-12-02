@@ -221,7 +221,8 @@ isdir(outdir) && rm(outdir, recursive=true)
   end
 end
 
-# Clean up afterwards: delete Trixi output directory
+# Clean up afterwards: delete Trixi output directory and reference file directory
 @test_nowarn rm(outdir, recursive=true)
+@test_nowarn rm(TEST_REFERENCE_DIR, recursive=true)
 
 end
