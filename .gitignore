@@ -11,7 +11,7 @@
 *.ogv
 **/Manifest.toml
 out/
-artifacts/
+reference_files/
 docs/build
 public/
 coverage/
