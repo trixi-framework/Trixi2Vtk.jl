@@ -9,15 +9,6 @@ include("test_trixi2vtk.jl")
 outdir = "out"
 isdir(outdir) && rm(outdir, recursive=true)
 
-# Create artifacts directory where all files that should be preserved will be stored
-artifacts_dir = joinpath(pathof(Trixi2Vtk) |> dirname |> dirname, "artifacts")
-if !isdir(artifacts_dir)
-  mkdir(artifacts_dir)
-end
-
-# Point to the directory containing the reference VTK files
-# TODO: Not sure how to get these files
-refdir = joinpath(pathof(Trixi2Vtk) |> dirname |> dirname, "test", "reference_files")
 
 @testset "2D" begin
   @testset "TreeMesh" begin
@@ -27,14 +18,16 @@ refdir = joinpath(pathof(Trixi2Vtk) |> dirname |> dirname, "test", "reference_fi
     @timed_testset "mesh data" begin
       @test_nowarn trixi2vtk(joinpath(outdir, "mesh_000010.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"mesh_000010_celldata.vtu")
-      ref_file = joinpath(refdir, "2d", "treemesh", "dgsem_sedov_amr_mesh_10.vtu")
+      ref_file = get_test_reference_file("dgsem_sedov_amr_mesh_10.vtu",
+                                         joinpath("2d", "treemesh", "dgsem_sedov_amr_mesh_10.vtu"))
       compare_cell_info(out_file, ref_file)
     end
 
     @timed_testset "solution celldata" begin
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000010.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"solution_000010_celldata.vtu")
-      ref_file = joinpath(refdir, "2d", "treemesh", "dgsem_sedov_amr_celldata_10.vtu")
+      ref_file = get_test_reference_file("dgsem_sedov_amr_celldata_10.vtu",
+                                         joinpath("2d", "treemesh", "dgsem_sedov_amr_celldata_10.vtu"))
       compare_cell_info(out_file, ref_file)
     end
 
@@ -42,7 +35,8 @@ refdir = joinpath(pathof(Trixi2Vtk) |> dirname |> dirname, "test", "reference_fi
       # Create and test output with reinterpolation (default options: `reinterpolate=true, data_is_uniform=false`)
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000010.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"solution_000010.vtu")
-      ref_file = joinpath(refdir, "2d", "treemesh", "dgsem_sedov_amr_reinterp_10.vtu")
+      ref_file = get_test_reference_file("dgsem_sedov_amr_reinterp_10.vtu",
+                                         joinpath("2d", "treemesh", "dgsem_sedov_amr_reinterp_10.vtu"))
       compare_cell_info(out_file, ref_file)
     end
 
@@ -50,7 +44,8 @@ refdir = joinpath(pathof(Trixi2Vtk) |> dirname |> dirname, "test", "reference_fi
       # Create and test output without reinterpolation on LGL nodes
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000010.h5"), output_directory=outdir, reinterpolate=false)
       out_file = joinpath(outdir,"solution_000010.vtu")
-      ref_file = joinpath(refdir, "2d", "treemesh", "dgsem_sedov_amr_no_reinterp_10.vtu")
+      ref_file = get_test_reference_file("dgsem_sedov_amr_no_reinterp_10.vtu",
+                                         joinpath("2d", "treemesh", "dgsem_sedov_amr_no_reinterp_10.vtu"))
       compare_point_info(out_file, ref_file)
     end
 
@@ -59,7 +54,8 @@ refdir = joinpath(pathof(Trixi2Vtk) |> dirname |> dirname, "test", "reference_fi
       # OBS! This is a dummy test just to exercise code. The resulting plot will look weird.
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000010.h5"), output_directory=outdir, reinterpolate=false, data_is_uniform=true)
       out_file = joinpath(outdir,"solution_000010.vtu")
-      ref_file = joinpath(refdir, "2d", "treemesh", "dgsem_sedov_amr_no_reinterp_uniform_10.vtu")
+      ref_file = get_test_reference_file("dgsem_sedov_amr_no_reinterp_uniform_10.vtu",
+                                         joinpath("2d", "treemesh", "dgsem_sedov_amr_no_reinterp_uniform_10.vtu"))
       compare_point_info(out_file, ref_file)
     end
 
@@ -84,14 +80,16 @@ refdir = joinpath(pathof(Trixi2Vtk) |> dirname |> dirname, "test", "reference_fi
     @timed_testset "mesh data" begin
       @test_nowarn trixi2vtk(joinpath(outdir, "mesh.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"mesh_celldata.vtu")
-      ref_file = joinpath(refdir, "2d", "structuredmesh", "dgsem_adv_mesh_01.vtu")
+      ref_file = get_test_reference_file("dgsem_adv_mesh_01.vtu",
+                                         joinpath("2d", "structuredmesh", "dgsem_adv_mesh_01.vtu"))
       compare_cell_info(out_file, ref_file)
     end
 
     @timed_testset "solution celldata" begin
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"solution_000001_celldata.vtu")
-      ref_file = joinpath(refdir, "2d", "structuredmesh", "dgsem_adv_celldata_01.vtu")
+      ref_file = get_test_reference_file("dgsem_adv_celldata_01.vtu",
+                                         joinpath("2d", "structuredmesh", "dgsem_adv_celldata_01.vtu"))
       compare_cell_info(out_file, ref_file)
     end
 
@@ -99,7 +97,8 @@ refdir = joinpath(pathof(Trixi2Vtk) |> dirname |> dirname, "test", "reference_fi
       # Create and test output with reinterpolation (default options: `reinterpolate=true, data_is_uniform=false`)
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"solution_000001.vtu")
-      ref_file = joinpath(refdir, "2d", "structuredmesh", "dgsem_adv_reinterp_01.vtu")
+      ref_file = get_test_reference_file("dgsem_adv_reinterp_01.vtu",
+                                         joinpath("2d", "structuredmesh", "dgsem_adv_reinterp_01.vtu"))
       compare_point_info(out_file, ref_file)
     end
 
@@ -107,7 +106,8 @@ refdir = joinpath(pathof(Trixi2Vtk) |> dirname |> dirname, "test", "reference_fi
       # Create and test output without reinterpolation on LGL nodes
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir, reinterpolate=false)
       out_file = joinpath(outdir,"solution_000001.vtu")
-      ref_file = joinpath(refdir, "2d", "structuredmesh", "dgsem_adv_no_reinterp_01.vtu")
+      ref_file = get_test_reference_file("dgsem_adv_no_reinterp_01.vtu",
+                                         joinpath("2d", "structuredmesh", "dgsem_adv_no_reinterp_01.vtu"))
       compare_point_info(out_file, ref_file)
     end
 
@@ -116,7 +116,8 @@ refdir = joinpath(pathof(Trixi2Vtk) |> dirname |> dirname, "test", "reference_fi
       # OBS! This is a dummy test just to exercise code. The resulting plot will look weird.
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir, reinterpolate=false, data_is_uniform=true)
       out_file = joinpath(outdir,"solution_000001.vtu")
-      ref_file = joinpath(refdir, "2d", "structuredmesh", "dgsem_adv_no_reinterp_uniform_01.vtu")
+      ref_file = get_test_reference_file("dgsem_adv_no_reinterp_uniform_01.vtu",
+                                         joinpath("2d", "structuredmesh", "dgsem_adv_no_reinterp_uniform_01.vtu"))
       compare_point_info(out_file, ref_file)
     end
   end
@@ -128,14 +129,16 @@ refdir = joinpath(pathof(Trixi2Vtk) |> dirname |> dirname, "test", "reference_fi
     @timed_testset "mesh data" begin
       @test_nowarn trixi2vtk(joinpath(outdir, "mesh.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"mesh_celldata.vtu")
-      ref_file = joinpath(refdir, "2d", "unstructuredmesh", "dgsem_swe_mesh_01.vtu")
+      ref_file = get_test_reference_file("dgsem_swe_mesh_01.vtu",
+                                         joinpath("2d", "unstructuredmesh", "dgsem_swe_mesh_01.vtu"))
       compare_cell_info(out_file, ref_file)
     end
 
     @timed_testset "solution celldata" begin
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"solution_000001_celldata.vtu")
-      ref_file = joinpath(refdir, "2d", "unstructuredmesh", "dgsem_swe_celldata_01.vtu")
+      ref_file = get_test_reference_file("dgsem_swe_celldata_01.vtu",
+                                         joinpath("2d", "unstructuredmesh", "dgsem_swe_celldata_01.vtu"))
       compare_cell_info(out_file, ref_file)
     end
 
@@ -143,7 +146,8 @@ refdir = joinpath(pathof(Trixi2Vtk) |> dirname |> dirname, "test", "reference_fi
       # Create and test output with reinterpolation (default options: `reinterpolate=true, data_is_uniform=false`)
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"solution_000001.vtu")
-      ref_file = joinpath(refdir, "2d", "unstructuredmesh", "dgsem_swe_reinterp_01.vtu")
+      ref_file = get_test_reference_file("dgsem_swe_reinterp_01.vtu",
+                                         joinpath("2d", "unstructuredmesh", "dgsem_swe_reinterp_01.vtu"))
       compare_point_info(out_file, ref_file)
     end
 
@@ -151,7 +155,8 @@ refdir = joinpath(pathof(Trixi2Vtk) |> dirname |> dirname, "test", "reference_fi
       # Create and test output without reinterpolation on LGL nodes
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir, reinterpolate=false)
       out_file = joinpath(outdir,"solution_000001.vtu")
-      ref_file = joinpath(refdir, "2d", "unstructuredmesh", "dgsem_swe_no_reinterp_01.vtu")
+      ref_file = get_test_reference_file("dgsem_swe_no_reinterp_01.vtu",
+                                         joinpath("2d", "unstructuredmesh", "dgsem_swe_no_reinterp_01.vtu"))
       compare_point_info(out_file, ref_file)
     end
 
@@ -160,7 +165,8 @@ refdir = joinpath(pathof(Trixi2Vtk) |> dirname |> dirname, "test", "reference_fi
       # OBS! This is a dummy test just to exercise code. The resulting plot will look weird.
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir, reinterpolate=false, data_is_uniform=true)
       out_file = joinpath(outdir,"solution_000001.vtu")
-      ref_file = joinpath(refdir, "2d", "unstructuredmesh", "dgsem_swe_no_reinterp_uniform_01.vtu")
+      ref_file = get_test_reference_file("dgsem_swe_no_reinterp_uniform_01.vtu",
+                                         joinpath("2d", "unstructuredmesh", "dgsem_swe_no_reinterp_uniform_01.vtu"))
       compare_point_info(out_file, ref_file)
     end
   end
@@ -172,14 +178,16 @@ refdir = joinpath(pathof(Trixi2Vtk) |> dirname |> dirname, "test", "reference_fi
     @timed_testset "mesh data" begin
       @test_nowarn trixi2vtk(joinpath(outdir, "mesh_000005.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"mesh_000005_celldata.vtu")
-      ref_file = joinpath(refdir, "2d", "p4estmesh", "dgsem_rotor_amr_mesh_05.vtu")
+      ref_file = get_test_reference_file("dgsem_rotor_amr_mesh_05.vtu",
+                                         joinpath("2d", "p4estmesh", "dgsem_rotor_amr_mesh_05.vtu"))
       compare_cell_info(out_file, ref_file)
     end
 
     @timed_testset "solution celldata" begin
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000005.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"solution_000005_celldata.vtu")
-      ref_file = joinpath(refdir, "2d", "p4estmesh", "dgsem_rotor_amr_celldata_05.vtu")
+      ref_file = get_test_reference_file("dgsem_rotor_amr_celldata_05.vtu",
+                                         joinpath("2d", "p4estmesh", "dgsem_rotor_amr_celldata_05.vtu"))
       compare_cell_info(out_file, ref_file)
     end
 
@@ -187,7 +195,8 @@ refdir = joinpath(pathof(Trixi2Vtk) |> dirname |> dirname, "test", "reference_fi
       # Create and test output with reinterpolation (default options: `reinterpolate=true, data_is_uniform=false`)
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000005.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"solution_000005.vtu")
-      ref_file = joinpath(refdir, "2d", "p4estmesh", "dgsem_rotor_amr_reinterp_05.vtu")
+      ref_file = get_test_reference_file("dgsem_rotor_amr_reinterp_05.vtu",
+                                         joinpath("2d", "p4estmesh", "dgsem_rotor_amr_reinterp_05.vtu"))
       compare_point_info(out_file, ref_file)
     end
 
@@ -195,7 +204,8 @@ refdir = joinpath(pathof(Trixi2Vtk) |> dirname |> dirname, "test", "reference_fi
       # Create and test output without reinterpolation on LGL nodes
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000005.h5"), output_directory=outdir, reinterpolate=false)
       out_file = joinpath(outdir,"solution_000005.vtu")
-      ref_file = joinpath(refdir, "2d", "p4estmesh", "dgsem_rotor_amr_no_reinterp_05.vtu")
+      ref_file = get_test_reference_file("dgsem_rotor_amr_no_reinterp_05.vtu",
+                                         joinpath("2d", "p4estmesh", "dgsem_rotor_amr_no_reinterp_05.vtu"))
       compare_point_info(out_file, ref_file)
     end
 
@@ -204,7 +214,8 @@ refdir = joinpath(pathof(Trixi2Vtk) |> dirname |> dirname, "test", "reference_fi
       # OBS! This is a dummy test just to exercise code. The resulting plot will look weird.
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000005.h5"), output_directory=outdir, reinterpolate=false, data_is_uniform=true)
       out_file = joinpath(outdir,"solution_000005.vtu")
-      ref_file = joinpath(refdir, "2d", "p4estmesh", "dgsem_rotor_amr_no_reinterp_uniform_05.vtu")
+      ref_file = get_test_reference_file("dgsem_rotor_amr_no_reinterp_uniform_05.vtu",
+                                         joinpath("2d", "p4estmesh", "dgsem_rotor_amr_no_reinterp_uniform_05.vtu"))
       compare_point_info(out_file, ref_file)
     end
   end
