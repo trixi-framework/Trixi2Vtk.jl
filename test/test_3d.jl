@@ -18,44 +18,47 @@ isdir(outdir) && rm(outdir, recursive=true)
     @timed_testset "mesh data" begin
       @test_nowarn trixi2vtk(joinpath(outdir, "mesh_000004.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"mesh_000004_celldata.vtu")
-      ref_file = get_test_reference_file("dgsem_blob_amr_mesh_04.vtu",
-                                         joinpath("3d", "treemesh", "dgsem_blob_amr_mesh_04.vtu"))
+      remote_filename = joinpath("3d", "treemesh", "dgsem_blob_amr_mesh_04.vtu")
+      ref_file = get_test_reference_file("dgsem_blob_amr_mesh_04.vtu", remote_filename)
       compare_cell_info(out_file, ref_file)
     end
 
     @timed_testset "solution celldata" begin
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000004.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"solution_000004_celldata.vtu")
-      ref_file = get_test_reference_file("dgsem_blob_amr_celldata_04.vtu",
-                                         joinpath("3d", "treemesh", "dgsem_blob_amr_celldata_04.vtu"))
+      remote_filename = joinpath("3d", "treemesh", "dgsem_blob_amr_celldata_04.vtu")
+      ref_file = get_test_reference_file("dgsem_blob_amr_celldata_04.vtu", remote_filename)
       compare_cell_info(out_file, ref_file)
     end
 
     @timed_testset "reinterpolate with nonuniform data" begin
+      rm(joinpath(outdir, "solution_000004.vtu")) # delete existing output file
       # Create and test output with reinterpolation (default options: `reinterpolate=true, data_is_uniform=false`)
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000004.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"solution_000004.vtu")
-      ref_file = get_test_reference_file("dgsem_blob_amr_reinterp_04.vtu",
-                                         joinpath("3d", "treemesh", "dgsem_blob_amr_reinterp_04.vtu"))
+      remote_filename = joinpath("3d", "treemesh", "dgsem_blob_amr_reinterp_04.vtu")
+      ref_file = get_test_reference_file("dgsem_blob_amr_reinterp_04.vtu", remote_filename)
       compare_cell_info(out_file, ref_file)
     end
 
     @timed_testset "do not reinterpolate with nonuniform data" begin
+      rm(joinpath(outdir, "solution_000004.vtu")) # delete existing output file
       # Create and test output without reinterpolation on LGL nodes
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000004.h5"), output_directory=outdir, reinterpolate=false)
       out_file = joinpath(outdir,"solution_000004.vtu")
-      ref_file = get_test_reference_file("dgsem_blob_amr_no_reinterp_04.vtu",
-                                         joinpath("3d", "treemesh", "dgsem_blob_amr_no_reinterp_04.vtu"))
+      remote_filename = joinpath("3d", "treemesh", "dgsem_blob_amr_no_reinterp_04.vtu")
+      ref_file = get_test_reference_file("dgsem_blob_amr_no_reinterp_04.vtu", remote_filename)
       compare_point_info(out_file, ref_file)
     end
 
     @timed_testset "do not reinterpolate with uniform data" begin
+      rm(joinpath(outdir, "solution_000004.vtu")) # delete existing output file
       # Create and test output without reinterpolation on uniform nodes
       # OBS! This is a dummy test just to exercise code. The resulting plot will look weird.
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000004.h5"), output_directory=outdir, reinterpolate=false, data_is_uniform=true)
       out_file = joinpath(outdir,"solution_000004.vtu")
-      ref_file = get_test_reference_file("dgsem_blob_amr_no_reinterp_uniform_04.vtu",
-                                         joinpath("3d", "treemesh", "dgsem_blob_amr_no_reinterp_uniform_04.vtu"))
+      remote_filename = joinpath("3d", "treemesh", "dgsem_blob_amr_no_reinterp_uniform_04.vtu")
+      ref_file = get_test_reference_file("dgsem_blob_amr_no_reinterp_uniform_04.vtu", remote_filename)
       compare_point_info(out_file, ref_file)
     end
   end
@@ -67,44 +70,47 @@ isdir(outdir) && rm(outdir, recursive=true)
     @timed_testset "mesh data" begin
       @test_nowarn trixi2vtk(joinpath(outdir, "mesh.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"mesh_celldata.vtu")
-      ref_file = get_test_reference_file("dgsem_adv_mesh_01.vtu",
-                                         joinpath("3d", "structuredmesh", "dgsem_adv_mesh_01.vtu"))
+      remote_filename = joinpath("3d", "structuredmesh", "dgsem_adv_mesh_01.vtu")
+      ref_file = get_test_reference_file("dgsem_adv_mesh_01.vtu", remote_filename)
       compare_cell_info(out_file, ref_file)
     end
 
     @timed_testset "solution celldata" begin
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"solution_000001_celldata.vtu")
-      ref_file = get_test_reference_file("dgsem_adv_celldata_01.vtu",
-                                         joinpath("3d", "structuredmesh", "dgsem_adv_celldata_01.vtu"))
+      remote_filename = joinpath("3d", "structuredmesh", "dgsem_adv_celldata_01.vtu")
+      ref_file = get_test_reference_file("dgsem_adv_celldata_01.vtu", remote_filename)
       compare_cell_info(out_file, ref_file)
     end
 
     @timed_testset "reinterpolate with nonuniform data" begin
+      rm(joinpath(outdir, "solution_000001.vtu")) # delete existing output file
       # Create and test output with reinterpolation (default options: `reinterpolate=true, data_is_uniform=false`)
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"solution_000001.vtu")
-      ref_file = get_test_reference_file("dgsem_adv_reinterp_01.vtu",
-                                         joinpath("3d", "structuredmesh", "dgsem_adv_reinterp_01.vtu"))
+      remote_filename = joinpath("3d", "structuredmesh", "dgsem_adv_reinterp_01.vtu")
+      ref_file = get_test_reference_file("dgsem_adv_reinterp_01.vtu", remote_filename)
       compare_point_info(out_file, ref_file)
     end
 
     @timed_testset "do not reinterpolate with nonuniform data" begin
+      rm(joinpath(outdir, "solution_000001.vtu")) # delete existing output file
       # Create and test output without reinterpolation on LGL nodes
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir, reinterpolate=false)
       out_file = joinpath(outdir,"solution_000001.vtu")
-      ref_file = get_test_reference_file("dgsem_adv_no_reinterp_01.vtu",
-                                         joinpath("3d", "structuredmesh", "dgsem_adv_no_reinterp_01.vtu"))
+      remote_filename = joinpath("3d", "structuredmesh", "dgsem_adv_no_reinterp_01.vtu")
+      ref_file = get_test_reference_file("dgsem_adv_no_reinterp_01.vtu", remote_filename)
       compare_point_info(out_file, ref_file)
     end
 
     @timed_testset "do not reinterpolate with uniform data" begin
+      rm(joinpath(outdir, "solution_000001.vtu")) # delete existing output file
       # Create and test output without reinterpolation on uniform nodes
       # OBS! This is a dummy test just to exercise code. The resulting plot will look weird.
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir, reinterpolate=false, data_is_uniform=true)
       out_file = joinpath(outdir,"solution_000001.vtu")
-      ref_file = get_test_reference_file("dgsem_adv_no_reinterp_uniform_01.vtu",
-                                         joinpath("3d", "structuredmesh", "dgsem_adv_no_reinterp_uniform_01.vtu"))
+      remote_filename = joinpath("3d", "structuredmesh", "dgsem_adv_no_reinterp_uniform_01.vtu")
+      ref_file = get_test_reference_file("dgsem_adv_no_reinterp_uniform_01.vtu", remote_filename)
       compare_point_info(out_file, ref_file)
     end
   end
@@ -116,44 +122,47 @@ isdir(outdir) && rm(outdir, recursive=true)
     @timed_testset "mesh data" begin
       @test_nowarn trixi2vtk(joinpath(outdir, "mesh.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"mesh_celldata.vtu")
-      ref_file = get_test_reference_file("dgsem_adv_sphere_mesh_02.vtu",
-                                         joinpath("3d", "p4estmesh", "dgsem_adv_sphere_mesh_02.vtu"))
+      remote_filename = joinpath("3d", "p4estmesh", "dgsem_adv_sphere_mesh_02.vtu")
+      ref_file = get_test_reference_file("dgsem_adv_sphere_mesh_02.vtu", remote_filename)
       compare_cell_info(out_file, ref_file)
     end
 
     @timed_testset "solution celldata" begin
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000002.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"solution_000002_celldata.vtu")
-      ref_file = get_test_reference_file("dgsem_adv_sphere_celldata_02.vtu",
-                                         joinpath("3d", "p4estmesh", "dgsem_adv_sphere_celldata_02.vtu"))
+      remote_filename = joinpath("3d", "p4estmesh", "dgsem_adv_sphere_celldata_02.vtu")
+      ref_file = get_test_reference_file("dgsem_adv_sphere_celldata_02.vtu", remote_filename)
       compare_cell_info(out_file, ref_file)
     end
 
     @timed_testset "reinterpolate with nonuniform data" begin
+      rm(joinpath(outdir, "solution_000002.vtu")) # delete existing output file
       # Create and test output with reinterpolation (default options: `reinterpolate=true, data_is_uniform=false`)
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000002.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"solution_000002.vtu")
-      ref_file = get_test_reference_file("dgsem_adv_sphere_reinterp_02.vtu",
-                                         joinpath("3d", "p4estmesh", "dgsem_adv_sphere_reinterp_02.vtu"))
+      remote_filename = joinpath("3d", "p4estmesh", "dgsem_adv_sphere_reinterp_02.vtu")
+      ref_file = get_test_reference_file("dgsem_adv_sphere_reinterp_02.vtu", remote_filename)
       compare_point_info(out_file, ref_file)
     end
 
     @timed_testset "do not reinterpolate with nonuniform data" begin
+      rm(joinpath(outdir, "solution_000002.vtu")) # delete existing output file
       # Create and test output without reinterpolation on LGL nodes
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000002.h5"), output_directory=outdir, reinterpolate=false)
       out_file = joinpath(outdir,"solution_000002.vtu")
-      ref_file = get_test_reference_file("dgsem_adv_sphere_no_reinterp_02.vtu",
-                                         joinpath("3d", "p4estmesh", "dgsem_adv_sphere_no_reinterp_02.vtu"))
+      remote_filename = joinpath("3d", "p4estmesh", "dgsem_adv_sphere_no_reinterp_02.vtu")
+      ref_file = get_test_reference_file("dgsem_adv_sphere_no_reinterp_02.vtu", remote_filename)
       compare_point_info(out_file, ref_file)
     end
 
     @timed_testset "do not reinterpolate with uniform data" begin
+      rm(joinpath(outdir, "solution_000002.vtu")) # delete existing output file
       # Create and test output without reinterpolation on uniform nodes
       # OBS! This is a dummy test just to exercise code. The resulting plot will look weird.
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000002.h5"), output_directory=outdir, reinterpolate=false, data_is_uniform=true)
       out_file = joinpath(outdir,"solution_000002.vtu")
-      ref_file = get_test_reference_file("dgsem_adv_sphere_no_reinterp_uniform_02.vtu",
-                                         joinpath("3d", "p4estmesh", "dgsem_adv_sphere_no_reinterp_uniform_02.vtu"))
+      remote_filename = joinpath("3d", "p4estmesh", "dgsem_adv_sphere_no_reinterp_uniform_02.vtu")
+      ref_file = get_test_reference_file("dgsem_adv_sphere_no_reinterp_uniform_02.vtu", remote_filename)
       compare_point_info(out_file, ref_file)
     end
   end
