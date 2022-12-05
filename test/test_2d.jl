@@ -18,7 +18,8 @@ isdir(outdir) && rm(outdir, recursive=true)
     @timed_testset "mesh data" begin
       @test_nowarn trixi2vtk(joinpath(outdir, "mesh_000010.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"mesh_000010_celldata.vtu")
-      remote_filename = joinpath("2d", "treemesh", "dgsem_sedov_amr_mesh_10.vtu")
+      # remote file path is actually a URL so it always has the same path structure
+      remote_filename = "2d/treemesh/dgsem_sedov_amr_mesh_10.vtu"
       ref_file = get_test_reference_file("dgsem_sedov_amr_mesh_10.vtu", remote_filename)
       compare_cell_info(out_file, ref_file)
     end
@@ -26,7 +27,8 @@ isdir(outdir) && rm(outdir, recursive=true)
     @timed_testset "solution celldata" begin
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000010.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"solution_000010_celldata.vtu")
-      remote_filename = joinpath("2d", "treemesh", "dgsem_sedov_amr_celldata_10.vtu")
+      # remote file path is actually a URL so it always has the same path structure
+      remote_filename = "2d/treemesh/dgsem_sedov_amr_celldata_10.vtu"
       ref_file = get_test_reference_file("dgsem_sedov_amr_celldata_10.vtu", remote_filename)
       compare_cell_info(out_file, ref_file)
     end
@@ -36,7 +38,8 @@ isdir(outdir) && rm(outdir, recursive=true)
       # Create and test output with reinterpolation (default options: `reinterpolate=true, data_is_uniform=false`)
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000010.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"solution_000010.vtu")
-      remote_filename = joinpath("2d", "treemesh", "dgsem_sedov_amr_reinterp_10.vtu")
+      # remote file path is actually a URL so it always has the same path structure
+      remote_filename = "2d/treemesh/dgsem_sedov_amr_reinterp_10.vtu"
       ref_file = get_test_reference_file("dgsem_sedov_amr_reinterp_10.vtu", remote_filename)
       compare_cell_info(out_file, ref_file)
     end
@@ -46,7 +49,8 @@ isdir(outdir) && rm(outdir, recursive=true)
       # Create and test output without reinterpolation on LGL nodes
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000010.h5"), output_directory=outdir, reinterpolate=false)
       out_file = joinpath(outdir,"solution_000010.vtu")
-      remote_filename = joinpath("2d", "treemesh", "dgsem_sedov_amr_no_reinterp_10.vtu")
+      # remote file path is actually a URL so it always has the same path structure
+      remote_filename = "2d/treemesh/dgsem_sedov_amr_no_reinterp_10.vtu"
       ref_file = get_test_reference_file("dgsem_sedov_amr_no_reinterp_10.vtu", remote_filename)
       compare_point_info(out_file, ref_file)
     end
@@ -57,7 +61,8 @@ isdir(outdir) && rm(outdir, recursive=true)
       # OBS! This is a dummy test just to exercise code. The resulting plot will look weird.
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000010.h5"), output_directory=outdir, reinterpolate=false, data_is_uniform=true)
       out_file = joinpath(outdir,"solution_000010.vtu")
-      remote_filename = joinpath("2d", "treemesh", "dgsem_sedov_amr_no_reinterp_uniform_10.vtu")
+      # remote file path is actually a URL so it always has the same path structure
+      remote_filename = "2d/treemesh/dgsem_sedov_amr_no_reinterp_uniform_10.vtu"
       ref_file = get_test_reference_file("dgsem_sedov_amr_no_reinterp_uniform_10.vtu", remote_filename)
       compare_point_info(out_file, ref_file)
     end
@@ -83,7 +88,8 @@ isdir(outdir) && rm(outdir, recursive=true)
     @timed_testset "mesh data" begin
       @test_nowarn trixi2vtk(joinpath(outdir, "mesh.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"mesh_celldata.vtu")
-      remote_filename = joinpath("2d", "structuredmesh", "dgsem_adv_mesh_01.vtu")
+      # remote file path is actually a URL so it always has the same path structure
+      remote_filename = "2d/structuredmesh/dgsem_adv_mesh_01.vtu"
       ref_file = get_test_reference_file("dgsem_adv_mesh_01.vtu", remote_filename)
       compare_cell_info(out_file, ref_file)
     end
@@ -91,7 +97,8 @@ isdir(outdir) && rm(outdir, recursive=true)
     @timed_testset "solution celldata" begin
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"solution_000001_celldata.vtu")
-      remote_filename = joinpath("2d", "structuredmesh", "dgsem_adv_celldata_01.vtu")
+      # remote file path is actually a URL so it always has the same path structure
+      remote_filename = "2d/structuredmesh/dgsem_adv_celldata_01.vtu"
       ref_file = get_test_reference_file("dgsem_adv_celldata_01.vtu", remote_filename)
       compare_cell_info(out_file, ref_file)
     end
@@ -101,7 +108,8 @@ isdir(outdir) && rm(outdir, recursive=true)
       # Create and test output with reinterpolation (default options: `reinterpolate=true, data_is_uniform=false`)
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"solution_000001.vtu")
-      remote_filename = joinpath("2d", "structuredmesh", "dgsem_adv_reinterp_01.vtu")
+      # remote file path is actually a URL so it always has the same path structure
+      remote_filename = "2d/structuredmesh/dgsem_adv_reinterp_01.vtu"
       ref_file = get_test_reference_file("dgsem_adv_reinterp_01.vtu", remote_filename)
       compare_point_info(out_file, ref_file)
     end
@@ -111,7 +119,8 @@ isdir(outdir) && rm(outdir, recursive=true)
       # Create and test output without reinterpolation on LGL nodes
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir, reinterpolate=false)
       out_file = joinpath(outdir,"solution_000001.vtu")
-      remote_filename = joinpath("2d", "structuredmesh", "dgsem_adv_no_reinterp_01.vtu")
+      # remote file path is actually a URL so it always has the same path structure
+      remote_filename = "2d/structuredmesh/dgsem_adv_no_reinterp_01.vtu"
       ref_file = get_test_reference_file("dgsem_adv_no_reinterp_01.vtu", remote_filename)
       compare_point_info(out_file, ref_file)
     end
@@ -122,7 +131,8 @@ isdir(outdir) && rm(outdir, recursive=true)
       # OBS! This is a dummy test just to exercise code. The resulting plot will look weird.
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir, reinterpolate=false, data_is_uniform=true)
       out_file = joinpath(outdir,"solution_000001.vtu")
-      remote_filename = joinpath("2d", "structuredmesh", "dgsem_adv_no_reinterp_uniform_01.vtu")
+      # remote file path is actually a URL so it always has the same path structure
+      remote_filename = "2d/structuredmesh/dgsem_adv_no_reinterp_uniform_01.vtu"
       ref_file = get_test_reference_file("dgsem_adv_no_reinterp_uniform_01.vtu", remote_filename)
       compare_point_info(out_file, ref_file)
     end
@@ -135,7 +145,8 @@ isdir(outdir) && rm(outdir, recursive=true)
     @timed_testset "mesh data" begin
       @test_nowarn trixi2vtk(joinpath(outdir, "mesh.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"mesh_celldata.vtu")
-      remote_filename = joinpath("2d", "unstructuredmesh", "dgsem_swe_mesh_01.vtu")
+      # remote file path is actually a URL so it always has the same path structure
+      remote_filename = "2d/unstructuredmesh/dgsem_swe_mesh_01.vtu"
       ref_file = get_test_reference_file("dgsem_swe_mesh_01.vtu", remote_filename)
       compare_cell_info(out_file, ref_file)
     end
@@ -143,7 +154,8 @@ isdir(outdir) && rm(outdir, recursive=true)
     @timed_testset "solution celldata" begin
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"solution_000001_celldata.vtu")
-      remote_filename = joinpath("2d", "unstructuredmesh", "dgsem_swe_celldata_01.vtu")
+      # remote file path is actually a URL so it always has the same path structure
+      remote_filename = "2d/unstructuredmesh/dgsem_swe_celldata_01.vtu"
       ref_file = get_test_reference_file("dgsem_swe_celldata_01.vtu", remote_filename)
       compare_cell_info(out_file, ref_file)
     end
@@ -153,7 +165,8 @@ isdir(outdir) && rm(outdir, recursive=true)
       # Create and test output with reinterpolation (default options: `reinterpolate=true, data_is_uniform=false`)
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"solution_000001.vtu")
-      remote_filename = joinpath("2d", "unstructuredmesh", "dgsem_swe_reinterp_01.vtu")
+      # remote file path is actually a URL so it always has the same path structure
+      remote_filename = "2d/unstructuredmesh/dgsem_swe_reinterp_01.vtu"
       ref_file = get_test_reference_file("dgsem_swe_reinterp_01.vtu", remote_filename)
       compare_point_info(out_file, ref_file)
     end
@@ -163,7 +176,8 @@ isdir(outdir) && rm(outdir, recursive=true)
       # Create and test output without reinterpolation on LGL nodes
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir, reinterpolate=false)
       out_file = joinpath(outdir,"solution_000001.vtu")
-      remote_filename = joinpath("2d", "unstructuredmesh", "dgsem_swe_no_reinterp_01.vtu")
+      # remote file path is actually a URL so it always has the same path structure
+      remote_filename = "2d/unstructuredmesh/dgsem_swe_no_reinterp_01.vtu"
       ref_file = get_test_reference_file("dgsem_swe_no_reinterp_01.vtu", remote_filename)
       compare_point_info(out_file, ref_file)
     end
@@ -174,7 +188,8 @@ isdir(outdir) && rm(outdir, recursive=true)
       # OBS! This is a dummy test just to exercise code. The resulting plot will look weird.
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir, reinterpolate=false, data_is_uniform=true)
       out_file = joinpath(outdir,"solution_000001.vtu")
-      remote_filename = joinpath("2d", "unstructuredmesh", "dgsem_swe_no_reinterp_uniform_01.vtu")
+      # remote file path is actually a URL so it always has the same path structure
+      remote_filename = "2d/unstructuredmesh/dgsem_swe_no_reinterp_uniform_01.vtu"
       ref_file = get_test_reference_file("dgsem_swe_no_reinterp_uniform_01.vtu", remote_filename)
       compare_point_info(out_file, ref_file)
     end
@@ -187,7 +202,8 @@ isdir(outdir) && rm(outdir, recursive=true)
     @timed_testset "mesh data" begin
       @test_nowarn trixi2vtk(joinpath(outdir, "mesh_000005.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"mesh_000005_celldata.vtu")
-      remote_filename = joinpath("2d", "p4estmesh", "dgsem_rotor_amr_mesh_05.vtu")
+      # remote file path is actually a URL so it always has the same path structure
+      remote_filename = "2d/p4estmesh/dgsem_rotor_amr_mesh_05.vtu"
       ref_file = get_test_reference_file("dgsem_rotor_amr_mesh_05.vtu", remote_filename)
       compare_cell_info(out_file, ref_file)
     end
@@ -195,7 +211,8 @@ isdir(outdir) && rm(outdir, recursive=true)
     @timed_testset "solution celldata" begin
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000005.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"solution_000005_celldata.vtu")
-      remote_filename = joinpath("2d", "p4estmesh", "dgsem_rotor_amr_celldata_05.vtu")
+      # remote file path is actually a URL so it always has the same path structure
+      remote_filename = "2d/p4estmesh/dgsem_rotor_amr_celldata_05.vtu"
       ref_file = get_test_reference_file("dgsem_rotor_amr_celldata_05.vtu", remote_filename)
       compare_cell_info(out_file, ref_file)
     end
@@ -205,7 +222,8 @@ isdir(outdir) && rm(outdir, recursive=true)
       # Create and test output with reinterpolation (default options: `reinterpolate=true, data_is_uniform=false`)
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000005.h5"), output_directory=outdir)
       out_file = joinpath(outdir,"solution_000005.vtu")
-      remote_filename = joinpath("2d", "p4estmesh", "dgsem_rotor_amr_reinterp_05.vtu")
+      # remote file path is actually a URL so it always has the same path structure
+      remote_filename = "2d/p4estmesh/dgsem_rotor_amr_reinterp_05.vtu"
       ref_file = get_test_reference_file("dgsem_rotor_amr_reinterp_05.vtu", remote_filename)
       compare_point_info(out_file, ref_file)
     end
@@ -215,7 +233,8 @@ isdir(outdir) && rm(outdir, recursive=true)
       # Create and test output without reinterpolation on LGL nodes
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000005.h5"), output_directory=outdir, reinterpolate=false)
       out_file = joinpath(outdir,"solution_000005.vtu")
-      remote_filename = joinpath("2d", "p4estmesh", "dgsem_rotor_amr_no_reinterp_05.vtu")
+      # remote file path is actually a URL so it always has the same path structure
+      remote_filename = "2d/p4estmesh/dgsem_rotor_amr_no_reinterp_05.vtu"
       ref_file = get_test_reference_file("dgsem_rotor_amr_no_reinterp_05.vtu", remote_filename)
       compare_point_info(out_file, ref_file)
     end
@@ -226,7 +245,8 @@ isdir(outdir) && rm(outdir, recursive=true)
       # OBS! This is a dummy test just to exercise code. The resulting plot will look weird.
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000005.h5"), output_directory=outdir, reinterpolate=false, data_is_uniform=true)
       out_file = joinpath(outdir,"solution_000005.vtu")
-      remote_filename = joinpath("2d", "p4estmesh", "dgsem_rotor_amr_no_reinterp_uniform_05.vtu")
+      # remote file path is actually a URL so it always has the same path structure
+      remote_filename = "2d/p4estmesh/dgsem_rotor_amr_no_reinterp_uniform_05.vtu"
       ref_file = get_test_reference_file("dgsem_rotor_amr_no_reinterp_uniform_05.vtu", remote_filename)
       compare_point_info(out_file, ref_file)
     end
