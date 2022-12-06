@@ -80,25 +80,34 @@ function compare_cell_info(out_filename, ref_filename; atol=500*eps(), rtol=sqrt
   @test length(out_cell_data.names) == length(ref_cell_data.names)
   @test out_cell_data.names == ref_cell_data.names
 
-  # Note!!
-  # Occassionally, for the last equation variable there is an issue
-  # that the size of the data extracted with
-  # [`ReadVTK.jl`](https://github.com/trixi-framework/ReadVTK.jl)
-  # is one byte larger than expected. Somehow this is related to
-  # the zlib format and/or how
-  # [`WriteVTK.jl`](https://github.com/jipolanco/WriteVTK.jl) created
-  # the file in the first place. Even though there is this access error,
-  # the `vtu` file is valid and can be used with ParaView or VisIt without issue.
-  # Therefore, we check all the variable data except for the last one.
+  if Sys.iswindows()
+    # For some reason Windows does not encounter ReadVTK issues
+    for (i, variable_name) in enumerate(ref_cell_data.names)
+      out_data = get_data(out_cell_data[variable_name])
+      ref_data = get_data(ref_cell_data[variable_name])
+      @test isapprox(out_data, ref_data, atol=atol, rtol=rtol)
+    end
+  else
+    # Note!!
+    # Occassionally, for the last equation variable there is an issue
+    # that the size of the data extracted with
+    # [`ReadVTK.jl`](https://github.com/trixi-framework/ReadVTK.jl)
+    # is one byte larger than expected. Somehow this is related to
+    # the zlib format and/or how
+    # [`WriteVTK.jl`](https://github.com/jipolanco/WriteVTK.jl) created
+    # the file in the first place. Even though there is this access error,
+    # the `vtu` file is valid and can be used with ParaView or VisIt without issue.
+    # Therefore, we check all the variable data except for the last one.
 
-  eqn_check_number = length(ref_cell_data.names) == 1 ? length(ref_cell_data.names) : length(ref_cell_data.names)-1
+    eqn_check_number = length(ref_cell_data.names) == 1 ? length(ref_cell_data.names) : length(ref_cell_data.names)-1
 
-  # check that the actual plot data is (approximately) the same
-  for i in 1:eqn_check_number
-    variable_name = ref_cell_data.names[i]
-    out_data = get_data(out_cell_data[variable_name])
-    ref_data = get_data(ref_cell_data[variable_name])
-    @test isapprox(out_data, ref_data, atol=atol, rtol=rtol)
+    # check that the actual plot data is (approximately) the same
+    for i in 1:eqn_check_number
+      variable_name = ref_cell_data.names[i]
+      out_data = get_data(out_cell_data[variable_name])
+      ref_data = get_data(ref_cell_data[variable_name])
+      @test isapprox(out_data, ref_data, atol=atol, rtol=rtol)
+    end
   end
 end
 
@@ -136,25 +145,34 @@ function compare_point_info(out_filename, ref_filename; atol=500*eps(), rtol=sqr
   @test length(out_point_data.names) == length(ref_point_data.names)
   @test out_point_data.names == ref_point_data.names
 
-  # Note!!
-  # Occassionally, for the last equation variable there is an issue
-  # that the size of the data extracted with
-  # [`ReadVTK.jl`](https://github.com/trixi-framework/ReadVTK.jl)
-  # is one byte larger than expected. Somehow this is related to
-  # the zlib format and/or how
-  # [`WriteVTK.jl`](https://github.com/jipolanco/WriteVTK.jl) created
-  # the file in the first place. Even though there is this access error,
-  # the `vtu` file is valid and can be used with ParaView or VisIt without issue.
-  # Therefore, we check all the variable data except for the last one.
+  if Sys.iswindows()
+    # For some reason Windows does not encounter ReadVTK issues
+    for (i, variable_name) in enumerate(ref_point_data.names)
+      out_data = get_data(out_point_data[variable_name])
+      ref_data = get_data(ref_point_data[variable_name])
+      @test isapprox(out_data, ref_data, atol=atol, rtol=rtol)
+    end
+  else
+    # Note!!
+    # Occassionally, for the last equation variable there is an issue
+    # that the size of the data extracted with
+    # [`ReadVTK.jl`](https://github.com/trixi-framework/ReadVTK.jl)
+    # is one byte larger than expected. Somehow this is related to
+    # the zlib format and/or how
+    # [`WriteVTK.jl`](https://github.com/jipolanco/WriteVTK.jl) created
+    # the file in the first place. Even though there is this access error,
+    # the `vtu` file is valid and can be used with ParaView or VisIt without issue.
+    # Therefore, we check all the variable data except for the last one.
 
-  eqn_check_number = length(ref_point_data.names) == 1 ? length(ref_point_data.names) : length(ref_point_data.names)-1
+    eqn_check_number = length(ref_point_data.names) == 1 ? length(ref_point_data.names) : length(ref_point_data.names)-1
 
-  # check that the actual plot data is (approximately) the same
-  for i in 1:eqn_check_number
-    variable_name = ref_point_data.names[i]
-    out_data = get_data(out_point_data[variable_name])
-    ref_data = get_data(ref_point_data[variable_name])
-    @test isapprox(out_data, ref_data, atol=atol, rtol=rtol)
+    # check that the actual plot data is (approximately) the same
+    for i in 1:eqn_check_number
+      variable_name = ref_point_data.names[i]
+      out_data = get_data(out_point_data[variable_name])
+      ref_data = get_data(ref_point_data[variable_name])
+      @test isapprox(out_data, ref_data, atol=atol, rtol=rtol)
+    end
   end
 end
 
