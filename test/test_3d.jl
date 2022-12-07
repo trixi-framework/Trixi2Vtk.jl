@@ -47,7 +47,7 @@ end
       # save output file to `artifacts` to facilitate debugging of failing tests
       testname = "3d-treemesh"
       cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
-      
+
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "3d/treemesh/dgsem_blob_amr_celldata_04.vtu"
       ref_file = get_test_reference_file("dgsem_blob_amr_celldata_04.vtu", remote_filename)
@@ -104,175 +104,179 @@ end
     end
   end
 
-  @testset "StructuredMesh" begin
-    isdir(outdir) && rm(outdir, recursive=true)
-    run_trixi(joinpath(examples_dir(), "structured_3d_dgsem", "elixir_advection_nonperiodic_curved.jl"), maxiters=1)
+  if !Sys.iswindows()
+    # OBS! Only `TreeMesh` results are tested on Windows runners due to memory limits.
+    #      All remaining mesh types are tested on Ubuntu and Mac
+    @testset "StructuredMesh" begin
+      isdir(outdir) && rm(outdir, recursive=true)
+      run_trixi(joinpath(examples_dir(), "structured_3d_dgsem", "elixir_advection_nonperiodic_curved.jl"), maxiters=1)
 
-    @timed_testset "mesh data" begin
-      # create the output file to be tested
-      @test_nowarn trixi2vtk(joinpath(outdir, "mesh.h5"), output_directory=outdir)
-      outfilename = "mesh_celldata.vtu"
-      out_file = joinpath(outdir, outfilename)
+      @timed_testset "mesh data" begin
+        # create the output file to be tested
+        @test_nowarn trixi2vtk(joinpath(outdir, "mesh.h5"), output_directory=outdir)
+        outfilename = "mesh_celldata.vtu"
+        out_file = joinpath(outdir, outfilename)
 
-      # save output file to `artifacts` to facilitate debugging of failing tests
-      testname = "3d-structuredmesh"
-      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "3d-structuredmesh"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
 
-      # remote file path is actually a URL so it always has the same path structure
-      remote_filename = "3d/structuredmesh/dgsem_adv_mesh_01.vtu"
-      ref_file = get_test_reference_file("dgsem_adv_mesh_01.vtu", remote_filename)
-      compare_cell_info(out_file, ref_file)
+        # remote file path is actually a URL so it always has the same path structure
+        remote_filename = "3d/structuredmesh/dgsem_adv_mesh_01.vtu"
+        ref_file = get_test_reference_file("dgsem_adv_mesh_01.vtu", remote_filename)
+        compare_cell_info(out_file, ref_file)
+      end
+
+      @timed_testset "solution celldata" begin
+        # create the output file to be tested
+        @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir)
+        outfilename = "solution_000001_celldata.vtu"
+        out_file = joinpath(outdir, outfilename)
+
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "3d-structuredmesh"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+
+        # remote file path is actually a URL so it always has the same path structure
+        remote_filename = "3d/structuredmesh/dgsem_adv_celldata_01.vtu"
+        ref_file = get_test_reference_file("dgsem_adv_celldata_01.vtu", remote_filename)
+        compare_cell_info(out_file, ref_file)
+      end
+
+      @timed_testset "reinterpolate with nonuniform data" begin
+        # Create and test output with reinterpolation (default options: `reinterpolate=true, data_is_uniform=false`)
+        @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir)
+        outfilename = "solution_000001.vtu"
+        out_file = joinpath(outdir, outfilename)
+
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "3d-structuredmesh-reinterp"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+
+        # remote file path is actually a URL so it always has the same path structure
+        remote_filename = "3d/structuredmesh/dgsem_adv_reinterp_01.vtu"
+        ref_file = get_test_reference_file("dgsem_adv_reinterp_01.vtu", remote_filename)
+        compare_point_info(out_file, ref_file)
+      end
+
+      @timed_testset "do not reinterpolate with nonuniform data" begin
+        # Create and test output without reinterpolation on LGL nodes
+        @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir, reinterpolate=false)
+        outfilename = "solution_000001.vtu"
+        out_file = joinpath(outdir, outfilename)
+
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "3d-structuredmesh-no-reinterp"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+
+        # remote file path is actually a URL so it always has the same path structure
+        remote_filename = "3d/structuredmesh/dgsem_adv_no_reinterp_01.vtu"
+        ref_file = get_test_reference_file("dgsem_adv_no_reinterp_01.vtu", remote_filename)
+        compare_point_info(out_file, ref_file)
+      end
+
+      @timed_testset "do not reinterpolate with uniform data" begin
+        # Create and test output without reinterpolation on uniform nodes
+        # OBS! This is a dummy test just to exercise code. The resulting plot will look weird.
+        @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir, reinterpolate=false, data_is_uniform=true)
+        outfilename = "solution_000001.vtu"
+        out_file = joinpath(outdir, outfilename)
+
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "3d-structuredmesh-no-reinterp-uniform"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+
+        # remote file path is actually a URL so it always has the same path structure
+        remote_filename = "3d/structuredmesh/dgsem_adv_no_reinterp_uniform_01.vtu"
+        ref_file = get_test_reference_file("dgsem_adv_no_reinterp_uniform_01.vtu", remote_filename)
+        compare_point_info(out_file, ref_file)
+      end
     end
 
-    @timed_testset "solution celldata" begin
-      # create the output file to be tested
-      @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir)
-      outfilename = "solution_000001_celldata.vtu"
-      out_file = joinpath(outdir, outfilename)
+    @testset "P4estMesh" begin
+      isdir(outdir) && rm(outdir, recursive=true)
+      run_trixi(joinpath(examples_dir(), "p4est_3d_dgsem", "elixir_advection_cubed_sphere.jl"), maxiters=2)
 
-      # save output file to `artifacts` to facilitate debugging of failing tests
-      testname = "3d-structuredmesh"
-      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      @timed_testset "mesh data" begin
+        # create the output file to be tested
+        @test_nowarn trixi2vtk(joinpath(outdir, "mesh.h5"), output_directory=outdir)
+        outfilename = "mesh_celldata.vtu"
+        out_file = joinpath(outdir, outfilename)
 
-      # remote file path is actually a URL so it always has the same path structure
-      remote_filename = "3d/structuredmesh/dgsem_adv_celldata_01.vtu"
-      ref_file = get_test_reference_file("dgsem_adv_celldata_01.vtu", remote_filename)
-      compare_cell_info(out_file, ref_file)
-    end
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "3d-p4estmesh"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
 
-    @timed_testset "reinterpolate with nonuniform data" begin
-      # Create and test output with reinterpolation (default options: `reinterpolate=true, data_is_uniform=false`)
-      @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir)
-      outfilename = "solution_000001.vtu"
-      out_file = joinpath(outdir, outfilename)
+        # remote file path is actually a URL so it always has the same path structure
+        remote_filename = "3d/p4estmesh/dgsem_adv_sphere_mesh_02.vtu"
+        ref_file = get_test_reference_file("dgsem_adv_sphere_mesh_02.vtu", remote_filename)
+        compare_cell_info(out_file, ref_file)
+      end
 
-      # save output file to `artifacts` to facilitate debugging of failing tests
-      testname = "3d-structuredmesh-reinterp"
-      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      @timed_testset "solution celldata" begin
+        # create the output file to be tested
+        @test_nowarn trixi2vtk(joinpath(outdir, "solution_000002.h5"), output_directory=outdir)
+        outfilename = "solution_000002_celldata.vtu"
+        out_file = joinpath(outdir, outfilename)
 
-      # remote file path is actually a URL so it always has the same path structure
-      remote_filename = "3d/structuredmesh/dgsem_adv_reinterp_01.vtu"
-      ref_file = get_test_reference_file("dgsem_adv_reinterp_01.vtu", remote_filename)
-      compare_point_info(out_file, ref_file)
-    end
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "3d-p4estmesh"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
 
-    @timed_testset "do not reinterpolate with nonuniform data" begin
-      # Create and test output without reinterpolation on LGL nodes
-      @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir, reinterpolate=false)
-      outfilename = "solution_000001.vtu"
-      out_file = joinpath(outdir, outfilename)
+        # remote file path is actually a URL so it always has the same path structure
+        remote_filename = "3d/p4estmesh/dgsem_adv_sphere_celldata_02.vtu"
+        ref_file = get_test_reference_file("dgsem_adv_sphere_celldata_02.vtu", remote_filename)
+        compare_cell_info(out_file, ref_file)
+      end
 
-      # save output file to `artifacts` to facilitate debugging of failing tests
-      testname = "3d-structuredmesh-no-reinterp"
-      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      @timed_testset "reinterpolate with nonuniform data" begin
+        # Create and test output with reinterpolation (default options: `reinterpolate=true, data_is_uniform=false`)
+        @test_nowarn trixi2vtk(joinpath(outdir, "solution_000002.h5"), output_directory=outdir)
+        outfilename = "solution_000002.vtu"
+        out_file = joinpath(outdir, outfilename)
 
-      # remote file path is actually a URL so it always has the same path structure
-      remote_filename = "3d/structuredmesh/dgsem_adv_no_reinterp_01.vtu"
-      ref_file = get_test_reference_file("dgsem_adv_no_reinterp_01.vtu", remote_filename)
-      compare_point_info(out_file, ref_file)
-    end
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "3d-p4estmesh-reinterp"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
 
-    @timed_testset "do not reinterpolate with uniform data" begin
-      # Create and test output without reinterpolation on uniform nodes
-      # OBS! This is a dummy test just to exercise code. The resulting plot will look weird.
-      @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir, reinterpolate=false, data_is_uniform=true)
-      outfilename = "solution_000001.vtu"
-      out_file = joinpath(outdir, outfilename)
+        # remote file path is actually a URL so it always has the same path structure
+        remote_filename = "3d/p4estmesh/dgsem_adv_sphere_reinterp_02.vtu"
+        ref_file = get_test_reference_file("dgsem_adv_sphere_reinterp_02.vtu", remote_filename)
+        compare_point_info(out_file, ref_file)
+      end
 
-      # save output file to `artifacts` to facilitate debugging of failing tests
-      testname = "3d-structuredmesh-no-reinterp-uniform"
-      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      @timed_testset "do not reinterpolate with nonuniform data" begin
+        # Create and test output without reinterpolation on LGL nodes
+        @test_nowarn trixi2vtk(joinpath(outdir, "solution_000002.h5"), output_directory=outdir, reinterpolate=false)
+        outfilename = "solution_000002.vtu"
+        out_file = joinpath(outdir, outfilename)
 
-      # remote file path is actually a URL so it always has the same path structure
-      remote_filename = "3d/structuredmesh/dgsem_adv_no_reinterp_uniform_01.vtu"
-      ref_file = get_test_reference_file("dgsem_adv_no_reinterp_uniform_01.vtu", remote_filename)
-      compare_point_info(out_file, ref_file)
-    end
-  end
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "3d-p4estmesh-no-reinterp"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
 
-  @testset "P4estMesh" begin
-    isdir(outdir) && rm(outdir, recursive=true)
-    run_trixi(joinpath(examples_dir(), "p4est_3d_dgsem", "elixir_advection_cubed_sphere.jl"), maxiters=2)
+        # remote file path is actually a URL so it always has the same path structure
+        remote_filename = "3d/p4estmesh/dgsem_adv_sphere_no_reinterp_02.vtu"
+        ref_file = get_test_reference_file("dgsem_adv_sphere_no_reinterp_02.vtu", remote_filename)
+        compare_point_info(out_file, ref_file)
+      end
 
-    @timed_testset "mesh data" begin
-      # create the output file to be tested
-      @test_nowarn trixi2vtk(joinpath(outdir, "mesh.h5"), output_directory=outdir)
-      outfilename = "mesh_celldata.vtu"
-      out_file = joinpath(outdir, outfilename)
+      @timed_testset "do not reinterpolate with uniform data" begin
+        # Create and test output without reinterpolation on uniform nodes
+        # OBS! This is a dummy test just to exercise code. The resulting plot will look weird.
+        @test_nowarn trixi2vtk(joinpath(outdir, "solution_000002.h5"), output_directory=outdir, reinterpolate=false, data_is_uniform=true)
+        outfilename = "solution_000002.vtu"
+        out_file = joinpath(outdir, outfilename)
 
-      # save output file to `artifacts` to facilitate debugging of failing tests
-      testname = "3d-p4estmesh"
-      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "3d-p4estmesh-no-reinterp-uniform"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
 
-      # remote file path is actually a URL so it always has the same path structure
-      remote_filename = "3d/p4estmesh/dgsem_adv_sphere_mesh_02.vtu"
-      ref_file = get_test_reference_file("dgsem_adv_sphere_mesh_02.vtu", remote_filename)
-      compare_cell_info(out_file, ref_file)
-    end
-
-    @timed_testset "solution celldata" begin
-      # create the output file to be tested
-      @test_nowarn trixi2vtk(joinpath(outdir, "solution_000002.h5"), output_directory=outdir)
-      outfilename = "solution_000002_celldata.vtu"
-      out_file = joinpath(outdir, outfilename)
-
-      # save output file to `artifacts` to facilitate debugging of failing tests
-      testname = "3d-p4estmesh"
-      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
-
-      # remote file path is actually a URL so it always has the same path structure
-      remote_filename = "3d/p4estmesh/dgsem_adv_sphere_celldata_02.vtu"
-      ref_file = get_test_reference_file("dgsem_adv_sphere_celldata_02.vtu", remote_filename)
-      compare_cell_info(out_file, ref_file)
-    end
-
-    @timed_testset "reinterpolate with nonuniform data" begin
-      # Create and test output with reinterpolation (default options: `reinterpolate=true, data_is_uniform=false`)
-      @test_nowarn trixi2vtk(joinpath(outdir, "solution_000002.h5"), output_directory=outdir)
-      outfilename = "solution_000002.vtu"
-      out_file = joinpath(outdir, outfilename)
-
-      # save output file to `artifacts` to facilitate debugging of failing tests
-      testname = "3d-p4estmesh-reinterp"
-      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
-
-      # remote file path is actually a URL so it always has the same path structure
-      remote_filename = "3d/p4estmesh/dgsem_adv_sphere_reinterp_02.vtu"
-      ref_file = get_test_reference_file("dgsem_adv_sphere_reinterp_02.vtu", remote_filename)
-      compare_point_info(out_file, ref_file)
-    end
-
-    @timed_testset "do not reinterpolate with nonuniform data" begin
-      # Create and test output without reinterpolation on LGL nodes
-      @test_nowarn trixi2vtk(joinpath(outdir, "solution_000002.h5"), output_directory=outdir, reinterpolate=false)
-      outfilename = "solution_000002.vtu"
-      out_file = joinpath(outdir, outfilename)
-
-      # save output file to `artifacts` to facilitate debugging of failing tests
-      testname = "3d-p4estmesh-no-reinterp"
-      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
-
-      # remote file path is actually a URL so it always has the same path structure
-      remote_filename = "3d/p4estmesh/dgsem_adv_sphere_no_reinterp_02.vtu"
-      ref_file = get_test_reference_file("dgsem_adv_sphere_no_reinterp_02.vtu", remote_filename)
-      compare_point_info(out_file, ref_file)
-    end
-
-    @timed_testset "do not reinterpolate with uniform data" begin
-      # Create and test output without reinterpolation on uniform nodes
-      # OBS! This is a dummy test just to exercise code. The resulting plot will look weird.
-      @test_nowarn trixi2vtk(joinpath(outdir, "solution_000002.h5"), output_directory=outdir, reinterpolate=false, data_is_uniform=true)
-      outfilename = "solution_000002.vtu"
-      out_file = joinpath(outdir, outfilename)
-
-      # save output file to `artifacts` to facilitate debugging of failing tests
-      testname = "3d-p4estmesh-no-reinterp-uniform"
-      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
-
-      # remote file path is actually a URL so it always has the same path structure
-      remote_filename = "3d/p4estmesh/dgsem_adv_sphere_no_reinterp_uniform_02.vtu"
-      ref_file = get_test_reference_file("dgsem_adv_sphere_no_reinterp_uniform_02.vtu", remote_filename)
-      compare_point_info(out_file, ref_file)
+        # remote file path is actually a URL so it always has the same path structure
+        remote_filename = "3d/p4estmesh/dgsem_adv_sphere_no_reinterp_uniform_02.vtu"
+        ref_file = get_test_reference_file("dgsem_adv_sphere_no_reinterp_uniform_02.vtu", remote_filename)
+        compare_point_info(out_file, ref_file)
+      end
     end
   end
 end
