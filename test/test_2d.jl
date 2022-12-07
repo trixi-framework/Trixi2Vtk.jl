@@ -9,10 +9,14 @@ include("test_trixi2vtk.jl")
 outdir = "out"
 isdir(outdir) && rm(outdir, recursive=true)
 
-# Create artifacts directory where all files that should be preserved will be stored
-artifacts_dir = joinpath(pathof(Trixi2Vtk) |> dirname |> dirname, "artifacts")
-if !isdir(artifacts_dir)
-  mkdir(artifacts_dir)
+if !Sys.iswindows()
+  # Windows github runners encounter memory issues saving all the output files.
+  # So artifacts are only save on Ubuntu and Mac
+  # Create artifacts directory where all files that should be preserved will be stored
+  artifacts_dir = joinpath(pathof(Trixi2Vtk) |> dirname |> dirname, "artifacts")
+  if !isdir(artifacts_dir)
+    mkdir(artifacts_dir)
+  end
 end
 
 @testset "2D" begin
@@ -26,9 +30,11 @@ end
       outfilename = "mesh_000010_celldata.vtu"
       out_file = joinpath(outdir, outfilename)
 
-      # save output file to `artifacts` to facilitate debugging of failing tests
-      testname = "2d-treemesh"
-      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      if !Sys.iswindows() # Do not save on Windows
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "2d-treemesh"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      end
 
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "2d/treemesh/dgsem_sedov_amr_mesh_10.vtu"
@@ -42,9 +48,11 @@ end
       outfilename = "solution_000010_celldata.vtu"
       out_file = joinpath(outdir, outfilename)
 
-      # save output file to `artifacts` to facilitate debugging of failing tests
-      testname = "2d-treemesh"
-      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      if !Sys.iswindows() # Do not save on Windows
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "2d-treemesh"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      end
 
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "2d/treemesh/dgsem_sedov_amr_celldata_10.vtu"
@@ -58,9 +66,11 @@ end
       outfilename = "solution_000010.vtu"
       out_file = joinpath(outdir, outfilename)
 
-      # save output file to `artifacts` to facilitate debugging of failing tests
-      testname = "2d-treemesh-reinterp"
-      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      if !Sys.iswindows() # Do not save on Windows
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "2d-treemesh-reinterp"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      end
 
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "2d/treemesh/dgsem_sedov_amr_reinterp_10.vtu"
@@ -74,9 +84,11 @@ end
       outfilename = "solution_000010.vtu"
       out_file = joinpath(outdir, outfilename)
 
-      # save output file to `artifacts` to facilitate debugging of failing tests
-      testname = "2d-treemesh-no-reinterp"
-      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      if !Sys.iswindows() # Do not save on Windows
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "2d-treemesh-no-reinterp"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      end
 
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "2d/treemesh/dgsem_sedov_amr_no_reinterp_10.vtu"
@@ -91,9 +103,11 @@ end
       outfilename = "solution_000010.vtu"
       out_file = joinpath(outdir, outfilename)
 
-      # save output file to `artifacts` to facilitate debugging of failing tests
-      testname = "2d-treemesh-no-reinterp-uniform"
-      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      if !Sys.iswindows() # Do not save on Windows
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "2d-treemesh-no-reinterp-uniform"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      end
 
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "2d/treemesh/dgsem_sedov_amr_no_reinterp_uniform_10.vtu"
@@ -125,9 +139,11 @@ end
       outfilename = "mesh_celldata.vtu"
       out_file = joinpath(outdir, outfilename)
 
-      # save output file to `artifacts` to facilitate debugging of failing tests
-      testname = "2d-structuredmesh"
-      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      if !Sys.iswindows() # Do not save on Windows
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "2d-structuredmesh"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      end
 
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "2d/structuredmesh/dgsem_adv_mesh_01.vtu"
@@ -143,9 +159,11 @@ end
       outfilename = "solution_000001_celldata.vtu"
       out_file = joinpath(outdir, outfilename)
 
-      # save output file to `artifacts` to facilitate debugging of failing tests
-      testname = "2d-structuredmesh"
-      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      if !Sys.iswindows() # Do not save on Windows
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "2d-structuredmesh"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      end
 
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "2d/structuredmesh/dgsem_adv_celldata_01.vtu"
@@ -159,9 +177,11 @@ end
       outfilename = "solution_000001.vtu"
       out_file = joinpath(outdir, outfilename)
 
-      # save output file to `artifacts` to facilitate debugging of failing tests
-      testname = "2d-structuredmesh-reinterp"
-      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      if !Sys.iswindows() # Do not save on Windows
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "2d-structuredmesh-reinterp"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      end
 
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "2d/structuredmesh/dgsem_adv_reinterp_01.vtu"
@@ -175,9 +195,11 @@ end
       outfilename = "solution_000001.vtu"
       out_file = joinpath(outdir, outfilename)
 
-      # save output file to `artifacts` to facilitate debugging of failing tests
-      testname = "2d-structuredmesh-no-reinterp"
-      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      if !Sys.iswindows() # Do not save on Windows
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "2d-structuredmesh-no-reinterp"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      end
 
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "2d/structuredmesh/dgsem_adv_no_reinterp_01.vtu"
@@ -192,9 +214,11 @@ end
       outfilename = "solution_000001.vtu"
       out_file = joinpath(outdir, outfilename)
 
-      # save output file to `artifacts` to facilitate debugging of failing tests
-      testname = "2d-structuredmesh-no-reinterp-uniform"
-      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      if !Sys.iswindows() # Do not save on Windows
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "2d-structuredmesh-no-reinterp-uniform"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      end
 
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "2d/structuredmesh/dgsem_adv_no_reinterp_uniform_01.vtu"
@@ -213,9 +237,11 @@ end
       outfilename = "mesh_celldata.vtu"
       out_file = joinpath(outdir, outfilename)
 
-      # save output file to `artifacts` to facilitate debugging of failing tests
-      testname = "2d-unstructuredmesh"
-      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      if !Sys.iswindows() # Do not save on Windows
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "2d-unstructuredmesh"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      end
 
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "2d/unstructuredmesh/dgsem_swe_mesh_01.vtu"
@@ -229,9 +255,11 @@ end
       outfilename = "solution_000001_celldata.vtu"
       out_file = joinpath(outdir, outfilename)
 
-      # save output file to `artifacts` to facilitate debugging of failing tests
-      testname = "2d-unstructuredmesh"
-      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      if !Sys.iswindows() # Do not save on Windows
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "2d-unstructuredmesh"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      end
 
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "2d/unstructuredmesh/dgsem_swe_celldata_01.vtu"
@@ -245,9 +273,11 @@ end
       outfilename = "solution_000001.vtu"
       out_file = joinpath(outdir, outfilename)
 
-      # save output file to `artifacts` to facilitate debugging of failing tests
-      testname = "2d-unstructuredmesh-reinterp"
-      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      if !Sys.iswindows() # Do not save on Windows
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "2d-unstructuredmesh-reinterp"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      end
 
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "2d/unstructuredmesh/dgsem_swe_reinterp_01.vtu"
@@ -261,9 +291,11 @@ end
       outfilename = "solution_000001.vtu"
       out_file = joinpath(outdir, outfilename)
 
-      # save output file to `artifacts` to facilitate debugging of failing tests
-      testname = "2d-unstructuredmesh-no-reinterp"
-      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      if !Sys.iswindows() # Do not save on Windows
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "2d-unstructuredmesh-no-reinterp"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      end
 
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "2d/unstructuredmesh/dgsem_swe_no_reinterp_01.vtu"
@@ -278,9 +310,11 @@ end
       outfilename = "solution_000001.vtu"
       out_file = joinpath(outdir, outfilename)
 
-      # save output file to `artifacts` to facilitate debugging of failing tests
-      testname = "2d-unstructuredmesh-no-reinterp-uniform"
-      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      if !Sys.iswindows() # Do not save on Windows
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "2d-unstructuredmesh-no-reinterp-uniform"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      end
 
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "2d/unstructuredmesh/dgsem_swe_no_reinterp_uniform_01.vtu"
@@ -299,9 +333,11 @@ end
       outfilename = "mesh_000005_celldata.vtu"
       out_file = joinpath(outdir, outfilename)
 
-      # save output file to `artifacts` to facilitate debugging of failing tests
-      testname = "2d-p4estmesh"
-      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      if !Sys.iswindows() # Do not save on Windows
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "2d-p4estmesh"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      end
 
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "2d/p4estmesh/dgsem_rotor_amr_mesh_05.vtu"
@@ -315,9 +351,11 @@ end
       outfilename = "solution_000005_celldata.vtu"
       out_file = joinpath(outdir, outfilename)
 
-      # save output file to `artifacts` to facilitate debugging of failing tests
-      testname = "2d-p4estmesh"
-      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      if !Sys.iswindows() # Do not save on Windows
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "2d-p4estmesh"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      end
 
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "2d/p4estmesh/dgsem_rotor_amr_celldata_05.vtu"
@@ -331,9 +369,11 @@ end
       outfilename = "solution_000005.vtu"
       out_file = joinpath(outdir, outfilename)
 
-      # save output file to `artifacts` to facilitate debugging of failing tests
-      testname = "2d-p4estmesh-reinterp"
-      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      if !Sys.iswindows() # Do not save on Windows
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "2d-p4estmesh-reinterp"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      end
 
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "2d/p4estmesh/dgsem_rotor_amr_reinterp_05.vtu"
@@ -347,9 +387,11 @@ end
       outfilename = "solution_000005.vtu"
       out_file = joinpath(outdir, outfilename)
 
-      # save output file to `artifacts` to facilitate debugging of failing tests
-      testname = "2d-p4estmesh-no-reinterp"
-      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      if !Sys.iswindows() # Do not save on Windows
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "2d-p4estmesh-no-reinterp"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      end
 
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "2d/p4estmesh/dgsem_rotor_amr_no_reinterp_05.vtu"
@@ -364,9 +406,11 @@ end
       outfilename = "solution_000005.vtu"
       out_file = joinpath(outdir, outfilename)
 
-      # save output file to `artifacts` to facilitate debugging of failing tests
-      testname = "2d-p4estmesh-no-reinterp-uniform"
-      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      if !Sys.iswindows() # Do not save on Windows
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "2d-p4estmesh-no-reinterp-uniform"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+      end
 
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "2d/p4estmesh/dgsem_rotor_amr_no_reinterp_uniform_05.vtu"
