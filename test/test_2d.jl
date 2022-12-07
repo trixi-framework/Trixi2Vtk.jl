@@ -137,7 +137,9 @@ end
 
     @timed_testset "solution celldata" begin
       # create the output file to be tested
-      @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir)
+      # OBS! This exercises passing multiple files (in this case 2 files) to `trixi2vtk`
+      #      that only needs to be tested once.
+      @test_nowarn trixi2vtk(joinpath(outdir, "solution_00000*.h5"), output_directory=outdir)
       outfilename = "solution_000001_celldata.vtu"
       out_file = joinpath(outdir, outfilename)
 
