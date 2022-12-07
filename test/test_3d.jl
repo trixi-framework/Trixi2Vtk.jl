@@ -19,12 +19,13 @@ end
 @testset "3D" begin
   @testset "TreeMesh" begin
     isdir(outdir) && rm(outdir, recursive=true)
-    run_trixi(joinpath("tree_3d_dgsem", "elixir_advection_extended.jl"), maxiters=1)
+    run_trixi(joinpath(examples_dir(), "tree_3d_dgsem", "elixir_advection_extended.jl"), maxiters=1)
 
     @timed_testset "uniform mesh" begin
       test_trixi2vtk("solution_000000.h5", outdir,
           hashes=[("solution_000000.vtu", "6ab3aa525851187ee0839e1d670a254a66be4ad7"),
                   ("solution_000000_celldata.vtu", "fdfee2d4200ecdad08067b37908412813016f4e7")])
+      @test_nowarn trixi2vtk(joinpath(outdir, "mesh.h5"))
 
       # Store output files as artifacts to facilitate debugging of failing tests
       outfiles = ("solution_000000.vtu", "solution_000000_celldata.vtu")
@@ -40,7 +41,7 @@ end
 
   @testset "StructuredMesh" begin
     isdir(outdir) && rm(outdir, recursive=true)
-    run_trixi(joinpath("structured_3d_dgsem", "elixir_advection_basic.jl"), maxiters=1)
+    run_trixi(joinpath(examples_dir(), "structured_3d_dgsem", "elixir_advection_basic.jl"), maxiters=1)
 
     @timed_testset "basic" begin
       if Sys.isapple()
@@ -51,6 +52,7 @@ end
         test_trixi2vtk("solution_000000.h5", outdir,
             hashes=[("solution_000000.vtu", "58e07f981fd6c005ea17e47054bd509c2c66d771")])
       end
+      @test_nowarn trixi2vtk(joinpath(outdir, "mesh.h5"))
 
       # Store output files as artifacts to facilitate debugging of failing tests
       outfiles = ("solution_000000.vtu",)
@@ -66,7 +68,7 @@ end
 
   @testset "P4estMesh" begin
     isdir(outdir) && rm(outdir, recursive=true)
-    run_trixi(joinpath("p4est_3d_dgsem", "elixir_advection_amr_unstructured_curved.jl"), maxiters=1)
+    run_trixi(joinpath(examples_dir(), "p4est_3d_dgsem", "elixir_advection_amr_unstructured_curved.jl"), maxiters=1)
 
     @timed_testset "unstructured curved" begin
       if Sys.isapple()
@@ -77,6 +79,7 @@ end
         test_trixi2vtk("solution_000000.h5", outdir,
           hashes=[("solution_000000.vtu", "0fa5a099378d153aa3a1bb7dcf3559ea5d6bf9c5")])
       end
+      @test_nowarn trixi2vtk(joinpath(outdir, "mesh.h5"))
 
       # Store output files as artifacts to facilitate debugging of failing tests
       outfiles = ("solution_000000.vtu",)
