@@ -54,7 +54,7 @@ end
       compare_cell_info(out_file, ref_file)
     end
 
-    @timed_testset "reinterpolate with nonuniform data qith VTU format" begin
+    @timed_testset "reinterpolate with nonuniform data with VTU format" begin
       # Create and test output with reinterpolation (default options: `reinterpolate=true, data_is_uniform=false`)
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000010.h5"), output_directory=outdir)
       outfilename = "solution_000010.vtu"
