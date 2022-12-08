@@ -38,7 +38,7 @@ end
 # Note: The purpose of using a specific commit hash (instead of `main`) is to be able to tie a given
 #       version of Trixi2Vtk to a specific version of the test file repository. This way, also tests
 #       for older Trixi2Vtk releases should continue to work.
-TEST_REFERENCE_COMMIT = "1fb95363322c32d2391267e06671273ad2889144"
+TEST_REFERENCE_COMMIT = "c0a966b06489f9b2ee3aefeb0a5c0dae733df36f"
 
 # Local folder to store downloaded reference files. If you change this, also adapt `../.gitignore`!
 TEST_REFERENCE_DIR = "reference_files"
