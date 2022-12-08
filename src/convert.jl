@@ -112,6 +112,11 @@ function trixi2vtk(filename::AbstractString...;
     verbose && println("| Reading mesh file...")
     @timeit "read mesh" mesh = Trixi.load_mesh_serial(meshfile; n_cells_max=0, RealT=Float64)
 
+    # Check compatibility of the mesh type and the output format
+    if format == :vti && typeof(mesh) != Trixi.TreeMesh{2, Trixi.SerialTree{2}}
+      error("VTI format only available for 2D TreeMesh")
+    end
+
     # Create an empty `node_set` such that converting a mesh.h5 file also works
     node_set = []
 
