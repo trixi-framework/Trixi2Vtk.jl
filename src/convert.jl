@@ -117,9 +117,6 @@ function trixi2vtk(filename::AbstractString...;
       error("VTI format only available for 2D TreeMesh")
     end
 
-    # Create an empty `node_set` such that converting a mesh.h5 file also works
-    node_set = []
-
     # Read data only if it is a data file
     if is_datafile
       verbose && println("| Reading data file...")
