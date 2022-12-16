@@ -66,6 +66,12 @@ function compare_cell_info(out_filename, ref_filename; atol=500*eps(), rtol=sqrt
   ref_vtk = VTKFile(ref_filename)
   vtk = VTKFile(out_filename)
 
+  # Compare header information
+  @test vtk.byte_order == ref_vtk.byte_order
+  @test vtk.compressor == ref_vtk.compressor
+  @test vtk.file_type == ref_vtk.file_type
+  @test vtk.version == ref_vtk.version
+
   # check that the number of cells and points match
   @test vtk.n_cells == ref_vtk.n_cells
   @test vtk.n_points == ref_vtk.n_points
