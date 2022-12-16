@@ -317,14 +317,14 @@ end
 
 
 # default number of visualization nodes if only the mesh should be visualized
-  function get_default_nvisnodes_mesh(nvisnodes, mesh::TreeMesh)
-    if nvisnodes === nothing
-      # for a Cartesian mesh, we do not need to interpolate
-      return 1
-    else
-      return nvisnodes
-    end
+function get_default_nvisnodes_mesh(nvisnodes, mesh::TreeMesh)
+  if nvisnodes === nothing
+    # for a Cartesian mesh, we do not need to interpolate
+    return 1
+  else
+    return nvisnodes
   end
+end
 
 # default number of visualization nodes if only the mesh should be visualized
 function get_default_nvisnodes_mesh(nvisnodes,
