@@ -21,10 +21,10 @@ end
 
 
 # Interpolate data from input format to desired output format (vti version)
-function interpolate_data(::Val{:vti}, input_data, mesh, n_visnodes, verbose)
+function interpolate_data(::Val{:vti}, input_data, mesh::TreeMesh, n_visnodes, verbose)
   coordinates, levels, center_level_0, length_level_0 = extract_mesh_information(mesh)
 
-  # Normalize element coordinates: move center to (0, 0) and domain size to [-1, 1]²
+  # Normalize element coordinates: move center to origin and domain size to [-1, 1]²
   normalized_coordinates = similar(coordinates)
   for element_id in axes(coordinates, 2)
     @views normalized_coordinates[:, element_id] .= (
@@ -77,7 +77,6 @@ function unstructured2structured(unstructured_data::AbstractArray{Float64},
 
   # Create output data structure
   structured = Array{Float64}(undef, resolution, resolution, n_variables)
-
   # For each variable, interpolate element data and store to global data structure
   for v in 1:n_variables
     # Reshape data array for use in interpolate_nodes function
@@ -135,7 +134,7 @@ end
 # Find 2D array index for a 2-tuple of normalized, cell-centered coordinates (i.e., in [-1,1])
 function coordinate2index(coordinate, resolution::Integer)
   # Calculate 1D normalized coordinates
-  dx = 2/resolution
+  dx = 2 / resolution
   mesh_coordinates = collect(range(-1 + dx/2, 1 - dx/2, length=resolution))
 
   # Find index
@@ -210,6 +209,7 @@ function interpolate_nodes(data_in::AbstractArray{T, 3},
   data_out = zeros(eltype(data_in), n_vars, n_nodes_out, n_nodes_out)
   interpolate_nodes!(data_out, data_in, vandermonde, n_vars)
 end
+
 
 function interpolate_nodes!(data_out::AbstractArray{T, 3}, data_in::AbstractArray{T, 3},
                             vandermonde, n_vars) where T
