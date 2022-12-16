@@ -81,7 +81,7 @@ end
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "3d/treemesh/dgsem_blob_amr_no_reinterp_04.vtu"
       ref_file = get_test_reference_file("dgsem_blob_amr_no_reinterp_04.vtu", remote_filename)
-      compare_point_info(out_file, ref_file)
+      compare_point_data(out_file, ref_file)
     end
 
     @timed_testset "do not reinterpolate with uniform data" begin
@@ -98,7 +98,7 @@ end
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "3d/treemesh/dgsem_blob_amr_no_reinterp_uniform_04.vtu"
       ref_file = get_test_reference_file("dgsem_blob_amr_no_reinterp_uniform_04.vtu", remote_filename)
-      compare_point_info(out_file, ref_file)
+      compare_point_data(out_file, ref_file)
     end
   end
 
@@ -154,7 +154,7 @@ end
         # remote file path is actually a URL so it always has the same path structure
         remote_filename = "3d/structuredmesh/dgsem_adv_reinterp_01.vtu"
         ref_file = get_test_reference_file("dgsem_adv_reinterp_01.vtu", remote_filename)
-        compare_point_info(out_file, ref_file)
+        compare_point_data(out_file, ref_file)
       end
 
       @timed_testset "do not reinterpolate with nonuniform data" begin
@@ -170,7 +170,7 @@ end
         # remote file path is actually a URL so it always has the same path structure
         remote_filename = "3d/structuredmesh/dgsem_adv_no_reinterp_01.vtu"
         ref_file = get_test_reference_file("dgsem_adv_no_reinterp_01.vtu", remote_filename)
-        compare_point_info(out_file, ref_file)
+        compare_point_data(out_file, ref_file)
       end
 
       @timed_testset "do not reinterpolate with uniform data" begin
@@ -187,7 +187,7 @@ end
         # remote file path is actually a URL so it always has the same path structure
         remote_filename = "3d/structuredmesh/dgsem_adv_no_reinterp_uniform_01.vtu"
         ref_file = get_test_reference_file("dgsem_adv_no_reinterp_uniform_01.vtu", remote_filename)
-        compare_point_info(out_file, ref_file)
+        compare_point_data(out_file, ref_file)
       end
     end
 
@@ -240,7 +240,7 @@ end
         # remote file path is actually a URL so it always has the same path structure
         remote_filename = "3d/p4estmesh/dgsem_adv_sphere_reinterp_02.vtu"
         ref_file = get_test_reference_file("dgsem_adv_sphere_reinterp_02.vtu", remote_filename)
-        compare_point_info(out_file, ref_file)
+        compare_point_data(out_file, ref_file)
       end
 
       @timed_testset "do not reinterpolate with nonuniform data" begin
@@ -256,7 +256,7 @@ end
         # remote file path is actually a URL so it always has the same path structure
         remote_filename = "3d/p4estmesh/dgsem_adv_sphere_no_reinterp_02.vtu"
         ref_file = get_test_reference_file("dgsem_adv_sphere_no_reinterp_02.vtu", remote_filename)
-        compare_point_info(out_file, ref_file)
+        compare_point_data(out_file, ref_file)
       end
 
       @timed_testset "do not reinterpolate with uniform data" begin
@@ -273,7 +273,7 @@ end
         # remote file path is actually a URL so it always has the same path structure
         remote_filename = "3d/p4estmesh/dgsem_adv_sphere_no_reinterp_uniform_02.vtu"
         ref_file = get_test_reference_file("dgsem_adv_sphere_no_reinterp_uniform_02.vtu", remote_filename)
-        compare_point_info(out_file, ref_file)
+        compare_point_data(out_file, ref_file)
       end
     end
   end

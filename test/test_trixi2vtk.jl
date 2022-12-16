@@ -55,7 +55,7 @@ mkpath(TEST_REFERENCE_DIR)
 
 
 """
-     compare_cell_info(out_filename, ref_filename; atol=500*eps(), rtol=sqrt(eps()))
+     compare_cell_data(out_filename, ref_filename; atol=500*eps(), rtol=sqrt(eps()))
 
 Test values from the VTK file header and acutal (possibly interpolated) cell data. Uses
 `out_filename` created during testing and compares against `ref_filename` that comes
@@ -110,14 +110,14 @@ end
 
 
 """
-    compare_point_info(out_filename, ref_filename; atol=500*eps(), rtol=sqrt(eps()))
+    compare_point_data(out_filename, ref_filename; atol=500*eps(), rtol=sqrt(eps()))
 
 Test values from the VTK file header and acutal (possibly interpolated) point data. Uses
 `out_filename` created during testing and compares against `ref_filename` that comes
 from the
 [`Trixi2Vtk_reference_files` repository](https://github.com/trixi-framework/Trixi2Vtk_reference_files).
 """
-function compare_point_info(out_filename, ref_filename; atol=500*eps(), rtol=sqrt(eps()))
+function compare_point_data(out_filename, ref_filename; atol=500*eps(), rtol=sqrt(eps()))
   # Load the data from both files
   ref_vtk = VTKFile(ref_filename)
   vtk = VTKFile(out_filename)
