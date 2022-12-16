@@ -120,19 +120,12 @@ end
     @timed_testset "attempt reinterpolate with uniform data" begin
       # Purposely request a bad configuration and check that an error message gets thrown
       # OBS! Only needs tested once across all mesh types and dimensions
-      let err = nothing
-        try
-          trixi2vtk(joinpath(outdir, "solution_000010.h5"), output_directory=outdir, data_is_uniform=true)
-        catch err
-        end
-        @test err isa Exception
-        @test sprint(showerror, err) == "uniform data should not be reinterpolated! Set reinterpolate=false and try again."
-      end
+      @test_throws ArgumentError trixi2vtk(joinpath(outdir, "solution_000010.h5"), output_directory=outdir, data_is_uniform=true)
     end
   end
 
 
-  if !Sys.iswindows()
+  if !Sys.iswindows() && get(ENV, "CI", nothing) == "true"
     # OBS! Only `TreeMesh` results are tested on Windows runners due to memory limits.
     #      All remaining mesh types are tested on Ubuntu and Mac
     @testset "StructuredMesh" begin
@@ -226,14 +219,7 @@ end
       @timed_testset "attempt VTI format on unsupportd mesh type" begin
         # Purposely request a bad configuration and check that an error message gets thrown
         # OBS! Only needs tested once across all mesh types and dimensions
-        let err = nothing
-          try
-            trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir, format=:vti)
-          catch err
-          end
-          @test err isa Exception
-          @test sprint(showerror, err) == "VTI format only available for 2D TreeMesh"
-        end
+        @test_throws ArgumentError trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir, format=:vti)
       end
     end
 

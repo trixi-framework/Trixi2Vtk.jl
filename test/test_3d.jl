@@ -102,7 +102,7 @@ end
     end
   end
 
-  if !Sys.iswindows()
+  if !Sys.iswindows() && get(ENV, "CI", nothing) == "true"
     # OBS! Only `TreeMesh` results are tested on Windows runners due to memory limits.
     #      All remaining mesh types are tested on Ubuntu and Mac
     @testset "StructuredMesh" begin

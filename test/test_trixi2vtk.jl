@@ -14,7 +14,7 @@ end
 """
     get_reference_file(filename, remotename; head="main", output_directory=".", force=false)
 
-Retrieve an reference file from the
+Retrieve a reference file from the
 [`Trixi2Vtk_reference_files` repository](https://github.com/trixi-framework/Trixi2Vtk_reference_files)
 at commit/branch `head` and store it in the `output_directory`. If the file already
 exists locally, do not download the file again unless `force` is true.
@@ -38,10 +38,10 @@ end
 # Note: The purpose of using a specific commit hash (instead of `main`) is to be able to tie a given
 #       version of Trixi2Vtk to a specific version of the test file repository. This way, also tests
 #       for older Trixi2Vtk releases should continue to work.
-TEST_REFERENCE_COMMIT = "c0a966b06489f9b2ee3aefeb0a5c0dae733df36f"
+const TEST_REFERENCE_COMMIT = "c0a966b06489f9b2ee3aefeb0a5c0dae733df36f"
 
 # Local folder to store downloaded reference files. If you change this, also adapt `../.gitignore`!
-TEST_REFERENCE_DIR = "reference_files"
+const TEST_REFERENCE_DIR = "reference_files"
 
 
 get_test_reference_file(filename, remotename) = get_reference_file(filename, remotename,
@@ -89,8 +89,8 @@ function compare_cell_info(out_filename, ref_filename; atol=500*eps(), rtol=sqrt
   # [`WriteVTK.jl`](https://github.com/jipolanco/WriteVTK.jl) created
   # the file in the first place. Even though there is this access error,
   # the `vtu` file is valid and can be used with ParaView or VisIt without issue.
-  # Therefore, we check all the variable data except for the last one.
-
+  # Therefore, we check all the variable data except for the last one,
+  # unless the file only has a single variable stored as cell data.
   eqn_check_number = length(ref_cell_data.names) == 1 ? length(ref_cell_data.names) : length(ref_cell_data.names)-1
 
   # check that the actual plot data is (approximately) the same

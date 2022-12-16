@@ -113,8 +113,8 @@ function trixi2vtk(filename::AbstractString...;
     @timeit "read mesh" mesh = Trixi.load_mesh_serial(meshfile; n_cells_max=0, RealT=Float64)
 
     # Check compatibility of the mesh type and the output format
-    if format == :vti && !(mesh isa Trixi.TreeMesh)
-      error("VTI format only available for 2D TreeMesh")
+    if format === :vti && !(mesh isa Trixi.TreeMesh)
+      throw(ArgumentError("VTI format only available for 2D TreeMesh"))
     end
 
     # Read data only if it is a data file
@@ -140,15 +140,15 @@ function trixi2vtk(filename::AbstractString...;
 
     # Check if the raw data is uniform (finite difference) or not (dg)
     # and create the corresponding node set for reinterpolation / copying.
-    if (reinterpolate & !data_is_uniform) | (!reinterpolate & data_is_uniform)
+    if (reinterpolate && !data_is_uniform) || (!reinterpolate && data_is_uniform)
       # (1) Default settings; presumably the most common
       # (2) Finite difference data
       node_set = range(-1, 1, length=n_visnodes)
-    elseif !reinterpolate & !data_is_uniform
+    elseif !reinterpolate && !data_is_uniform
       # raw data is on a set of LGL nodes
       node_set, _ = gauss_lobatto_nodes_weights(n_visnodes)
     else # reinterpolate & data_is_uniform
-      error("uniform data should not be reinterpolated! Set reinterpolate=false and try again.")
+      throw(ArgumentError("Uniform data should not be reinterpolated! Set `reinterpolate=false` and try again."))
     end
 
     # Create output directory if it does not exist

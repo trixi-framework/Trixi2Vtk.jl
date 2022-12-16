@@ -114,7 +114,7 @@ function build_vtk_grids(::Val{:vti}, mesh::TreeMesh, nodes, n_visnodes, verbose
     # Determine level-wise resolution
     max_level = maximum(levels)
     resolution = n_visnodes * 2^max_level
-    origin = center_level_0 .- 1/2 * length_level_0
+    origin = @. center_level_0 - 0.5 * length_level_0
 
     Nx = Ny = resolution + 1
     dx = dy = length_level_0/resolution
@@ -244,7 +244,7 @@ end
 
 
 # Calculation of the node coordinates for `TreeMesh` in 2D
-function calc_node_coordinates!(node_coordinates::AbstractArray{<:Any, 4}, nodes, mesh)
+function calc_node_coordinates!(node_coordinates, nodes, mesh::TreeMesh{2})
   _, levels, _, length_level_0 = extract_mesh_information(mesh)
 
   # Extract number of spatial dimensions
@@ -288,7 +288,7 @@ end
 
 
 # Calculation of the node coordinates for `TreeMesh` in 3D
-function calc_node_coordinates!(node_coordinates::AbstractArray{<:Any, 5}, nodes, mesh)
+function calc_node_coordinates!(node_coordinates, nodes, mesh::TreeMesh{3})
   _, levels, _, length_level_0 = extract_mesh_information(mesh)
 
   # Extract number of spatial dimensions
