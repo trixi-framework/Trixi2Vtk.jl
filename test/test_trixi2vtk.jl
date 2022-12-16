@@ -62,7 +62,7 @@ Test values from the VTK file header and acutal (possibly interpolated) cell dat
 from the
 [`Trixi2Vtk_reference_files` repository](https://github.com/trixi-framework/Trixi2Vtk_reference_files).
 """
-function compare_cell_info(out_filename, ref_filename; atol=500*eps(), rtol=sqrt(eps()))
+function compare_cell_data(out_filename, ref_filename; atol=500*eps(), rtol=sqrt(eps()))
   ref_vtk = VTKFile(ref_filename)
   vtk = VTKFile(out_filename)
 

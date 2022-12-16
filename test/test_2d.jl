@@ -33,7 +33,7 @@ end
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "2d/treemesh/dgsem_sedov_amr_mesh_10.vtu"
       ref_file = get_test_reference_file("dgsem_sedov_amr_mesh_10.vtu", remote_filename)
-      compare_cell_info(out_file, ref_file)
+      compare_cell_data(out_file, ref_file)
     end
 
     @timed_testset "solution celldata" begin
@@ -49,7 +49,7 @@ end
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "2d/treemesh/dgsem_sedov_amr_celldata_10.vtu"
       ref_file = get_test_reference_file("dgsem_sedov_amr_celldata_10.vtu", remote_filename)
-      compare_cell_info(out_file, ref_file)
+      compare_cell_data(out_file, ref_file)
     end
 
     @timed_testset "reinterpolate with nonuniform data with VTU format" begin
@@ -65,7 +65,7 @@ end
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "2d/treemesh/dgsem_sedov_amr_reinterp_10.vtu"
       ref_file = get_test_reference_file("dgsem_sedov_amr_reinterp_10.vtu", remote_filename)
-      compare_cell_info(out_file, ref_file)
+      compare_cell_data(out_file, ref_file)
     end
 
     @timed_testset "reinterpolate with nonuniform data with VTI format" begin
@@ -81,7 +81,7 @@ end
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "2d/treemesh/dgsem_sedov_amr_10.vti"
       ref_file = get_test_reference_file("dgsem_sedov_amr_10.vti", remote_filename)
-      compare_cell_info(out_file, ref_file)
+      compare_cell_data(out_file, ref_file)
     end
 
     @timed_testset "do not reinterpolate with nonuniform data" begin
@@ -145,7 +145,7 @@ end
         # remote file path is actually a URL so it always has the same path structure
         remote_filename = "2d/structuredmesh/dgsem_adv_mesh_01.vtu"
         ref_file = get_test_reference_file("dgsem_adv_mesh_01.vtu", remote_filename)
-        compare_cell_info(out_file, ref_file)
+        compare_cell_data(out_file, ref_file)
       end
 
       @timed_testset "solution celldata" begin
@@ -164,7 +164,7 @@ end
         # remote file path is actually a URL so it always has the same path structure
         remote_filename = "2d/structuredmesh/dgsem_adv_celldata_01.vtu"
         ref_file = get_test_reference_file("dgsem_adv_celldata_01.vtu", remote_filename)
-        compare_cell_info(out_file, ref_file)
+        compare_cell_data(out_file, ref_file)
       end
 
       @timed_testset "reinterpolate with nonuniform data" begin
@@ -240,7 +240,7 @@ end
         # remote file path is actually a URL so it always has the same path structure
         remote_filename = "2d/unstructuredmesh/dgsem_swe_mesh_01.vtu"
         ref_file = get_test_reference_file("dgsem_swe_mesh_01.vtu", remote_filename)
-        compare_cell_info(out_file, ref_file)
+        compare_cell_data(out_file, ref_file)
       end
 
       @timed_testset "solution celldata" begin
@@ -256,7 +256,7 @@ end
         # remote file path is actually a URL so it always has the same path structure
         remote_filename = "2d/unstructuredmesh/dgsem_swe_celldata_01.vtu"
         ref_file = get_test_reference_file("dgsem_swe_celldata_01.vtu", remote_filename)
-        compare_cell_info(out_file, ref_file)
+        compare_cell_data(out_file, ref_file)
       end
 
       @timed_testset "reinterpolate with nonuniform data" begin
@@ -326,7 +326,7 @@ end
         # remote file path is actually a URL so it always has the same path structure
         remote_filename = "2d/p4estmesh/dgsem_rotor_amr_mesh_05.vtu"
         ref_file = get_test_reference_file("dgsem_rotor_amr_mesh_05.vtu", remote_filename)
-        compare_cell_info(out_file, ref_file)
+        compare_cell_data(out_file, ref_file)
       end
 
       @timed_testset "solution celldata" begin
@@ -342,7 +342,7 @@ end
         # remote file path is actually a URL so it always has the same path structure
         remote_filename = "2d/p4estmesh/dgsem_rotor_amr_celldata_05.vtu"
         ref_file = get_test_reference_file("dgsem_rotor_amr_celldata_05.vtu", remote_filename)
-        compare_cell_info(out_file, ref_file)
+        compare_cell_data(out_file, ref_file)
       end
 
       @timed_testset "reinterpolate with nonuniform data" begin
