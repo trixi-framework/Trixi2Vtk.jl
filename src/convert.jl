@@ -139,7 +139,7 @@ function trixi2vtk(filename::AbstractString...;
       if (reinterpolate && !data_is_uniform) || (!reinterpolate && data_is_uniform)
         # (1) Default settings; presumably the most common
         # (2) Finite difference data
-        node_set = range(-1, 1, length=n_visnodes)
+        node_set = collect(range(-1, 1, length=n_visnodes))
       elseif !reinterpolate && !data_is_uniform
         # raw data is on a set of LGL nodes
         node_set, _ = gauss_lobatto_nodes_weights(n_visnodes)
