@@ -113,7 +113,7 @@ function trixi2vtk(filename::AbstractString...;
     @timeit "read mesh" mesh = Trixi.load_mesh_serial(meshfile; n_cells_max=0, RealT=Float64)
 
     # Check compatibility of the mesh type and the output format
-    if format === :vti && !(mesh isa Trixi.TreeMesh)
+    if format === :vti && !(mesh isa Trixi.TreeMesh{2})
       throw(ArgumentError("VTI format only available for 2D TreeMesh"))
     end
 
