@@ -120,12 +120,10 @@ function unstructured2structured(unstructured_data::AbstractArray{Float64},
 
   # Create output data structure
   structured = Array{Float64}(undef, resolution, resolution, n_variables)
-
   # For each variable, interpolate element data and store to global data structure
   for v in 1:n_variables
     # Reshape data array for use in interpolate_nodes function
     reshaped_data = reshape(unstructured_data[:, :, :, v], 1, n_nodes_in, n_nodes_in, n_elements)
-
 
     for element_id in 1:n_elements
       # Extract level for convenience

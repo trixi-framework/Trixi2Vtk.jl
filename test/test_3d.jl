@@ -9,8 +9,6 @@ include("test_trixi2vtk.jl")
 outdir = "out"
 isdir(outdir) && rm(outdir, recursive=true)
 
-# Windows github runners encounter memory issues saving all the output files.
-# So artifacts are only save on Ubuntu and Mac
 # Create artifacts directory where all files that should be preserved will be stored
 artifacts_dir = joinpath(pathof(Trixi2Vtk) |> dirname |> dirname, "artifacts")
 if !isdir(artifacts_dir)

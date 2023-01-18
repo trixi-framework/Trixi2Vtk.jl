@@ -1,4 +1,4 @@
-using Test: @test_nowarn, @test, @testset, @test_skip
+using Test: @test_nowarn, @test, @testset
 using Downloads: download
 using Trixi
 using Trixi2Vtk
