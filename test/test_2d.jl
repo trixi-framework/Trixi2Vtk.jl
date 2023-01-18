@@ -35,7 +35,7 @@ end
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "2d/treemesh/dgsem_sedov_amr_mesh_10.vtu"
       ref_file = get_test_reference_file("dgsem_sedov_amr_mesh_10.vtu", remote_filename)
-      compare_cell_info(out_file, ref_file)
+      compare_cell_data(out_file, ref_file)
     end
 
     @timed_testset "solution celldata" begin
@@ -51,10 +51,10 @@ end
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "2d/treemesh/dgsem_sedov_amr_celldata_10.vtu"
       ref_file = get_test_reference_file("dgsem_sedov_amr_celldata_10.vtu", remote_filename)
-      compare_cell_info(out_file, ref_file)
+      compare_cell_data(out_file, ref_file)
     end
 
-    @timed_testset "reinterpolate with nonuniform data" begin
+    @timed_testset "reinterpolate with nonuniform data with VTU format" begin
       # Create and test output with reinterpolation (default options: `reinterpolate=true, data_is_uniform=false`)
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000010.h5"), output_directory=outdir)
       outfilename = "solution_000010.vtu"
@@ -67,7 +67,23 @@ end
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "2d/treemesh/dgsem_sedov_amr_reinterp_10.vtu"
       ref_file = get_test_reference_file("dgsem_sedov_amr_reinterp_10.vtu", remote_filename)
-      compare_cell_info(out_file, ref_file)
+      compare_cell_data(out_file, ref_file)
+    end
+
+    @timed_testset "reinterpolate with nonuniform data with VTI format" begin
+      # Create and test output with reinterpolation (default options: `reinterpolate=true, data_is_uniform=false`)
+      @test_nowarn trixi2vtk(joinpath(outdir, "solution_000010.h5"), output_directory=outdir, format=:vti)
+      outfilename = "solution_000010.vti"
+      out_file = joinpath(outdir, outfilename)
+
+      # save output file to `artifacts` to facilitate debugging of failing tests
+      testname = "2d-treemesh-vti-format"
+      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+
+      # remote file path is actually a URL so it always has the same path structure
+      remote_filename = "2d/treemesh/dgsem_sedov_amr_10.vti"
+      ref_file = get_test_reference_file("dgsem_sedov_amr_10.vti", remote_filename)
+      compare_cell_data(out_file, ref_file)
     end
 
     @timed_testset "do not reinterpolate with nonuniform data" begin
@@ -83,7 +99,7 @@ end
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "2d/treemesh/dgsem_sedov_amr_no_reinterp_10.vtu"
       ref_file = get_test_reference_file("dgsem_sedov_amr_no_reinterp_10.vtu", remote_filename)
-      compare_point_info(out_file, ref_file)
+      compare_point_data(out_file, ref_file)
     end
 
     @timed_testset "do not reinterpolate with uniform data" begin
@@ -100,25 +116,18 @@ end
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "2d/treemesh/dgsem_sedov_amr_no_reinterp_uniform_10.vtu"
       ref_file = get_test_reference_file("dgsem_sedov_amr_no_reinterp_uniform_10.vtu", remote_filename)
-      compare_point_info(out_file, ref_file)
+      compare_point_data(out_file, ref_file)
     end
 
     @timed_testset "attempt reinterpolate with uniform data" begin
       # Purposely request a bad configuration and check that an error message gets thrown
       # OBS! Only needs tested once across all mesh types and dimensions
-      let err = nothing
-        try
-          trixi2vtk(joinpath(outdir, "solution_000010.h5"), output_directory=outdir, data_is_uniform=true)
-        catch err
-        end
-        @test err isa Exception
-        @test sprint(showerror, err) == "uniform data should not be reinterpolated! Set reinterpolate=false and try again."
-      end
+      @test_throws ArgumentError trixi2vtk(joinpath(outdir, "solution_000010.h5"), output_directory=outdir, data_is_uniform=true)
     end
   end
 
 
-  if !Sys.iswindows()
+  if !Sys.iswindows() && get(ENV, "CI", nothing) == "true"
     # OBS! Only `TreeMesh` results are tested on Windows runners due to memory limits.
     #      All remaining mesh types are tested on Ubuntu and Mac
     @testset "StructuredMesh" begin
@@ -138,7 +147,7 @@ end
         # remote file path is actually a URL so it always has the same path structure
         remote_filename = "2d/structuredmesh/dgsem_adv_mesh_01.vtu"
         ref_file = get_test_reference_file("dgsem_adv_mesh_01.vtu", remote_filename)
-        compare_cell_info(out_file, ref_file)
+        compare_cell_data(out_file, ref_file)
       end
 
       @timed_testset "solution celldata" begin
@@ -157,7 +166,7 @@ end
         # remote file path is actually a URL so it always has the same path structure
         remote_filename = "2d/structuredmesh/dgsem_adv_celldata_01.vtu"
         ref_file = get_test_reference_file("dgsem_adv_celldata_01.vtu", remote_filename)
-        compare_cell_info(out_file, ref_file)
+        compare_cell_data(out_file, ref_file)
       end
 
       @timed_testset "reinterpolate with nonuniform data" begin
@@ -173,7 +182,7 @@ end
         # remote file path is actually a URL so it always has the same path structure
         remote_filename = "2d/structuredmesh/dgsem_adv_reinterp_01.vtu"
         ref_file = get_test_reference_file("dgsem_adv_reinterp_01.vtu", remote_filename)
-        compare_point_info(out_file, ref_file)
+        compare_point_data(out_file, ref_file)
       end
 
       @timed_testset "do not reinterpolate with nonuniform data" begin
@@ -189,7 +198,7 @@ end
         # remote file path is actually a URL so it always has the same path structure
         remote_filename = "2d/structuredmesh/dgsem_adv_no_reinterp_01.vtu"
         ref_file = get_test_reference_file("dgsem_adv_no_reinterp_01.vtu", remote_filename)
-        compare_point_info(out_file, ref_file)
+        compare_point_data(out_file, ref_file)
       end
 
       @timed_testset "do not reinterpolate with uniform data" begin
@@ -206,7 +215,13 @@ end
         # remote file path is actually a URL so it always has the same path structure
         remote_filename = "2d/structuredmesh/dgsem_adv_no_reinterp_uniform_01.vtu"
         ref_file = get_test_reference_file("dgsem_adv_no_reinterp_uniform_01.vtu", remote_filename)
-        compare_point_info(out_file, ref_file)
+        compare_point_data(out_file, ref_file)
+      end
+
+      @timed_testset "attempt VTI format on unsupportd mesh type" begin
+        # Purposely request a bad configuration and check that an error message gets thrown
+        # OBS! Only needs tested once across all mesh types and dimensions
+        @test_throws ArgumentError trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir, format=:vti)
       end
     end
 
@@ -227,7 +242,7 @@ end
         # remote file path is actually a URL so it always has the same path structure
         remote_filename = "2d/unstructuredmesh/dgsem_swe_mesh_01.vtu"
         ref_file = get_test_reference_file("dgsem_swe_mesh_01.vtu", remote_filename)
-        compare_cell_info(out_file, ref_file)
+        compare_cell_data(out_file, ref_file)
       end
 
       @timed_testset "solution celldata" begin
@@ -243,7 +258,7 @@ end
         # remote file path is actually a URL so it always has the same path structure
         remote_filename = "2d/unstructuredmesh/dgsem_swe_celldata_01.vtu"
         ref_file = get_test_reference_file("dgsem_swe_celldata_01.vtu", remote_filename)
-        compare_cell_info(out_file, ref_file)
+        compare_cell_data(out_file, ref_file)
       end
 
       @timed_testset "reinterpolate with nonuniform data" begin
@@ -259,7 +274,7 @@ end
         # remote file path is actually a URL so it always has the same path structure
         remote_filename = "2d/unstructuredmesh/dgsem_swe_reinterp_01.vtu"
         ref_file = get_test_reference_file("dgsem_swe_reinterp_01.vtu", remote_filename)
-        compare_point_info(out_file, ref_file)
+        compare_point_data(out_file, ref_file)
       end
 
       @timed_testset "do not reinterpolate with nonuniform data" begin
@@ -275,7 +290,7 @@ end
         # remote file path is actually a URL so it always has the same path structure
         remote_filename = "2d/unstructuredmesh/dgsem_swe_no_reinterp_01.vtu"
         ref_file = get_test_reference_file("dgsem_swe_no_reinterp_01.vtu", remote_filename)
-        compare_point_info(out_file, ref_file)
+        compare_point_data(out_file, ref_file)
       end
 
       @timed_testset "do not reinterpolate with uniform data" begin
@@ -292,7 +307,7 @@ end
         # remote file path is actually a URL so it always has the same path structure
         remote_filename = "2d/unstructuredmesh/dgsem_swe_no_reinterp_uniform_01.vtu"
         ref_file = get_test_reference_file("dgsem_swe_no_reinterp_uniform_01.vtu", remote_filename)
-        compare_point_info(out_file, ref_file)
+        compare_point_data(out_file, ref_file)
       end
     end
 
@@ -313,7 +328,7 @@ end
         # remote file path is actually a URL so it always has the same path structure
         remote_filename = "2d/p4estmesh/dgsem_rotor_amr_mesh_05.vtu"
         ref_file = get_test_reference_file("dgsem_rotor_amr_mesh_05.vtu", remote_filename)
-        compare_cell_info(out_file, ref_file)
+        compare_cell_data(out_file, ref_file)
       end
 
       @timed_testset "solution celldata" begin
@@ -329,7 +344,7 @@ end
         # remote file path is actually a URL so it always has the same path structure
         remote_filename = "2d/p4estmesh/dgsem_rotor_amr_celldata_05.vtu"
         ref_file = get_test_reference_file("dgsem_rotor_amr_celldata_05.vtu", remote_filename)
-        compare_cell_info(out_file, ref_file)
+        compare_cell_data(out_file, ref_file)
       end
 
       @timed_testset "reinterpolate with nonuniform data" begin
@@ -345,7 +360,7 @@ end
         # remote file path is actually a URL so it always has the same path structure
         remote_filename = "2d/p4estmesh/dgsem_rotor_amr_reinterp_05.vtu"
         ref_file = get_test_reference_file("dgsem_rotor_amr_reinterp_05.vtu", remote_filename)
-        compare_point_info(out_file, ref_file)
+        compare_point_data(out_file, ref_file)
       end
 
       @timed_testset "do not reinterpolate with nonuniform data" begin
@@ -361,7 +376,7 @@ end
         # remote file path is actually a URL so it always has the same path structure
         remote_filename = "2d/p4estmesh/dgsem_rotor_amr_no_reinterp_05.vtu"
         ref_file = get_test_reference_file("dgsem_rotor_amr_no_reinterp_05.vtu", remote_filename)
-        compare_point_info(out_file, ref_file)
+        compare_point_data(out_file, ref_file)
       end
 
       @timed_testset "do not reinterpolate with uniform data" begin
@@ -378,7 +393,7 @@ end
         # remote file path is actually a URL so it always has the same path structure
         remote_filename = "2d/p4estmesh/dgsem_rotor_amr_no_reinterp_uniform_05.vtu"
         ref_file = get_test_reference_file("dgsem_rotor_amr_no_reinterp_uniform_05.vtu", remote_filename)
-        compare_point_info(out_file, ref_file)
+        compare_point_data(out_file, ref_file)
       end
     end
   end

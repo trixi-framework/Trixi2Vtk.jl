@@ -112,8 +112,10 @@ function trixi2vtk(filename::AbstractString...;
     verbose && println("| Reading mesh file...")
     @timeit "read mesh" mesh = Trixi.load_mesh_serial(meshfile; n_cells_max=0, RealT=Float64)
 
-    # Create an empty `node_set` such that converting a mesh.h5 file also works
-    node_set = []
+    # Check compatibility of the mesh type and the output format
+    if format === :vti && !(mesh isa Trixi.TreeMesh{2})
+      throw(ArgumentError("VTI format only available for 2D TreeMesh"))
+    end
 
     # Read data only if it is a data file
     if is_datafile
@@ -131,9 +133,24 @@ function trixi2vtk(filename::AbstractString...;
       if !reinterpolate
         n_visnodes = n_nodes
       end
+
+      # Check if the raw data is uniform (finite difference) or not (dg)
+      # and create the corresponding node set for reinterpolation / copying.
+      if (reinterpolate && !data_is_uniform) || (!reinterpolate && data_is_uniform)
+        # (1) Default settings; presumably the most common
+        # (2) Finite difference data
+        node_set = collect(range(-1, 1, length=n_visnodes))
+      elseif !reinterpolate && !data_is_uniform
+        # raw data is on a set of LGL nodes
+        node_set, _ = gauss_lobatto_nodes_weights(n_visnodes)
+      else # reinterpolate & data_is_uniform
+        throw(ArgumentError("Uniform data should not be reinterpolated! Set `reinterpolate=false` and try again."))
+      end
     else
       # If file is a mesh file, do not interpolate data as detailed
       n_visnodes = get_default_nvisnodes_mesh(nvisnodes, mesh)
+      # Create an "empty" node set that is unused in the mesh conversion
+      node_set = Array{Float64}(undef, n_visnodes)
     end
 
     # Check if the raw data is uniform (finite difference) or not (dg)
