@@ -39,6 +39,12 @@ isdir(outdir) && rm(outdir, recursive=true)
     @test_nowarn trixi2vtk(joinpath(outdir, "mesh.h5"); output_directory=outdir)
   end
 
+  @testset "trixi2vtk set number of output nodes" begin
+    @test_nowarn trixi2vtk(joinpath(outdir, "solution_000000.h5"); nvisnodes=0)
+
+    @test_nowarn trixi2vtk(joinpath(outdir, "solution_000000.h5"); nvisnodes=5)
+  end
+
   @timed_testset "pvd_filenames" begin
     @test Trixi2Vtk.pvd_filenames("", "manual", "out") == (joinpath("out", "manual"), joinpath("out", "manual_celldata"))
     @test_throws ErrorException Trixi2Vtk.pvd_filenames(("a", "b"), nothing, "out")
