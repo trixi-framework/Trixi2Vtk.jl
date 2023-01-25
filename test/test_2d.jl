@@ -216,7 +216,7 @@ end
         compare_point_data(out_file, ref_file)
       end
 
-      @timed_testset "attempt VTI format on unsupportd mesh type" begin
+      @timed_testset "attempt VTI format on unsupported mesh type" begin
         # Purposely request a bad configuration and check that an error message gets thrown
         # OBS! Only needs tested once across all mesh types and dimensions
         @test_throws ArgumentError trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir, format=:vti)
