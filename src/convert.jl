@@ -399,7 +399,7 @@ function add_celldata!(vtk_celldata, mesh::P4estMesh, verbose)
   cell_counter = 1
   # Iterate through the p4est trees and each of their quadrants.
   # Assigns the tree index values. Also, grab and assign the level value.
-  for tree in Trixi.unsafe_wrap_sc(Trixi.P4est.p4est_tree_t, mesh.p4est.trees)
+  for tree in Trixi.unsafe_wrap_sc(Trixi.P4est.p4est_tree_t, unsafe_load(mesh.p4est).trees)
     for quadrant in Trixi.unsafe_wrap_sc(Trixi.P4est.p4est_quadrant_t, tree.quadrants)
       tree_ids[cell_counter] = tree_counter
       cell_levels[cell_counter] = quadrant.level
