@@ -204,12 +204,12 @@ function trixi2vtk(filename::AbstractString...;
           for (label, variable) in node_variables
             verbose && println("| | Node variable: $label...")
             if reinterpolate
-              @timeit "interpolate cell data" interpolated_cell_data = interpolate_cell_data(Val(format),
-                                                                        variable, mesh,
-                                                                        n_visnodes, verbose)
+              @timeit "interpolate data" interpolated_cell_data = interpolate_data(Val(format),
+                                                                    reshape(variable, size(variable)..., 1),
+                                                                    mesh, n_visnodes, verbose)
             else
-              @timeit "interpolate cell data" interpolated_cell_data = reshape(variable,
-                                                                        n_visnodes^ndims_ * n_elements)
+              @timeit "interpolate data" interpolated_cell_data = reshape(variable,
+                                                                          n_visnodes^ndims_ * n_elements)
             end
             # Add the "interpolated" cell_data to celldata, not node_data
             @timeit label vtk_nodedata[label] = interpolated_cell_data

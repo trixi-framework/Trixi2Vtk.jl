@@ -8,49 +8,6 @@ function interpolate_data(::Val{:vtu}, input_data, mesh::TreeMesh, n_visnodes, v
   return raw2interpolated(input_data, nodes_out)
 end
 
-function interpolate_cell_data(::Val{:vtu}, input_data, mesh::Union{TreeMesh, StructuredMesh}, n_visnodes, verbose)
-  # Calculate equidistant output nodes (visualization nodes)
-  nodes_out = collect(range(-1, 1, length=n_visnodes))
-
-  # Extract number of spatial dimensions
-  ndims_ = ndims(mesh)
-
-  # Extract data shape information
-  n_nodes_in = size(input_data, 1)
-  n_nodes_out = length(nodes_out)
-  n_elements = size(input_data, ndims_ + 1)
-
-  # Get node coordinates for DG locations on reference element
-  nodes_in, weights_in = gauss_lobatto_nodes_weights(n_nodes_in)
-
-  if ndims_ == 2
-    # Create output data structure
-    data_vis = Array{Float64}(undef, n_nodes_out, n_nodes_out, n_elements)
-
-    # Interpolate node data for visualization nodes to piecewise constant values and store to global data structure
-    for element_id in 1:n_elements
-      index_j = 1
-      for j in 1:n_nodes_out
-        index_i = 1
-        for i in 1:n_nodes_out
-          while -1.0 + sum(weights_in[1:index_i]) < nodes_out[i]
-            index_i += 1
-          end
-          while -1.0 + sum(weights_in[1:index_j]) < nodes_out[j]
-            index_j += 1
-          end
-          data_vis[i, j, element_id] = input_data[index_i, index_j, element_id]
-        end
-      end
-    end
-  else
-    error("Unsupported number of spatial dimensions: ", ndims_)
-  end
-
-  # Return as one 1D array
-  return reshape(data_vis, n_nodes_out^ndims_ * n_elements)
-end
-
 
 # Interpolate data from input format to desired output format (StructuredMesh or UnstructuredMesh2D version)
 function interpolate_data(::Val{:vtu}, input_data,
