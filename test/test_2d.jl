@@ -395,6 +395,18 @@ end
       end
     end
   end
+
+  @testset "Subcell limiting coefficients" begin
+    isdir(outdir) && rm(outdir, recursive=true)
+    run_trixi(joinpath(examples_dir(), "tree_2d_dgsem", "elixir_euler_shockcapturing_subcell.jl"), maxiters=10)
+
+    @timed_testset "do not reinterpolate" begin
+      @test_nowarn trixi2vtk(joinpath(outdir, "solution_000010.h5"), output_directory=outdir, reinterpolate=false)
+    end
+    @timed_testset "do reinterpolate" begin
+      @test_nowarn trixi2vtk(joinpath(outdir, "solution_000010.h5"), output_directory=outdir, reinterpolate=true)
+    end
+  end
 end
 
 # Clean up afterwards: delete Trixi output directory and reference file directory
