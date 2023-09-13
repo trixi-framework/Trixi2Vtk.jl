@@ -80,7 +80,10 @@ function trixi2vtk(filename::AbstractString...;
 
   # Show progress bar if not disabled
   if !hide_progress
-    progress = Progress(length(filenames), 0.5, "Converting .h5 to .$(format)...", 40)
+    progress = Progress(length(filenames);
+                        dt = 0.5,
+                        desc = "Converting .h5 to .$(format)...",
+                        barlen = 40)
   end
 
   # Iterate over input files
