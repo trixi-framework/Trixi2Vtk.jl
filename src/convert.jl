@@ -207,9 +207,9 @@ function trixi2vtk(filename::AbstractString...;
           for (label, variable) in node_variables
             verbose && println("| | Node variable: $label...")
             if reinterpolate
-              @info "The limiting coefficients are no continuous field but happens to be" *
+              println("The limiting coefficients are no continuous field but happens to be" *
               "represented by a piecewise-constant approximation. Thus, reinterpolation does" *
-              "not give a meaningful representation"
+              "not give a meaningful representation")
               @timeit "interpolate data" interpolated_cell_data = interpolate_data(Val(format),
                                                                     reshape(variable, size(variable)..., 1),
                                                                     mesh, n_visnodes, verbose)
