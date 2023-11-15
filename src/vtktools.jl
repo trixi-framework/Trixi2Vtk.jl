@@ -234,8 +234,9 @@ end
 function calc_node_coordinates(mesh::P4estMesh, nodes, n_visnodes)
   # Extract number of spatial dimensions
   ndims_ = ndims(mesh)
+  ndims_spa = size(mesh.tree_node_coordinates,1)
 
-  node_coordinates = Array{Float64, ndims_+2}(undef, ndims_,
+  node_coordinates = Array{Float64, ndims_+2}(undef, ndims_spa,
                                               ntuple(_ -> n_visnodes, ndims_)...,
                                               Trixi.ncells(mesh))
 
@@ -580,7 +581,7 @@ function calc_vtk_points_cells(node_coordinates::AbstractArray{<:Any,4})
   linear_indices = LinearIndices(size_[2:end])
 
   # Use lagrange nodes as VTK points
-  vtk_points = reshape(node_coordinates, (2, n_points))
+  vtk_points = reshape(node_coordinates, (size(node_coordinates, 1), n_points))
   vtk_cells = Vector{MeshCell}(undef, n_elements)
 
   # Create cell for each element
