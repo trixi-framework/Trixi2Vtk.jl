@@ -8,7 +8,7 @@ Trixi = "a7f1ee26-1774-49b1-8366-f1abc58fbfcb"
 
 [compat]
 Documenter = "0.27, 1"
-Downloads = "1.7"
+Downloads = "1"
 OrdinaryDiffEq = "6"
 ReadVTK = "0.1"
 Trixi = "0.5"
