@@ -32,13 +32,13 @@ function build_vtk_grids(::Val{:vtu}, mesh::TreeMesh, nodes, n_visnodes, verbose
   verbose && println("| Building VTK grid...")
   if is_datafile
     @timeit "build VTK grid (node data)" vtk_nodedata = vtk_grid(vtk_filename, vtk_points,
-                                                                 vtk_cells)
+                                                                 vtk_cells; append = false)
   else
     vtk_nodedata = nothing
   end
   @timeit "build VTK grid (cell data)" vtk_celldata = vtk_grid(vtk_celldata_filename,
                                                                 vtk_celldata_points,
-                                                                vtk_celldata_cells)
+                                                                vtk_celldata_cells; append = false)
 
   return vtk_nodedata, vtk_celldata
 end
@@ -74,13 +74,13 @@ function build_vtk_grids(::Val{:vtu}, mesh::TreeMesh,
   verbose && println("| Building VTK grid...")
   if is_datafile
     @timeit "build VTK grid (node data)" vtk_nodedata = vtk_grid(vtk_filename, vtk_points,
-                                                                 vtk_cells)
+                                                                 vtk_cells; append = false)
   else
     vtk_nodedata = nothing
   end
   @timeit "build VTK grid (cell data)" vtk_celldata = vtk_grid(vtk_celldata_filename,
                                                                 vtk_celldata_points,
-                                                                vtk_celldata_cells)
+                                                                vtk_celldata_cells; append = false)
 
   return vtk_nodedata, vtk_celldata
 end
@@ -121,13 +121,13 @@ function build_vtk_grids(::Val{:vti}, mesh::TreeMesh, nodes, n_visnodes, verbose
     spacing = (dx, dy)
     @timeit "build VTK grid (node data)" vtk_nodedata = vtk_grid(vtk_filename, Nx, Ny,
                                                                  origin=tuple(origin...),
-                                                                 spacing=spacing)
+                                                                 spacing=spacing; append = false)
   else
     vtk_nodedata = nothing
   end
   @timeit "build VTK grid (cell data)" vtk_celldata = vtk_grid(vtk_celldata_filename,
                                                       vtk_celldata_points,
-                                                      vtk_celldata_cells)
+                                                      vtk_celldata_cells; append = false)
 
   return vtk_nodedata, vtk_celldata
 end
@@ -165,13 +165,13 @@ function build_vtk_grids(::Val{:vtu},
   verbose && println("| Building VTK grid...")
   if is_datafile
     @timeit "build VTK grid (node data)" vtk_nodedata = vtk_grid(vtk_filename, vtk_points,
-                                                                 vtk_cells)
+                                                                 vtk_cells; append = false)
   else
     vtk_nodedata = nothing
   end
   @timeit "build VTK grid (cell data)" vtk_celldata = vtk_grid(vtk_celldata_filename,
                                                                 vtk_celldata_points,
-                                                                vtk_celldata_cells)
+                                                                vtk_celldata_cells; append = false)
 
   return vtk_nodedata, vtk_celldata
 end
