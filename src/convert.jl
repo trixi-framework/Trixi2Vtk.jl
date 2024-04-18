@@ -268,7 +268,7 @@ function assert_cells_elements(n_elements, mesh::TreeMesh, filename, meshfile)
 end
 
 
-function assert_cells_elements(n_elements, mesh::StructuredMesh, filename, meshfile)
+function assert_cells_elements(n_elements, mesh::Union{StructuredMesh, StructuredMeshView}, filename, meshfile)
   # Check if dimensions match
   if prod(size(mesh)) != n_elements
     error("number of elements in '$(filename)' do not match number of cells in " *
@@ -310,7 +310,7 @@ function get_default_nvisnodes_solution(nvisnodes, n_nodes, mesh::TreeMesh)
 end
 
 function get_default_nvisnodes_solution(nvisnodes, n_nodes,
-                                        mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh})
+                                        mesh::Union{StructuredMesh, StructuredMeshView, UnstructuredMesh2D, P4estMesh})
   if nvisnodes === nothing || nvisnodes == 0
     return n_nodes
   else
@@ -330,7 +330,7 @@ function get_default_nvisnodes_mesh(nvisnodes, mesh::TreeMesh)
 end
 
 function get_default_nvisnodes_mesh(nvisnodes,
-                                    mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh})
+                                    mesh::Union{StructuredMesh, StructuredMeshView, UnstructuredMesh2D, P4estMesh})
   if nvisnodes === nothing
     # for curved meshes, we need to get at least the vertices
     return 2
@@ -356,7 +356,7 @@ function add_celldata!(vtk_celldata, mesh::TreeMesh, verbose)
 end
 
 
-function add_celldata!(vtk_celldata, mesh::StructuredMesh, verbose)
+function add_celldata!(vtk_celldata, mesh::Union{StructuredMesh, StructuredMeshView}, verbose)
   @timeit "add data to VTK file" begin
     # Add element data to celldata VTK file
     verbose && println("| | element_ids...")
