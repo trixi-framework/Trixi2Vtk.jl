@@ -398,7 +398,7 @@ end
 
   @testset "Subcell limiting coefficients" begin
     isdir(outdir) && rm(outdir, recursive=true)
-    run_trixi(joinpath(examples_dir(), "tree_2d_dgsem", "elixir_euler_shockcapturing_subcell.jl"), maxiters=10)
+    run_trixi(joinpath(examples_dir(), "tree_2d_dgsem", "elixir_euler_sedov_blast_wave_sc_subcell.jl"), maxiters=10)
 
     @timed_testset "do not reinterpolate" begin
       # Create and test output without reinterpolation
@@ -411,8 +411,8 @@ end
       cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
 
       # remote file path is actually a URL so it always has the same path structure
-      remote_filename = "2d/treemesh/dgsem_blast_shockcapturing_subcell_no_interp_10.vtu"
-      ref_file = get_test_reference_file("dgsem_blast_shockcapturing_subcell_no_interp_10.vtu", remote_filename)
+      remote_filename = "2d/treemesh/dgsem_sedov_subcell_no_interp_10.vtu"
+      ref_file = get_test_reference_file("dgsem_sedov_subcell_no_interp_10.vtu", remote_filename)
       compare_point_data(out_file, ref_file)
     end
 
@@ -427,9 +427,9 @@ end
       cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
 
       # remote file path is actually a URL so it always has the same path structure
-      remote_filename = "2d/treemesh/dgsem_blast_shockcapturing_subcell_interp_10.vtu"
-      ref_file = get_test_reference_file("dgsem_blast_shockcapturing_subcell_interp_10.vtu", remote_filename)
-      compare_point_data(out_file, ref_file)
+      remote_filename = "2d/treemesh/dgsem_sedov_subcell_interp_10.vtu"
+      ref_file = get_test_reference_file("dgsem_sedov_subcell_interp_10.vtu", remote_filename)
+      compare_cell_data(out_file, ref_file)
     end
   end
 end
