@@ -400,7 +400,7 @@ end
     isdir(outdir) && rm(outdir, recursive=true)
     run_trixi(joinpath(examples_dir(), "tree_2d_dgsem", "elixir_euler_sedov_blast_wave_sc_subcell.jl"), maxiters=10)
 
-    @timed_testset "do not reinterpolate" begin
+    @timed_testset "without reinterpolation" begin
       # Create and test output without reinterpolation
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000010.h5"), output_directory=outdir, reinterpolate=false)
       outfilename = "solution_000010.vtu"
@@ -416,7 +416,7 @@ end
       compare_point_data(out_file, ref_file)
     end
 
-    @timed_testset "do reinterpolate" begin
+    @timed_testset "with reinterpolation" begin
       # Create and test output without reinterpolation
       @test_nowarn trixi2vtk(joinpath(outdir, "solution_000010.h5"), output_directory=outdir, reinterpolate=true)
       outfilename = "solution_000010.vtu"
