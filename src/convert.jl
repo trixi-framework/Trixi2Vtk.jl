@@ -257,6 +257,226 @@ function trixi2vtk(filename::AbstractString...;
   println()
 end
 
+function trixi2vtk(cache, dtRatios, Stages, filename::AbstractString...;
+                   format=:vtu, verbose=false, hide_progress=false, pvd=nothing,
+                   output_directory=".", nvisnodes=nothing, save_celldata=true,
+                   reinterpolate=true, data_is_uniform=false)
+  # Reset timer
+  reset_timer!()
+
+  # Convert filenames to a single list of strings
+  if isempty(filename)
+    error("no input file was provided")
+  end
+  filenames = expand_filename_patterns(filename)
+  if isempty(filenames)
+    error("no such file(s): ", join(filename, ", "))
+  end
+
+  # Ensure valid format
+  if !(format in (:vtu, :vti))
+    error("unsupported output format '$format' (must be 'vtu' or 'vti')")
+  end
+
+  # If verbose mode is enabled, always hide progress bar
+  if verbose
+    hide_progress = true
+  end
+
+  # Variable to avoid writing PVD files if only a single file is converted
+  is_single_file = length(filenames) == 1
+
+  # Get pvd filenames and open files
+  if !is_single_file
+    pvd_filename, pvd_celldata_filename = pvd_filenames(filenames, pvd, output_directory)
+    verbose && println("Opening PVD files '$(pvd_filename).pvd' + '$(pvd_celldata_filename).pvd'...")
+    @timeit "open PVD file" begin
+      pvd = paraview_collection(pvd_filename)
+      pvd_celldata = paraview_collection(pvd_celldata_filename)
+    end
+  end
+
+  # Variable to avoid writing PVD file if only mesh files were converted
+  has_data = false
+
+  # Show progress bar if not disabled
+  if !hide_progress
+    progress = Progress(length(filenames);
+                        dt = 0.5,
+                        desc = "Converting .h5 to .$(format)...",
+                        barlen = 40)
+  end
+
+  # Iterate over input files
+  for (index, filename) in enumerate(filenames)
+    verbose && println("Processing file $filename ($(index)/$(length(filenames)))...")
+
+    # Check if data file exists
+    if !isfile(filename)
+      error("data file '$filename' does not exist")
+    end
+
+    # Check if it is a data file at all
+    is_datafile = is_solution_restart_file(filename)
+
+    # If file is solution/restart file, extract mesh file name
+    if is_datafile
+      # Get mesh file name
+      meshfile = extract_mesh_filename(filename)
+
+      # Check if mesh file exists
+      if !isfile(meshfile)
+        error("mesh file '$meshfile' does not exist")
+      end
+    else
+      meshfile = filename
+    end
+
+    # Read mesh
+    verbose && println("| Reading mesh file...")
+    @timeit "read mesh" mesh = Trixi.load_mesh_serial(meshfile; n_cells_max=0, RealT=Float64)
+
+    # Check compatibility of the mesh type and the output format
+    if format === :vti && !(mesh isa Trixi.TreeMesh{2})
+      throw(ArgumentError("VTI format only available for 2D TreeMesh"))
+    end
+
+    # Read data only if it is a data file
+    if is_datafile
+      verbose && println("| Reading data file...")
+      @timeit "read data" (labels, data, n_elements, n_nodes,
+                           element_variables, time) = read_datafile(filename)
+
+      assert_cells_elements(n_elements, mesh, filename, meshfile)
+
+      # Determine resolution for data interpolation
+      n_visnodes = get_default_nvisnodes_solution(nvisnodes, n_nodes, mesh)
+
+      # If a user requests that no reinterpolation is done automatically set
+      # `n_visnodes` to be the same as the number of nodes in the raw data.
+      if !reinterpolate
+        n_visnodes = n_nodes
+      end
+
+      # Check if the raw data is uniform (finite difference) or not (dg)
+      # and create the corresponding node set for reinterpolation / copying.
+      if (reinterpolate && !data_is_uniform) || (!reinterpolate && data_is_uniform)
+        # (1) Default settings; presumably the most common
+        # (2) Finite difference data
+        node_set = collect(range(-1, 1, length=n_visnodes))
+      elseif !reinterpolate && !data_is_uniform
+        # raw data is on a set of LGL nodes
+        node_set, _ = gauss_lobatto_nodes_weights(n_visnodes)
+      else # reinterpolate & data_is_uniform
+        throw(ArgumentError("Uniform data should not be reinterpolated! Set `reinterpolate=false` and try again."))
+      end
+    else
+      # If file is a mesh file, do not interpolate data as detailed
+      n_visnodes = get_default_nvisnodes_mesh(nvisnodes, mesh)
+      # Create an "empty" node set that is unused in the mesh conversion
+      node_set = Array{Float64}(undef, n_visnodes)
+    end
+
+    # Create output directory if it does not exist
+    mkpath(output_directory)
+
+    # Build VTK grids
+    vtk_nodedata, vtk_celldata = build_vtk_grids(Val(format), mesh, node_set, n_visnodes, verbose,
+                                                 output_directory, is_datafile, filename, Val(reinterpolate))
+
+    # Interpolate data
+    if is_datafile
+      verbose && println("| Interpolating data...")
+      if reinterpolate
+        @timeit "interpolate data" interpolated_data = interpolate_data(Val(format),
+                                                                        data, mesh,
+                                                                        n_visnodes, verbose)
+      else # Copy the raw solution data; only works for `vtu` format
+        # Extract data shape information
+        ndims_ = ndims(data) - 2
+        n_variables = length(labels)
+        # Save raw data as one 1D array for each variable
+        @timeit "interpolate data" interpolated_data = reshape(data,
+                                                               n_visnodes^ndims_ * n_elements,
+                                                               n_variables)
+      end
+    end
+
+    # Add data to file
+    verbose && println("| Adding data to VTK file...")
+    @timeit "add data to VTK file" begin
+      if save_celldata
+        add_celldata!(vtk_celldata, mesh, verbose, cache, dtRatios, Stages)
+      end
+
+      # Only add data if it is a data file
+      if is_datafile
+        # Add solution variables
+        for (variable_id, label) in enumerate(labels)
+          verbose && println("| | Variable: $label...")
+          @timeit label vtk_nodedata[label] = @views interpolated_data[:, variable_id]
+        end
+
+        if save_celldata
+          # Add element variables
+          for (label, variable) in element_variables
+            verbose && println("| | Element variable: $label...")
+            @timeit label vtk_celldata[label] = variable
+          end
+        end
+      end
+    end
+
+    # Save VTK file
+    if is_datafile
+      verbose && println("| Saving VTK file '$(vtk_nodedata.path)'...")
+      @timeit "save VTK file" vtk_save(vtk_nodedata)
+    end
+
+    if save_celldata
+      verbose && println("| Saving VTK file '$(vtk_celldata.path)'...")
+      @timeit "save VTK file" vtk_save(vtk_celldata)
+    end
+
+    # Add to PVD file only if it is a datafile
+    if !is_single_file
+      if is_datafile
+        verbose && println("| Adding to PVD file...")
+        @timeit "add VTK to PVD file" begin
+          pvd[time] = vtk_nodedata
+          if save_celldata
+            pvd_celldata[time] = vtk_celldata
+          end
+        end
+        has_data = true
+      else
+        println("WARNING: file '$(filename)' will not be added to PVD file since it is a mesh file")
+      end
+    end
+
+    # Update progress bar
+    if !hide_progress
+      next!(progress, showvalues=[(:finished, filename)])
+    end
+  end
+
+  if !is_single_file
+    # Save PVD file only if at least one data file was added
+    if has_data
+      verbose && println("| Saving PVD file '$(pvd_filename).pvd'...")
+      @timeit "save PVD files" vtk_save(pvd)
+    end
+
+    if save_celldata
+      verbose && println("| Saving PVD file '$(pvd_celldata_filename).pvd'...")
+      @timeit "save PVD files" vtk_save(pvd_celldata)
+    end
+  end
+
+  verbose && println("| done.\n")
+  print_timer()
+  println()
+end
 
 function assert_cells_elements(n_elements, mesh::TreeMesh, filename, meshfile)
   # Check if dimensions match
@@ -408,6 +628,78 @@ function add_celldata!(vtk_celldata, mesh::P4estMesh, verbose)
   return vtk_celldata
 end
 
+function add_celldata!(vtk_celldata, mesh::P4estMesh, verbose, 
+                       cache, dtRatios, Stages)
+  # Create temporary storage for the tree_ids and levels.
+  tree_ids = zeros( Trixi.ncells(mesh) )
+  cell_levels = zeros( Trixi.ncells(mesh) )
+
+  h_min_per_element = zeros( Trixi.ncells(mesh) )
+  Stages_per_element = zeros( Trixi.ncells(mesh) )
+  nnodes = length(mesh.nodes)
+  n_levels = length(Stages)
+  h_min = 42
+
+  # Set global counters.
+  tree_counter = 1
+  cell_counter = 1
+  # Iterate through the p4est trees and each of their quadrants.
+  # Assigns the tree index values. Also, grab and assign the level value.
+  for tree in Trixi.unsafe_wrap_sc(Trixi.P4est.p4est_tree_t, unsafe_load(mesh.p4est).trees)
+    P0 = cache.elements.node_coordinates[:, 1, 1, cell_counter]
+    P1 = cache.elements.node_coordinates[:, nnodes, 1, cell_counter]
+    P2 = cache.elements.node_coordinates[:, nnodes, nnodes, cell_counter]
+    P3 = cache.elements.node_coordinates[:, 1, nnodes, cell_counter]
+    # compute the four side lengths and get the smallest
+    L0 = sqrt(sum((P1 - P0) .^ 2))
+    L1 = sqrt(sum((P2 - P1) .^ 2))
+    L2 = sqrt(sum((P3 - P2) .^ 2))
+    L3 = sqrt(sum((P0 - P3) .^ 2))
+    h = min(L0, L1, L2, L3)
+    h_min_per_element[cell_counter] = h
+
+    if h < h_min
+      h_min = h
+    end
+
+    for quadrant in Trixi.unsafe_wrap_sc(Trixi.P4est.p4est_quadrant_t, tree.quadrants)
+      tree_ids[cell_counter] = tree_counter
+      cell_levels[cell_counter] = quadrant.level
+      cell_counter += 1
+    end
+    tree_counter += 1
+  end
+
+  cell_counter = 1
+  for tree in Trixi.unsafe_wrap_sc(Trixi.P4est.p4est_tree_t, unsafe_load(mesh.p4est).trees)
+    h = h_min_per_element[cell_counter]
+
+    # Beyond linear scaling of timestep
+    level = findfirst(x -> x < h_min / h, dtRatios)
+    # Catch case that cell is "too coarse" for method with fewest stage evals
+    if level === nothing
+        level = n_levels
+    else # Avoid reduction in timestep: Use next higher level
+        level = level - 1
+    end
+    Stages_per_element[cell_counter] = Stages[level]
+    cell_counter += 1
+  end
+
+  @timeit "add data to VTK file" begin
+    # Add tree/element data to celldata VTK file
+    verbose && println("| | tree_ids...")
+    @timeit "tree_ids" vtk_celldata["tree_ids"] = tree_ids
+    verbose && println("| | element_ids...")
+    @timeit "element_ids" vtk_celldata["element_ids"] = collect(1:Trixi.ncells(mesh))
+    verbose && println("| | levels...")
+    @timeit "levels" vtk_celldata["levels"] = cell_levels
+    verbose && println("| | Stages_per_element...")
+    @timeit "Stages_per_element" vtk_celldata["Stages_per_element"] = Stages_per_element
+  end
+
+  return vtk_celldata
+end
 
 function expand_filename_patterns(patterns)
   filenames = String[]
