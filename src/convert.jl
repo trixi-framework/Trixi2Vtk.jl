@@ -86,6 +86,10 @@ function trixi2vtk(filename::AbstractString...;
                         barlen = 40)
   end
 
+  # Show warning when reinterpolating node-level data of subcell limiting
+  # Auxiliary variable to show warning only once
+  has_warned_about_interpolation = false
+
   # Iterate over input files
   for (index, filename) in enumerate(filenames)
     verbose && println("Processing file $filename ($(index)/$(length(filenames)))...")
@@ -207,10 +211,12 @@ function trixi2vtk(filename::AbstractString...;
           for (label, variable) in node_variables
             verbose && println("| | Node variable: $label...")
             if reinterpolate
-              if index == 1
+              # Show warning if node-level data of subcell limiting are reinterpolated.
+              if label == "limiting_coefficient" && !has_warned_about_interpolation
                 println("WARNING: The limiting coefficients are no continuous field but happens " *
                 "to be represented by a piecewise-constant approximation. Thus, reinterpolation " *
                 "does not give a meaningful representation.")
+                has_warned_about_interpolation = true
               end
               @timeit "interpolate data" interpolated_cell_data = interpolate_data(Val(format),
                                                                     reshape(variable, size(variable)..., 1),
