@@ -219,7 +219,7 @@ function trixi2vtk(filename::AbstractString...;
               @timeit "interpolate data" interpolated_cell_data = reshape(variable,
                                                                           n_visnodes^ndims_ * n_elements)
             end
-            # Add the "interpolated" cell_data to celldata, not node_data
+            # Add to node_data
             @timeit label vtk_nodedata[label] = interpolated_cell_data
           end
         end
