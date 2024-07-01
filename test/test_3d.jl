@@ -22,7 +22,7 @@ end
 
     @timed_testset "mesh data" begin
       # create the output file to be tested
-      @test_nowarn trixi2vtk(joinpath(outdir, "mesh_000004.h5"), output_directory=outdir)
+      @test_nowarn trixi2vtk(joinpath(outdir, "mesh_" * LEADING_ZEROS * "000004.h5"), output_directory=outdir)
       outfilename = "mesh_000004_celldata.vtu"
       out_file = joinpath(outdir, outfilename)
 
@@ -38,7 +38,7 @@ end
 
     @timed_testset "solution celldata" begin
       # create the output file to be tested
-      @test_nowarn trixi2vtk(joinpath(outdir, "solution_000004.h5"), output_directory=outdir)
+      @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000004.h5"), output_directory=outdir)
       outfilename = "solution_000004_celldata.vtu"
       out_file = joinpath(outdir, outfilename)
 
@@ -54,7 +54,7 @@ end
 
     @timed_testset "reinterpolate with nonuniform data" begin
       # Create and test output with reinterpolation (default options: `reinterpolate=true, data_is_uniform=false`)
-      @test_nowarn trixi2vtk(joinpath(outdir, "solution_000004.h5"), output_directory=outdir)
+      @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000004.h5"), output_directory=outdir)
       outfilename = "solution_000004.vtu"
       out_file = joinpath(outdir, outfilename)
 
@@ -70,7 +70,7 @@ end
 
     @timed_testset "do not reinterpolate with nonuniform data" begin
       # Create and test output without reinterpolation on LGL nodes
-      @test_nowarn trixi2vtk(joinpath(outdir, "solution_000004.h5"), output_directory=outdir, reinterpolate=false)
+      @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000004.h5"), output_directory=outdir, reinterpolate=false)
       outfilename = "solution_000004.vtu"
       out_file = joinpath(outdir, outfilename)
 
@@ -87,7 +87,7 @@ end
     @timed_testset "do not reinterpolate with uniform data" begin
       # Create and test output without reinterpolation on uniform nodes
       # OBS! This is a dummy test just to exercise code. The resulting plot will look weird.
-      @test_nowarn trixi2vtk(joinpath(outdir, "solution_000004.h5"), output_directory=outdir, reinterpolate=false, data_is_uniform=true)
+      @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000004.h5"), output_directory=outdir, reinterpolate=false, data_is_uniform=true)
       outfilename = "solution_000004.vtu"
       out_file = joinpath(outdir, outfilename)
 
@@ -127,7 +127,7 @@ end
 
       @timed_testset "solution celldata" begin
         # create the output file to be tested
-        @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir)
+        @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000001.h5"), output_directory=outdir)
         outfilename = "solution_000001_celldata.vtu"
         out_file = joinpath(outdir, outfilename)
 
@@ -143,7 +143,7 @@ end
 
       @timed_testset "reinterpolate with nonuniform data" begin
         # Create and test output with reinterpolation (default options: `reinterpolate=true, data_is_uniform=false`)
-        @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir)
+        @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000001.h5"), output_directory=outdir)
         outfilename = "solution_000001.vtu"
         out_file = joinpath(outdir, outfilename)
 
@@ -159,7 +159,7 @@ end
 
       @timed_testset "do not reinterpolate with nonuniform data" begin
         # Create and test output without reinterpolation on LGL nodes
-        @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir, reinterpolate=false)
+        @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000001.h5"), output_directory=outdir, reinterpolate=false)
         outfilename = "solution_000001.vtu"
         out_file = joinpath(outdir, outfilename)
 
@@ -176,7 +176,7 @@ end
       @timed_testset "do not reinterpolate with uniform data" begin
         # Create and test output without reinterpolation on uniform nodes
         # OBS! This is a dummy test just to exercise code. The resulting plot will look weird.
-        @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir, reinterpolate=false, data_is_uniform=true)
+        @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000001.h5"), output_directory=outdir, reinterpolate=false, data_is_uniform=true)
         outfilename = "solution_000001.vtu"
         out_file = joinpath(outdir, outfilename)
 
@@ -213,7 +213,7 @@ end
 
       @timed_testset "solution celldata" begin
         # create the output file to be tested
-        @test_nowarn trixi2vtk(joinpath(outdir, "solution_000002.h5"), output_directory=outdir)
+        @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000002.h5"), output_directory=outdir)
         outfilename = "solution_000002_celldata.vtu"
         out_file = joinpath(outdir, outfilename)
 
@@ -229,7 +229,7 @@ end
 
       @timed_testset "reinterpolate with nonuniform data" begin
         # Create and test output with reinterpolation (default options: `reinterpolate=true, data_is_uniform=false`)
-        @test_nowarn trixi2vtk(joinpath(outdir, "solution_000002.h5"), output_directory=outdir)
+        @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000002.h5"), output_directory=outdir)
         outfilename = "solution_000002.vtu"
         out_file = joinpath(outdir, outfilename)
 
@@ -245,7 +245,7 @@ end
 
       @timed_testset "do not reinterpolate with nonuniform data" begin
         # Create and test output without reinterpolation on LGL nodes
-        @test_nowarn trixi2vtk(joinpath(outdir, "solution_000002.h5"), output_directory=outdir, reinterpolate=false)
+        @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000002.h5"), output_directory=outdir, reinterpolate=false)
         outfilename = "solution_000002.vtu"
         out_file = joinpath(outdir, outfilename)
 
@@ -262,7 +262,7 @@ end
       @timed_testset "do not reinterpolate with uniform data" begin
         # Create and test output without reinterpolation on uniform nodes
         # OBS! This is a dummy test just to exercise code. The resulting plot will look weird.
-        @test_nowarn trixi2vtk(joinpath(outdir, "solution_000002.h5"), output_directory=outdir, reinterpolate=false, data_is_uniform=true)
+        @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000002.h5"), output_directory=outdir, reinterpolate=false, data_is_uniform=true)
         outfilename = "solution_000002.vtu"
         out_file = joinpath(outdir, outfilename)
 
