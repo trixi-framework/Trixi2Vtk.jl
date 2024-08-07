@@ -2,12 +2,14 @@
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
 OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 ReadVTK = "dc215faf-f008-4882-a9f7-a79a826fadc3"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Trixi = "a7f1ee26-1774-49b1-8366-f1abc58fbfcb"
+UUIDs = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 
 [compat]
 Documenter = "0.27, 1"
 OrdinaryDiffEq = "6"
 ReadVTK = "0.1, 0.2"
-Trixi = "0.5, 0.6"
+Trixi = "0.5, 0.6, 0.7, 0.8"
