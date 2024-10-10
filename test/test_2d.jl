@@ -399,7 +399,8 @@ end
   if VERSION >= v"1.8"
     @testset "Subcell limiting coefficients" begin
       isdir(outdir) && rm(outdir, recursive=true)
-      run_trixi(joinpath(examples_dir(), "tree_2d_dgsem", "elixir_euler_sedov_blast_wave_sc_subcell.jl"), maxiters=10)
+      run_trixi(joinpath(examples_dir(), "tree_2d_dgsem", "elixir_euler_sedov_blast_wave_sc_subcell.jl"),
+                maxiters=10, initial_refinement_level=4)
 
       @timed_testset "without reinterpolation" begin
         # Create and test output without reinterpolation
