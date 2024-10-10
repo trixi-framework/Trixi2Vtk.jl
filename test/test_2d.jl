@@ -403,8 +403,8 @@ end
 
       @timed_testset "without reinterpolation" begin
         # Create and test output without reinterpolation
-        @test_nowarn trixi2vtk(joinpath(outdir, "solution_000010.h5"), output_directory=outdir, reinterpolate=false)
-        outfilename = "solution_000010.vtu"
+        @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000010.h5"), output_directory=outdir, reinterpolate=false)
+        outfilename = "solution_" * LEADING_ZEROS * "000010.vtu"
         out_file = joinpath(outdir, outfilename)
 
         # save output file to `artifacts` to facilitate debugging of failing tests
@@ -419,8 +419,8 @@ end
 
       @timed_testset "with reinterpolation" begin
         # Create and test output without reinterpolation
-        @test_nowarn trixi2vtk(joinpath(outdir, "solution_000010.h5"), output_directory=outdir, reinterpolate=true)
-        outfilename = "solution_000010.vtu"
+        @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000010.h5"), output_directory=outdir, reinterpolate=true)
+        outfilename = "solution_" * LEADING_ZEROS * "000010.vtu"
         out_file = joinpath(outdir, outfilename)
 
         # save output file to `artifacts` to facilitate debugging of failing tests
