@@ -86,6 +86,10 @@ function trixi2vtk(filename::AbstractString...;
                         barlen = 40)
   end
 
+  # Show warning when reinterpolating node-level data of subcell limiting
+  # Auxiliary variable to show warning only once
+  has_warned_about_interpolation = false
+
   # Iterate over input files
   for (index, filename) in enumerate(filenames)
     verbose && println("Processing file $filename ($(index)/$(length(filenames)))...")
@@ -124,7 +128,7 @@ function trixi2vtk(filename::AbstractString...;
     if is_datafile
       verbose && println("| Reading data file...")
       @timeit "read data" (labels, data, n_elements, n_nodes,
-                           element_variables, time) = read_datafile(filename)
+                           element_variables, node_variables, time) = read_datafile(filename)
 
       assert_cells_elements(n_elements, mesh, filename, meshfile)
 
@@ -201,6 +205,28 @@ function trixi2vtk(filename::AbstractString...;
           for (label, variable) in element_variables
             verbose && println("| | Element variable: $label...")
             @timeit label vtk_celldata[label] = variable
+          end
+
+          # Add node variables
+          for (label, variable) in node_variables
+            verbose && println("| | Node variable: $label...")
+            if reinterpolate
+              # Show warning if node-level data of subcell limiting are reinterpolated.
+              if label == "limiting_coefficient" && !has_warned_about_interpolation
+                println("WARNING: The limiting coefficients are no continuous field but happens " *
+                "to be represented by a piecewise-constant approximation. Thus, reinterpolation " *
+                "does not give a meaningful representation.")
+                has_warned_about_interpolation = true
+              end
+              @timeit "interpolate data" interpolated_cell_data = interpolate_data(Val(format),
+                                                                    reshape(variable, size(variable)..., 1),
+                                                                    mesh, n_visnodes, verbose)
+            else
+              @timeit "interpolate data" interpolated_cell_data = reshape(variable,
+                                                                          n_visnodes^ndims_ * n_elements)
+            end
+            # Add to node_data
+            @timeit label vtk_nodedata[label] = interpolated_cell_data
           end
         end
       end
