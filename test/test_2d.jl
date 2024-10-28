@@ -397,6 +397,8 @@ end
   end
 
   if VERSION >= v"1.8"
+    # Julia v1.7 heavily downgrades Trixi.jl. Subcell limiting is not yet supported.
+    # Therefore, only perform tests with Julia v1.8 or newer.
     @testset "Subcell limiting coefficients" begin
       isdir(outdir) && rm(outdir, recursive=true)
       run_trixi(joinpath(examples_dir(), "tree_2d_dgsem", "elixir_euler_sedov_blast_wave_sc_subcell.jl"),
