@@ -5,6 +5,21 @@ using Trixi2Vtk
 using ReadVTK
 
 
+# Get the version of Trixi.jl we are testing since the output file name
+# format changed in v0.8.0
+import Pkg
+using UUIDs: UUID
+const LEADING_ZEROS = let
+  trixi_uuid = UUID("a7f1ee26-1774-49b1-8366-f1abc58fbfcb")
+  trixi_version = Pkg.dependencies()[trixi_uuid].version
+  if trixi_version > v"0.7.999999999"
+    "000"
+  else
+    ""
+  end
+end
+
+
 function run_trixi(elixir; kwargs...)
   # evaluate examples in the scope of the module they're called from
   trixi_include(@__MODULE__, elixir; kwargs...)
@@ -41,7 +56,7 @@ end
 if VERSION < v"1.8"
   const TEST_REFERENCE_COMMIT = "c0a966b06489f9b2ee3aefeb0a5c0dae733df36f"
 else
-  const TEST_REFERENCE_COMMIT = "86a43fe8dc254130345754fb512268204cf2233c"
+  const TEST_REFERENCE_COMMIT = "e51f3613ac1adfcfd2bf1d74a2756034dab0579c"
 end
 
 # Local folder to store downloaded reference files. If you change this, also adapt `../.gitignore`!
