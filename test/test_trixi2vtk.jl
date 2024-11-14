@@ -56,7 +56,7 @@ end
 if VERSION < v"1.8"
   const TEST_REFERENCE_COMMIT = "c0a966b06489f9b2ee3aefeb0a5c0dae733df36f"
 else
-  const TEST_REFERENCE_COMMIT = "86a43fe8dc254130345754fb512268204cf2233c"
+  const TEST_REFERENCE_COMMIT = "7bb59953a7f2a6511fede9549fe8b062011ed788"
 end
 
 # Local folder to store downloaded reference files. If you change this, also adapt `../.gitignore`!

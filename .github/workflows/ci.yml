@@ -37,11 +37,13 @@ jobs:
           # - 'nightly'
         os:
           - ubuntu-latest
-          - macOS-latest
           - windows-latest
         arch:
           - x64
         include:
+          - version: '1.9'
+            os: macOS-latest
+            arch: arm64
           - version: '1.7'
             os: ubuntu-latest
             arch: x64
