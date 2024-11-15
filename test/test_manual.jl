@@ -29,7 +29,7 @@ isdir(outdir) && rm(outdir, recursive=true)
     end
 
     @testset "unsupported file format" begin
-      @test_throws ErrorException trixi2vtk(joinpath(outdir, "solution_000000.h5");
+      @test_throws ErrorException trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000000.h5");
                                             output_directory=outdir,
                                             format=:does_not_exist)
     end
@@ -40,9 +40,9 @@ isdir(outdir) && rm(outdir, recursive=true)
   end
 
   @testset "trixi2vtk set number of output nodes" begin
-    @test_nowarn trixi2vtk(joinpath(outdir, "solution_000000.h5"); nvisnodes=0)
+    @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000000.h5"); nvisnodes=0)
 
-    @test_nowarn trixi2vtk(joinpath(outdir, "solution_000000.h5"); nvisnodes=5)
+    @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000000.h5"); nvisnodes=5)
   end
 
   @timed_testset "pvd_filenames" begin

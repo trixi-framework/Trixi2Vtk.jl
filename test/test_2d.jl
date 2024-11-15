@@ -22,8 +22,8 @@ end
 
     @timed_testset "mesh data" begin
       # create the output file to be tested
-      @test_nowarn trixi2vtk(joinpath(outdir, "mesh_000010.h5"), output_directory=outdir)
-      outfilename = "mesh_000010_celldata.vtu"
+      @test_nowarn trixi2vtk(joinpath(outdir, "mesh_" * LEADING_ZEROS * "000010.h5"), output_directory=outdir)
+      outfilename = "mesh_" * LEADING_ZEROS * "000010_celldata.vtu"
       out_file = joinpath(outdir, outfilename)
 
       # save output file to `artifacts` to facilitate debugging of failing tests
@@ -38,8 +38,8 @@ end
 
     @timed_testset "solution celldata" begin
       # create the output file to be tested
-      @test_nowarn trixi2vtk(joinpath(outdir, "solution_000010.h5"), output_directory=outdir)
-      outfilename = "solution_000010_celldata.vtu"
+      @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000010.h5"), output_directory=outdir)
+      outfilename = "solution_" * LEADING_ZEROS * "000010_celldata.vtu"
       out_file = joinpath(outdir, outfilename)
 
       # save output file to `artifacts` to facilitate debugging of failing tests
@@ -54,8 +54,8 @@ end
 
     @timed_testset "reinterpolate with nonuniform data with VTU format" begin
       # Create and test output with reinterpolation (default options: `reinterpolate=true, data_is_uniform=false`)
-      @test_nowarn trixi2vtk(joinpath(outdir, "solution_000010.h5"), output_directory=outdir)
-      outfilename = "solution_000010.vtu"
+      @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000010.h5"), output_directory=outdir)
+      outfilename = "solution_" * LEADING_ZEROS * "000010.vtu"
       out_file = joinpath(outdir, outfilename)
 
       # save output file to `artifacts` to facilitate debugging of failing tests
@@ -70,8 +70,8 @@ end
 
     @timed_testset "reinterpolate with nonuniform data with VTI format" begin
       # Create and test output with reinterpolation (default options: `reinterpolate=true, data_is_uniform=false`)
-      @test_nowarn trixi2vtk(joinpath(outdir, "solution_000010.h5"), output_directory=outdir, format=:vti)
-      outfilename = "solution_000010.vti"
+      @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000010.h5"), output_directory=outdir, format=:vti)
+      outfilename = "solution_" * LEADING_ZEROS * "000010.vti"
       out_file = joinpath(outdir, outfilename)
 
       # save output file to `artifacts` to facilitate debugging of failing tests
@@ -86,8 +86,8 @@ end
 
     @timed_testset "do not reinterpolate with nonuniform data" begin
       # Create and test output without reinterpolation on LGL nodes
-      @test_nowarn trixi2vtk(joinpath(outdir, "solution_000010.h5"), output_directory=outdir, reinterpolate=false)
-      outfilename = "solution_000010.vtu"
+      @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000010.h5"), output_directory=outdir, reinterpolate=false)
+      outfilename = "solution_" * LEADING_ZEROS * "000010.vtu"
       out_file = joinpath(outdir, outfilename)
 
       # save output file to `artifacts` to facilitate debugging of failing tests
@@ -103,8 +103,8 @@ end
     @timed_testset "do not reinterpolate with uniform data" begin
       # Create and test output without reinterpolation on uniform nodes
       # OBS! This is a dummy test just to exercise code. The resulting plot will look weird.
-      @test_nowarn trixi2vtk(joinpath(outdir, "solution_000010.h5"), output_directory=outdir, reinterpolate=false, data_is_uniform=true)
-      outfilename = "solution_000010.vtu"
+      @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000010.h5"), output_directory=outdir, reinterpolate=false, data_is_uniform=true)
+      outfilename = "solution_" * LEADING_ZEROS * "000010.vtu"
       out_file = joinpath(outdir, outfilename)
 
       # save output file to `artifacts` to facilitate debugging of failing tests
@@ -120,7 +120,7 @@ end
     @timed_testset "attempt reinterpolate with uniform data" begin
       # Purposely request a bad configuration and check that an error message gets thrown
       # OBS! Only needs tested once across all mesh types and dimensions
-      @test_throws ArgumentError trixi2vtk(joinpath(outdir, "solution_000010.h5"), output_directory=outdir, data_is_uniform=true)
+      @test_throws ArgumentError trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000010.h5"), output_directory=outdir, data_is_uniform=true)
     end
   end
 
@@ -154,7 +154,7 @@ end
         #      that only needs to be tested once.
         @test_nowarn trixi2vtk(joinpath(outdir, "solution_00000*.h5"), output_directory=outdir)
 
-        outfilename = "solution_000001_celldata.vtu"
+        outfilename = "solution_" * LEADING_ZEROS * "000001_celldata.vtu"
         out_file = joinpath(outdir, outfilename)
 
         # save output file to `artifacts` to facilitate debugging of failing tests
@@ -169,8 +169,8 @@ end
 
       @timed_testset "reinterpolate with nonuniform data" begin
         # Create and test output with reinterpolation (default options: `reinterpolate=true, data_is_uniform=false`)
-        @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir)
-        outfilename = "solution_000001.vtu"
+        @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000001.h5"), output_directory=outdir)
+        outfilename = "solution_" * LEADING_ZEROS * "000001.vtu"
         out_file = joinpath(outdir, outfilename)
 
         # save output file to `artifacts` to facilitate debugging of failing tests
@@ -185,8 +185,8 @@ end
 
       @timed_testset "do not reinterpolate with nonuniform data" begin
         # Create and test output without reinterpolation on LGL nodes
-        @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir, reinterpolate=false)
-        outfilename = "solution_000001.vtu"
+        @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000001.h5"), output_directory=outdir, reinterpolate=false)
+        outfilename = "solution_" * LEADING_ZEROS * "000001.vtu"
         out_file = joinpath(outdir, outfilename)
 
         # save output file to `artifacts` to facilitate debugging of failing tests
@@ -202,8 +202,8 @@ end
       @timed_testset "do not reinterpolate with uniform data" begin
         # Create and test output without reinterpolation on uniform nodes
         # OBS! This is a dummy test just to exercise code. The resulting plot will look weird.
-        @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir, reinterpolate=false, data_is_uniform=true)
-        outfilename = "solution_000001.vtu"
+        @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000001.h5"), output_directory=outdir, reinterpolate=false, data_is_uniform=true)
+        outfilename = "solution_" * LEADING_ZEROS * "000001.vtu"
         out_file = joinpath(outdir, outfilename)
 
         # save output file to `artifacts` to facilitate debugging of failing tests
@@ -219,7 +219,7 @@ end
       @timed_testset "attempt VTI format on unsupported mesh type" begin
         # Purposely request a bad configuration and check that an error message gets thrown
         # OBS! Only needs tested once across all mesh types and dimensions
-        @test_throws ArgumentError trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir, format=:vti)
+        @test_throws ArgumentError trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000001.h5"), output_directory=outdir, format=:vti)
       end
     end
 
@@ -245,8 +245,8 @@ end
 
       @timed_testset "solution celldata" begin
         # create the output file to be tested
-        @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir)
-        outfilename = "solution_000001_celldata.vtu"
+        @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000001.h5"), output_directory=outdir)
+        outfilename = "solution_" * LEADING_ZEROS * "000001_celldata.vtu"
         out_file = joinpath(outdir, outfilename)
 
         # save output file to `artifacts` to facilitate debugging of failing tests
@@ -261,8 +261,8 @@ end
 
       @timed_testset "reinterpolate with nonuniform data" begin
         # Create and test output with reinterpolation (default options: `reinterpolate=true, data_is_uniform=false`)
-        @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir)
-        outfilename = "solution_000001.vtu"
+        @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000001.h5"), output_directory=outdir)
+        outfilename = "solution_" * LEADING_ZEROS * "000001.vtu"
         out_file = joinpath(outdir, outfilename)
 
         # save output file to `artifacts` to facilitate debugging of failing tests
@@ -277,8 +277,8 @@ end
 
       @timed_testset "do not reinterpolate with nonuniform data" begin
         # Create and test output without reinterpolation on LGL nodes
-        @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir, reinterpolate=false)
-        outfilename = "solution_000001.vtu"
+        @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000001.h5"), output_directory=outdir, reinterpolate=false)
+        outfilename = "solution_" * LEADING_ZEROS * "000001.vtu"
         out_file = joinpath(outdir, outfilename)
 
         # save output file to `artifacts` to facilitate debugging of failing tests
@@ -294,8 +294,8 @@ end
       @timed_testset "do not reinterpolate with uniform data" begin
         # Create and test output without reinterpolation on uniform nodes
         # OBS! This is a dummy test just to exercise code. The resulting plot will look weird.
-        @test_nowarn trixi2vtk(joinpath(outdir, "solution_000001.h5"), output_directory=outdir, reinterpolate=false, data_is_uniform=true)
-        outfilename = "solution_000001.vtu"
+        @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000001.h5"), output_directory=outdir, reinterpolate=false, data_is_uniform=true)
+        outfilename = "solution_" * LEADING_ZEROS * "000001.vtu"
         out_file = joinpath(outdir, outfilename)
 
         # save output file to `artifacts` to facilitate debugging of failing tests
@@ -315,8 +315,8 @@ end
 
       @timed_testset "mesh data" begin
         # create the output file to be tested
-        @test_nowarn trixi2vtk(joinpath(outdir, "mesh_000005.h5"), output_directory=outdir)
-        outfilename = "mesh_000005_celldata.vtu"
+        @test_nowarn trixi2vtk(joinpath(outdir, "mesh_" * LEADING_ZEROS * "000005.h5"), output_directory=outdir)
+        outfilename = "mesh_" * LEADING_ZEROS * "000005_celldata.vtu"
         out_file = joinpath(outdir, outfilename)
 
         # save output file to `artifacts` to facilitate debugging of failing tests
@@ -331,8 +331,8 @@ end
 
       @timed_testset "solution celldata" begin
         # create the output file to be tested
-        @test_nowarn trixi2vtk(joinpath(outdir, "solution_000005.h5"), output_directory=outdir)
-        outfilename = "solution_000005_celldata.vtu"
+        @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000005.h5"), output_directory=outdir)
+        outfilename = "solution_" * LEADING_ZEROS * "000005_celldata.vtu"
         out_file = joinpath(outdir, outfilename)
 
         # save output file to `artifacts` to facilitate debugging of failing tests
@@ -347,8 +347,8 @@ end
 
       @timed_testset "reinterpolate with nonuniform data" begin
         # Create and test output with reinterpolation (default options: `reinterpolate=true, data_is_uniform=false`)
-        @test_nowarn trixi2vtk(joinpath(outdir, "solution_000005.h5"), output_directory=outdir)
-        outfilename = "solution_000005.vtu"
+        @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000005.h5"), output_directory=outdir)
+        outfilename = "solution_" * LEADING_ZEROS * "000005.vtu"
         out_file = joinpath(outdir, outfilename)
 
         # save output file to `artifacts` to facilitate debugging of failing tests
@@ -363,8 +363,8 @@ end
 
       @timed_testset "do not reinterpolate with nonuniform data" begin
         # Create and test output without reinterpolation on LGL nodes
-        @test_nowarn trixi2vtk(joinpath(outdir, "solution_000005.h5"), output_directory=outdir, reinterpolate=false)
-        outfilename = "solution_000005.vtu"
+        @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000005.h5"), output_directory=outdir, reinterpolate=false)
+        outfilename = "solution_" * LEADING_ZEROS * "000005.vtu"
         out_file = joinpath(outdir, outfilename)
 
         # save output file to `artifacts` to facilitate debugging of failing tests
@@ -380,8 +380,8 @@ end
       @timed_testset "do not reinterpolate with uniform data" begin
         # Create and test output without reinterpolation on uniform nodes
         # OBS! This is a dummy test just to exercise code. The resulting plot will look weird.
-        @test_nowarn trixi2vtk(joinpath(outdir, "solution_000005.h5"), output_directory=outdir, reinterpolate=false, data_is_uniform=true)
-        outfilename = "solution_000005.vtu"
+        @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000005.h5"), output_directory=outdir, reinterpolate=false, data_is_uniform=true)
+        outfilename = "solution_" * LEADING_ZEROS * "000005.vtu"
         out_file = joinpath(outdir, outfilename)
 
         # save output file to `artifacts` to facilitate debugging of failing tests
@@ -478,6 +478,48 @@ end
         remote_filename = "2d/t8codemesh/dgsem_rotor_amr_no_reinterp_uniform_05.vtu"
         ref_file = get_test_reference_file("dgsem_rotor_amr_no_reinterp_uniform_05.vtu", remote_filename)
         compare_point_data(out_file, ref_file)
+      end
+    end
+  end
+
+  if VERSION >= v"1.8"
+    # Julia v1.7 heavily downgrades Trixi.jl. Subcell limiting is not yet supported.
+    # Therefore, only perform tests with Julia v1.8 or newer.
+    @testset "Subcell limiting coefficients" begin
+      isdir(outdir) && rm(outdir, recursive=true)
+      run_trixi(joinpath(examples_dir(), "tree_2d_dgsem", "elixir_euler_sedov_blast_wave_sc_subcell.jl"),
+                maxiters=10, initial_refinement_level=4)
+
+      @timed_testset "without reinterpolation" begin
+        # Create and test output without reinterpolation
+        @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000010.h5"), output_directory=outdir, reinterpolate=false)
+        outfilename = "solution_" * LEADING_ZEROS * "000010.vtu"
+        out_file = joinpath(outdir, outfilename)
+
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "2d-treemesh-shockcapturing-subcell-no-reinterp"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+
+        # remote file path is actually a URL so it always has the same path structure
+        remote_filename = "2d/treemesh/dgsem_sedov_subcell_no_interp_10.vtu"
+        ref_file = get_test_reference_file("dgsem_sedov_subcell_no_interp_10.vtu", remote_filename)
+        compare_point_data(out_file, ref_file)
+      end
+
+      @timed_testset "with reinterpolation" begin
+        # Create and test output without reinterpolation
+        @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000010.h5"), output_directory=outdir, reinterpolate=true)
+        outfilename = "solution_" * LEADING_ZEROS * "000010.vtu"
+        out_file = joinpath(outdir, outfilename)
+
+        # save output file to `artifacts` to facilitate debugging of failing tests
+        testname = "2d-treemesh-shockcapturing-subcell-reinterp"
+        cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+
+        # remote file path is actually a URL so it always has the same path structure
+        remote_filename = "2d/treemesh/dgsem_sedov_subcell_interp_10.vtu"
+        ref_file = get_test_reference_file("dgsem_sedov_subcell_interp_10.vtu", remote_filename)
+        compare_cell_data(out_file, ref_file)
       end
     end
   end
