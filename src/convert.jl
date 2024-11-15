@@ -234,7 +234,7 @@ function trixi2vtk(filename::AbstractString...;
 
     # Finalize `mesh` object to free up memory early on. This is especially
     # necessary for `T8codeMesh` objects. See https://github.com/DLR-AMR/t8code/issues/1295
-    # for more details. Will be fixed in the future. Then this like can be removed.
+    # for more details. Will be fixed in the future. Then this line can be removed.
     finalize(mesh)
 
     # Save VTK file
