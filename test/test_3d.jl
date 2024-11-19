@@ -2,7 +2,6 @@ module Test3D
 
 using Test
 using Trixi2Vtk
-using Trixi
 using MPI: mpiexec
 
 include("test_trixi2vtk.jl")
@@ -110,7 +109,7 @@ end
 
     # Run trixi in parallel with 2 ranks
     mpiexec() do cmd
-      run(`$cmd -n 2 $(Base.julia_cmd()) --threads=1 --project=@. -e 'using Trixi; trixi_include(joinpath(examples_dir(), "p4est_3d_dgsem", "elixir_mhd_alfven_wave_nonconforming.jl"), trees_per_dimension=(1, 1, 1),  maxiters=4)'`)
+      run(`$cmd -n 2 $(Base.julia_cmd()) --threads=1 --project=@. -e 'using Trixi; trixi_include(@__MODULE__, joinpath(examples_dir(), "p4est_3d_dgsem", "elixir_mhd_alfven_wave_nonconforming.jl"), trees_per_dimension=(1, 1, 1),  maxiters=4)'`)
     end
 
     # Get output file name
