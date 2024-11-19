@@ -2,6 +2,7 @@ module Test3D
 
 using Test
 using Trixi2Vtk
+using Trixi
 using MPI: mpiexec
 
 include("test_trixi2vtk.jl")
