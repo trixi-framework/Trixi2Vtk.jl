@@ -14,6 +14,7 @@ for human readability.
 
 #### Changed
 
+- The required Julia version is updated to v1.10.
 
 #### Deprecated
 
