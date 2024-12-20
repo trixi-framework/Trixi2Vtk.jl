@@ -11,7 +11,7 @@ end
 
 # Interpolate data from input format to desired output format (StructuredMesh or UnstructuredMesh2D version)
 function interpolate_data(::Val{:vtu}, input_data,
-                          mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh},
+                          mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, T8codeMesh},
                           n_visnodes, verbose)
   # Calculate equidistant output nodes
   nodes_out = collect(range(-1, 1, length=n_visnodes))
