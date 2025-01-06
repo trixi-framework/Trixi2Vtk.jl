@@ -76,6 +76,21 @@ function read_datafile(filename::String)
       index +=1
     end
 
-    return labels, data, n_elements, n_nodes, element_variables, time
+    # Extract node variable arrays
+    node_variables = Dict{String, Union{Array{Float64}, Array{Int}}}()
+    index = 1
+    while haskey(file, "node_variables_$index")
+      varname = read(attributes(file["node_variables_$index"])["name"])
+      nodedata = read(file["node_variables_$index"])
+      if ndims_ == 2
+        node_variables[varname] = Array{Float64}(undef, n_nodes, n_nodes, n_elements)
+        @views node_variables[varname][:, :, :] .= nodedata
+      else
+        error("Unsupported number of spatial dimensions: ", ndims_)
+      end
+      index +=1
+    end
+
+    return labels, data, n_elements, n_nodes, element_variables, node_variables, time
   end
 end
