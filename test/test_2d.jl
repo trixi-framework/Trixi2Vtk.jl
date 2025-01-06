@@ -124,7 +124,6 @@ end
     end
   end
 
-
   if !Sys.iswindows() && get(ENV, "CI", nothing) == "true"
     # OBS! Only `TreeMesh` results are tested on Windows runners due to memory limits.
     #      All remaining mesh types are tested on Ubuntu and Mac
@@ -410,7 +409,7 @@ end
         cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
 
         # remote file path is actually a URL so it always has the same path structure
-        remote_filename = "2d/t8codemesh/dgsem_rotor_amr_mesh_05.vtu"
+        remote_filename = "2d/p4estmesh/dgsem_rotor_amr_mesh_05.vtu"
         ref_file = get_test_reference_file("dgsem_rotor_amr_mesh_05.vtu", remote_filename)
         compare_cell_data(out_file, ref_file)
       end
@@ -426,7 +425,7 @@ end
         cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
 
         # remote file path is actually a URL so it always has the same path structure
-        remote_filename = "2d/t8codemesh/dgsem_rotor_amr_celldata_05.vtu"
+        remote_filename = "2d/p4estmesh/dgsem_rotor_amr_celldata_05.vtu"
         ref_file = get_test_reference_file("dgsem_rotor_amr_celldata_05.vtu", remote_filename)
         compare_cell_data(out_file, ref_file)
       end
@@ -442,7 +441,7 @@ end
         cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
 
         # remote file path is actually a URL so it always has the same path structure
-        remote_filename = "2d/t8codemesh/dgsem_rotor_amr_reinterp_05.vtu"
+        remote_filename = "2d/p4estmesh/dgsem_rotor_amr_reinterp_05.vtu"
         ref_file = get_test_reference_file("dgsem_rotor_amr_reinterp_05.vtu", remote_filename)
         compare_point_data(out_file, ref_file)
       end
@@ -458,7 +457,7 @@ end
         cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
 
         # remote file path is actually a URL so it always has the same path structure
-        remote_filename = "2d/t8codemesh/dgsem_rotor_amr_no_reinterp_05.vtu"
+        remote_filename = "2d/p4estmesh/dgsem_rotor_amr_no_reinterp_05.vtu"
         ref_file = get_test_reference_file("dgsem_rotor_amr_no_reinterp_05.vtu", remote_filename)
         compare_point_data(out_file, ref_file)
       end
@@ -475,7 +474,7 @@ end
         cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
 
         # remote file path is actually a URL so it always has the same path structure
-        remote_filename = "2d/t8codemesh/dgsem_rotor_amr_no_reinterp_uniform_05.vtu"
+        remote_filename = "2d/p4estmesh/dgsem_rotor_amr_no_reinterp_uniform_05.vtu"
         ref_file = get_test_reference_file("dgsem_rotor_amr_no_reinterp_uniform_05.vtu", remote_filename)
         compare_point_data(out_file, ref_file)
       end
