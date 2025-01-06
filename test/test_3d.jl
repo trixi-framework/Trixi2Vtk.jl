@@ -292,8 +292,8 @@ end
         cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
 
         # remote file path is actually a URL so it always has the same path structure
-        remote_filename = "3d/t8codemesh/dgsem_adv_sphere_mesh_02.vtu"
-        ref_file = get_test_reference_file("dgsem_adv_sphere_mesh_02.vtu", remote_filename)
+        remote_filename = "3d/t8codemesh/t8_dgsem_adv_sphere_mesh_02.vtu"
+        ref_file = get_test_reference_file("t8_dgsem_adv_sphere_mesh_02.vtu", remote_filename)
         compare_cell_data(out_file, ref_file)
       end
 
@@ -308,8 +308,8 @@ end
         cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
 
         # remote file path is actually a URL so it always has the same path structure
-        remote_filename = "3d/t8codemesh/dgsem_adv_sphere_celldata_02.vtu"
-        ref_file = get_test_reference_file("dgsem_adv_sphere_celldata_02.vtu", remote_filename)
+        remote_filename = "3d/t8codemesh/t8_dgsem_adv_sphere_celldata_02.vtu"
+        ref_file = get_test_reference_file("t8_dgsem_adv_sphere_celldata_02.vtu", remote_filename)
         compare_cell_data(out_file, ref_file)
       end
 
@@ -324,8 +324,8 @@ end
         cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
 
         # remote file path is actually a URL so it always has the same path structure
-        remote_filename = "3d/t8codemesh/dgsem_adv_sphere_reinterp_02.vtu"
-        ref_file = get_test_reference_file("dgsem_adv_sphere_reinterp_02.vtu", remote_filename)
+        remote_filename = "3d/t8codemesh/t8_dgsem_adv_sphere_reinterp_02.vtu"
+        ref_file = get_test_reference_file("t8_dgsem_adv_sphere_reinterp_02.vtu", remote_filename)
         compare_point_data(out_file, ref_file)
       end
 
@@ -340,8 +340,8 @@ end
         cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
 
         # remote file path is actually a URL so it always has the same path structure
-        remote_filename = "3d/t8codemesh/dgsem_adv_sphere_no_reinterp_02.vtu"
-        ref_file = get_test_reference_file("dgsem_adv_sphere_no_reinterp_02.vtu", remote_filename)
+        remote_filename = "3d/t8codemesh/t8_dgsem_adv_sphere_no_reinterp_02.vtu"
+        ref_file = get_test_reference_file("t8_dgsem_adv_sphere_no_reinterp_02.vtu", remote_filename)
         compare_point_data(out_file, ref_file)
       end
 
@@ -357,8 +357,8 @@ end
         cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
 
         # remote file path is actually a URL so it always has the same path structure
-        remote_filename = "3d/t8codemesh/dgsem_adv_sphere_no_reinterp_uniform_02.vtu"
-        ref_file = get_test_reference_file("dgsem_adv_sphere_no_reinterp_uniform_02.vtu", remote_filename)
+        remote_filename = "3d/t8codemesh/t8_dgsem_adv_sphere_no_reinterp_uniform_02.vtu"
+        ref_file = get_test_reference_file("t8_dgsem_adv_sphere_no_reinterp_uniform_02.vtu", remote_filename)
         compare_point_data(out_file, ref_file)
       end
     end
