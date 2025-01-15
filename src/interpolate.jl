@@ -11,7 +11,7 @@ end
 
 # Interpolate data from input format to desired output format (StructuredMesh or UnstructuredMesh2D version)
 function interpolate_data(::Val{:vtu}, input_data,
-                          mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, T8codeMesh},
+                          mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, P4estMeshView},
                           n_visnodes, verbose)
   # Calculate equidistant output nodes
   nodes_out = collect(range(-1, 1, length=n_visnodes))
@@ -161,22 +161,41 @@ function raw2interpolated(data_gl::AbstractArray{Float64}, nodes_out)
   # Calculate Vandermonde matrix
   vandermonde = polynomial_interpolation_matrix(nodes_in, nodes_out)
 
-  @assert ndims_ == 2 || ndims_ == 3 "Only 2D and 3D data supported"
-  # Create output data structure
-  data_vis = Array{Float64}(undef, ntuple(_ -> n_nodes_out, ndims_)..., n_elements, n_variables)
+  if ndims_ == 2
+    # Create output data structure
+    data_vis = Array{Float64}(undef, n_nodes_out, n_nodes_out, n_elements, n_variables)
 
-  # For each variable, interpolate element data and store to global data structure
-  for v in 1:n_variables
-    # Reshape data array for use in interpolate_nodes function
-    @views reshaped_data = reshape(data_gl[.., v], 1,
-                                   ntuple(_ -> n_nodes_in, ndims_)..., n_elements)
+    # For each variable, interpolate element data and store to global data structure
+    for v in 1:n_variables
+      # Reshape data array for use in interpolate_nodes function
+      @views reshaped_data = reshape(data_gl[:, :, :, v], 1, n_nodes_in, n_nodes_in, n_elements)
 
-    # Interpolate data to visualization nodes
-    for element_id in 1:n_elements
-      @views data_vis[.., element_id, v] .= reshape(
-          interpolate_nodes(reshaped_data[.., element_id], vandermonde, 1),
-          ntuple(_ -> n_nodes_out, ndims_)...)
+      # Interpolate data to visualization nodes
+      for element_id in 1:n_elements
+        @views data_vis[:, :, element_id, v] .= reshape(
+            interpolate_nodes(reshaped_data[:, :, :, element_id], vandermonde, 1),
+            n_nodes_out, n_nodes_out)
+      end
     end
+  elseif ndims_ == 3
+    # Create output data structure
+    data_vis = Array{Float64}(undef, n_nodes_out, n_nodes_out, n_nodes_out, n_elements, n_variables)
+
+    # For each variable, interpolate element data and store to global data structure
+    for v in 1:n_variables
+      # Reshape data array for use in interpolate_nodes function
+      @views reshaped_data = reshape(data_gl[:, :, :, :, v],
+                                     1, n_nodes_in, n_nodes_in, n_nodes_in, n_elements)
+
+      # Interpolate data to visualization nodes
+      for element_id in 1:n_elements
+        @views data_vis[:, :, :, element_id, v] .= reshape(
+            interpolate_nodes(reshaped_data[:, :, :, :, element_id], vandermonde, 1),
+            n_nodes_out, n_nodes_out, n_nodes_out)
+      end
+    end
+  else
+    error("Unsupported number of spatial dimensions: ", ndims_)
   end
 
   # Return as one 1D array for each variable
