@@ -237,6 +237,10 @@ function trixi2vtk(filename::AbstractString...;
     if !hide_progress
       next!(progress, showvalues=[(:finished, filename)])
     end
+
+    # Free any unused memory.
+#     GC.safepoint()
+#     GC.gc()
   end
 
   if !is_single_file
@@ -297,6 +301,14 @@ function assert_cells_elements(n_elements, mesh::P4estMesh, filename, meshfile)
   end
 end
 
+function assert_cells_elements(n_elements, mesh::P4estMeshView, filename, meshfile)
+  # Check if dimensions match
+  if Trixi.ncells(mesh) != n_elements
+    error("number of elements in '$(filename)' do not match number of cells in " *
+          "'$(meshfile)' " *
+          "(did you forget to clean your 'out/' directory between different runs?)")
+  end
+end
 
 # default number of visualization nodes if a solution should be visualized
 function get_default_nvisnodes_solution(nvisnodes, n_nodes, mesh::TreeMesh)
@@ -310,7 +322,8 @@ function get_default_nvisnodes_solution(nvisnodes, n_nodes, mesh::TreeMesh)
 end
 
 function get_default_nvisnodes_solution(nvisnodes, n_nodes,
-                                        mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh})
+                                        mesh::Union{StructuredMesh, UnstructuredMesh2D,
+                                                    P4estMesh, P4estMeshView})
   if nvisnodes === nothing || nvisnodes == 0
     return n_nodes
   else
@@ -408,6 +421,37 @@ function add_celldata!(vtk_celldata, mesh::P4estMesh, verbose)
   return vtk_celldata
 end
 
+function add_celldata!(vtk_celldata, mesh::P4estMeshView, verbose)
+  # Create temporary storage for the tree_ids and levels.
+  tree_ids = zeros( Trixi.ncells(mesh) )
+  cell_levels = zeros( Trixi.ncells(mesh) )
+  # Set global counters.
+  tree_counter = 1
+  cell_counter = 1
+  # Iterate through the p4est trees and each of their quadrants.
+  # Assigns the tree index values. Also, grab and assign the level value.
+  trees = Trixi.unsafe_wrap_sc(Trixi.P4est.p4est_tree_t, unsafe_load(mesh.parent.p4est).trees)
+  for tree_view in eachindex(mesh.cell_ids)
+    tree = trees[tree_view]
+    for quadrant in Trixi.unsafe_wrap_sc(Trixi.P4est.p4est_quadrant_t, tree.quadrants)
+      tree_ids[cell_counter] = tree_counter
+      cell_levels[cell_counter] = quadrant.level
+      cell_counter += 1
+    end
+    tree_counter += 1
+  end
+  @timeit "add data to VTK file" begin
+    # Add tree/element data to celldata VTK file
+    verbose && println("| | tree_ids...")
+    @timeit "tree_ids" vtk_celldata["tree_ids"] = tree_ids
+    verbose && println("| | element_ids...")
+    @timeit "element_ids" vtk_celldata["element_ids"] = collect(1:Trixi.ncells(mesh))
+    verbose && println("| | levels...")
+    @timeit "levels" vtk_celldata["levels"] = cell_levels
+  end
+
+  return vtk_celldata
+end
 
 function expand_filename_patterns(patterns)
   filenames = String[]
