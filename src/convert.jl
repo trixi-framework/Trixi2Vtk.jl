@@ -86,6 +86,10 @@ function trixi2vtk(filename::AbstractString...;
                         barlen = 40)
   end
 
+  # Show warning when reinterpolating node-level data of subcell limiting
+  # Auxiliary variable to show warning only once
+  has_warned_about_interpolation = false
+
   # Iterate over input files
   for (index, filename) in enumerate(filenames)
     verbose && println("Processing file $filename ($(index)/$(length(filenames)))...")
@@ -124,7 +128,7 @@ function trixi2vtk(filename::AbstractString...;
     if is_datafile
       verbose && println("| Reading data file...")
       @timeit "read data" (labels, data, n_elements, n_nodes,
-                           element_variables, time) = read_datafile(filename)
+                           element_variables, node_variables, time) = read_datafile(filename)
 
       assert_cells_elements(n_elements, mesh, filename, meshfile)
 
@@ -201,6 +205,28 @@ function trixi2vtk(filename::AbstractString...;
           for (label, variable) in element_variables
             verbose && println("| | Element variable: $label...")
             @timeit label vtk_celldata[label] = variable
+          end
+
+          # Add node variables
+          for (label, variable) in node_variables
+            verbose && println("| | Node variable: $label...")
+            if reinterpolate
+              # Show warning if node-level data of subcell limiting are reinterpolated.
+              if label == "limiting_coefficient" && !has_warned_about_interpolation
+                println("WARNING: The limiting coefficients are no continuous field but happens " *
+                "to be represented by a piecewise-constant approximation. Thus, reinterpolation " *
+                "does not give a meaningful representation.")
+                has_warned_about_interpolation = true
+              end
+              @timeit "interpolate data" interpolated_cell_data = interpolate_data(Val(format),
+                                                                    reshape(variable, size(variable)..., 1),
+                                                                    mesh, n_visnodes, verbose)
+            else
+              @timeit "interpolate data" interpolated_cell_data = reshape(variable,
+                                                                          n_visnodes^ndims_ * n_elements)
+            end
+            # Add to node_data
+            @timeit label vtk_nodedata[label] = interpolated_cell_data
           end
         end
       end
@@ -292,7 +318,7 @@ function assert_cells_elements(n_elements, mesh::UnstructuredMesh2D, filename, m
 end
 
 
-function assert_cells_elements(n_elements, mesh::P4estMesh, filename, meshfile)
+function assert_cells_elements(n_elements, mesh::Union{P4estMesh, T8codeMesh}, filename, meshfile)
   # Check if dimensions match
   if Trixi.ncells(mesh) != n_elements
     error("number of elements in '$(filename)' do not match number of cells in " *
@@ -323,7 +349,7 @@ end
 
 function get_default_nvisnodes_solution(nvisnodes, n_nodes,
                                         mesh::Union{StructuredMesh, UnstructuredMesh2D,
-                                                    P4estMesh, P4estMeshView})
+                                                    P4estMesh, T8codeMesh, P4estMeshView})
   if nvisnodes === nothing || nvisnodes == 0
     return n_nodes
   else
@@ -343,7 +369,7 @@ function get_default_nvisnodes_mesh(nvisnodes, mesh::TreeMesh)
 end
 
 function get_default_nvisnodes_mesh(nvisnodes,
-                                    mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh})
+                                    mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, T8codeMesh})
   if nvisnodes === nothing
     # for curved meshes, we need to get at least the vertices
     return 2
@@ -440,6 +466,23 @@ function add_celldata!(vtk_celldata, mesh::P4estMeshView, verbose)
     end
     tree_counter += 1
   end
+
+function add_celldata!(vtk_celldata, mesh::T8codeMesh, verbose)
+  # Create temporary storage for the tree_ids and levels.
+  tree_ids = zeros( Trixi.ncells(mesh) )
+
+  elem_counter = 1
+  num_local_trees = Trixi.t8_forest_get_num_local_trees(mesh.forest)
+  for itree in 1:num_local_trees
+      num_elements_in_tree = Trixi.t8_forest_get_tree_num_elements(mesh.forest, itree-1)
+      for ielement in 1:num_elements_in_tree
+          tree_ids[elem_counter] = itree
+          elem_counter += 1
+      end
+  end
+
+  levels = Trixi.trixi_t8_get_local_element_levels(mesh.forest)
+
   @timeit "add data to VTK file" begin
     # Add tree/element data to celldata VTK file
     verbose && println("| | tree_ids...")
@@ -447,7 +490,7 @@ function add_celldata!(vtk_celldata, mesh::P4estMeshView, verbose)
     verbose && println("| | element_ids...")
     @timeit "element_ids" vtk_celldata["element_ids"] = collect(1:Trixi.ncells(mesh))
     verbose && println("| | levels...")
-    @timeit "levels" vtk_celldata["levels"] = cell_levels
+    @timeit "levels" vtk_celldata["levels"] = levels
   end
 
   return vtk_celldata

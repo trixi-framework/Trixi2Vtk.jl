@@ -43,6 +43,7 @@ function get_reference_file(filename, remotename; head="main", output_directory=
            * head
            * "/reference_files/"
            * remotename)
+
     download(url, filepath)
   end
 
@@ -53,11 +54,7 @@ end
 # Note: The purpose of using a specific commit hash (instead of `main`) is to be able to tie a given
 #       version of Trixi2Vtk to a specific version of the test file repository. This way, also tests
 #       for older Trixi2Vtk releases should continue to work.
-if VERSION < v"1.8"
-  const TEST_REFERENCE_COMMIT = "c0a966b06489f9b2ee3aefeb0a5c0dae733df36f"
-else
-  const TEST_REFERENCE_COMMIT = "86a43fe8dc254130345754fb512268204cf2233c"
-end
+const TEST_REFERENCE_COMMIT = "8e9a77a6febe86a175c15f8a04c68261db53ae6f"
 
 # Local folder to store downloaded reference files. If you change this, also adapt `../.gitignore`!
 const TEST_REFERENCE_DIR = "reference_files"
