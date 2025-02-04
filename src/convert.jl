@@ -128,7 +128,6 @@ function trixi2vtk(filename::AbstractString...;
     if is_datafile
       verbose && println("| Reading data file...")
 
-      # Check compatibility of the mesh type and the output format
       if mesh isa Trixi.DGMultiMesh
         @timeit "read data" (labels, data, n_elements, n_nodes,
                              element_variables, node_variables, time) = read_datafile_dgmulti(filename)
