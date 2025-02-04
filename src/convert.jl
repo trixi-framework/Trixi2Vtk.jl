@@ -127,8 +127,15 @@ function trixi2vtk(filename::AbstractString...;
     # Read data only if it is a data file
     if is_datafile
       verbose && println("| Reading data file...")
-      @timeit "read data" (labels, data, n_elements, n_nodes,
-                           element_variables, node_variables, time) = read_datafile(filename)
+
+      # Check compatibility of the mesh type and the output format
+      if mesh isa Trixi.DGMultiMesh
+        @timeit "read data" (labels, data, n_elements, n_nodes,
+                             element_variables, node_variables, time) = read_datafile_dgmulti(filename)
+      else
+        @timeit "read data" (labels, data, n_elements, n_nodes,
+                             element_variables, node_variables, time) = read_datafile(filename)
+      end
 
       assert_cells_elements(n_elements, mesh, filename, meshfile)
 
@@ -156,6 +163,7 @@ function trixi2vtk(filename::AbstractString...;
     else
       # If file is a mesh file, do not interpolate data as detailed
       n_visnodes = get_default_nvisnodes_mesh(nvisnodes, mesh)
+
       # Create an "empty" node set that is unused in the mesh conversion
       node_set = Array{Float64}(undef, n_visnodes)
     end
@@ -314,7 +322,7 @@ function assert_cells_elements(n_elements, mesh::UnstructuredMesh2D, filename, m
 end
 
 
-function assert_cells_elements(n_elements, mesh::Union{P4estMesh, T8codeMesh}, filename, meshfile)
+function assert_cells_elements(n_elements, mesh::Union{P4estMesh, T8codeMesh, DGMultiMesh}, filename, meshfile)
   # Check if dimensions match
   if Trixi.ncells(mesh) != n_elements
     error("number of elements in '$(filename)' do not match number of cells in " *
@@ -336,7 +344,7 @@ function get_default_nvisnodes_solution(nvisnodes, n_nodes, mesh::TreeMesh)
 end
 
 function get_default_nvisnodes_solution(nvisnodes, n_nodes,
-                                        mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, T8codeMesh})
+                                        mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, T8codeMesh, DGMultiMesh})
   if nvisnodes === nothing || nvisnodes == 0
     return n_nodes
   else
@@ -356,7 +364,7 @@ function get_default_nvisnodes_mesh(nvisnodes, mesh::TreeMesh)
 end
 
 function get_default_nvisnodes_mesh(nvisnodes,
-                                    mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, T8codeMesh})
+                                    mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, T8codeMesh, DGMultiMesh})
   if nvisnodes === nothing
     # for curved meshes, we need to get at least the vertices
     return 2
@@ -458,6 +466,16 @@ function add_celldata!(vtk_celldata, mesh::T8codeMesh, verbose)
     @timeit "element_ids" vtk_celldata["element_ids"] = collect(1:Trixi.ncells(mesh))
     verbose && println("| | levels...")
     @timeit "levels" vtk_celldata["levels"] = levels
+  end
+
+  return vtk_celldata
+end
+
+function add_celldata!(vtk_celldata, mesh::DGMultiMesh, verbose)
+  @timeit "add data to VTK file" begin
+    # Add tree/element data to celldata VTK file
+    verbose && println("| | element_ids...")
+    @timeit "element_ids" vtk_celldata["element_ids"] = collect(1:Trixi.ncells(mesh))
   end
 
   return vtk_celldata
