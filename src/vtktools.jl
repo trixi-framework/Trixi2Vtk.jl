@@ -278,13 +278,6 @@ function calc_node_coordinates(mesh::Union{P4estMesh,T8codeMesh}, nodes, n_visno
   return Trixi.calc_node_coordinates!(node_coordinates, mesh, nodes)
 end
 
-# function calc_node_coordinates(mesh::DGMultiMesh, varags...)
-#   # Extract number of spatial dimensions
-#   ndims_ = ndims(mesh)
-# 
-#   return mesh.md.x, mesh.md.y
-# end
-
 # Calculation of the node coordinates for `TreeMesh` in 2D
 function calc_node_coordinates!(node_coordinates, nodes, mesh::TreeMesh{2})
   _, levels, _, length_level_0 = extract_mesh_information(mesh)
