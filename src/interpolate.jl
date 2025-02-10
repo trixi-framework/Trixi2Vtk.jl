@@ -47,6 +47,32 @@ function interpolate_data(::Val{:vti}, input_data, mesh::TreeMesh, n_visnodes, v
   return structured_data
 end
 
+# Interpolate data from input format to desired output format (StructuredMesh or UnstructuredMesh2D version)
+function interpolate_data(::Val{:vtu}, input_data,
+                          mesh::DGMultiMesh,
+                          n_visnodes, verbose)
+  rd = mesh.rd
+
+  if length(rd.N) > 1
+      @assert length(Set(rd.N)) == 1 "`order` must have equal elements."
+      order = first(rd.N)
+  else
+      order = rd.N
+  end
+
+  interpolator = Trixi.StartUpDG.vandermonde(rd.element_type, order, Trixi.StartUpDG.equi_nodes(rd.element_type, order)...) / rd.VDM
+
+  dof_per_elem, n_elements, n_variables = size(input_data)
+  result = zeros((interpolator |> size |> first, n_elements, n_variables))
+
+  for v = 1:n_variables
+    for e = 1:n_elements
+      @views result[:,e,v] = interpolator * input_data[:,e,v]
+    end
+  end
+
+  return reshape(result, (interpolator |> size |> first) * n_elements, n_variables)
+end
 
 # Interpolate unstructured DG data to structured data (cell-centered)
 function unstructured2structured(unstructured_data::AbstractArray{Float64},
