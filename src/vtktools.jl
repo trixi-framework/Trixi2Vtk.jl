@@ -593,7 +593,9 @@ function calc_vtk_points_cells(node_coordinates::AbstractArray{<:Any,4})
   # Linear indices to access points by node indices and element id
   linear_indices = LinearIndices(size_[2:end])
 
-  # Use lagrange nodes as VTK points
+  # Use Lagrange nodes as VTK points. Note that we call size(node_coordinates, 1) in order  
+  # to provide support for standard two-dimensional meshes as well as meshes representing 
+  # 2D surfaces in 3D space, which are implemented using P4estMesh{2, 3}.
   vtk_points = reshape(node_coordinates, (size(node_coordinates, 1), n_points))
   vtk_cells = Vector{MeshCell}(undef, n_elements)
 
