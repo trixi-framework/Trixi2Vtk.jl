@@ -137,7 +137,7 @@ end
 # (StructuredMesh/UnstructuredMesh2D/P4estMesh version).
 # Routine is agnostic with respect to reinterpolation.
 function build_vtk_grids(::Val{:vtu},
-                         mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh},
+                         mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, T8codeMesh},
                          nodes, n_visnodes, verbose, output_directory, is_datafile, filename,
                          reinterpolate::Union{Val{true}, Val{false}})
 
@@ -230,8 +230,7 @@ function calc_node_coordinates(mesh::UnstructuredMesh2D, nodes, n_visnodes)
   return node_coordinates
 end
 
-
-function calc_node_coordinates(mesh::P4estMesh, nodes, n_visnodes)
+function calc_node_coordinates(mesh::Union{P4estMesh,T8codeMesh}, nodes, n_visnodes)
   # Extract number of spatial dimensions
   ndims_ = ndims(mesh)
   ndims_spa = size(mesh.tree_node_coordinates,1)

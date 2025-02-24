@@ -314,7 +314,7 @@ function assert_cells_elements(n_elements, mesh::UnstructuredMesh2D, filename, m
 end
 
 
-function assert_cells_elements(n_elements, mesh::P4estMesh, filename, meshfile)
+function assert_cells_elements(n_elements, mesh::Union{P4estMesh, T8codeMesh}, filename, meshfile)
   # Check if dimensions match
   if Trixi.ncells(mesh) != n_elements
     error("number of elements in '$(filename)' do not match number of cells in " *
@@ -336,7 +336,7 @@ function get_default_nvisnodes_solution(nvisnodes, n_nodes, mesh::TreeMesh)
 end
 
 function get_default_nvisnodes_solution(nvisnodes, n_nodes,
-                                        mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh})
+                                        mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, T8codeMesh})
   if nvisnodes === nothing || nvisnodes == 0
     return n_nodes
   else
@@ -356,7 +356,7 @@ function get_default_nvisnodes_mesh(nvisnodes, mesh::TreeMesh)
 end
 
 function get_default_nvisnodes_mesh(nvisnodes,
-                                    mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh})
+                                    mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, T8codeMesh})
   if nvisnodes === nothing
     # for curved meshes, we need to get at least the vertices
     return 2
@@ -434,6 +434,34 @@ function add_celldata!(vtk_celldata, mesh::P4estMesh, verbose)
   return vtk_celldata
 end
 
+function add_celldata!(vtk_celldata, mesh::T8codeMesh, verbose)
+  # Create temporary storage for the tree_ids and levels.
+  tree_ids = zeros( Trixi.ncells(mesh) )
+
+  elem_counter = 1
+  num_local_trees = Trixi.t8_forest_get_num_local_trees(mesh.forest)
+  for itree in 1:num_local_trees
+      num_elements_in_tree = Trixi.t8_forest_get_tree_num_elements(mesh.forest, itree-1)
+      for ielement in 1:num_elements_in_tree
+          tree_ids[elem_counter] = itree
+          elem_counter += 1
+      end
+  end
+
+  levels = Trixi.trixi_t8_get_local_element_levels(mesh.forest)
+
+  @timeit "add data to VTK file" begin
+    # Add tree/element data to celldata VTK file
+    verbose && println("| | tree_ids...")
+    @timeit "tree_ids" vtk_celldata["tree_ids"] = tree_ids
+    verbose && println("| | element_ids...")
+    @timeit "element_ids" vtk_celldata["element_ids"] = collect(1:Trixi.ncells(mesh))
+    verbose && println("| | levels...")
+    @timeit "levels" vtk_celldata["levels"] = levels
+  end
+
+  return vtk_celldata
+end
 
 function expand_filename_patterns(patterns)
   filenames = String[]
