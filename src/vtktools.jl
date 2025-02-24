@@ -230,18 +230,32 @@ function calc_node_coordinates(mesh::UnstructuredMesh2D, nodes, n_visnodes)
   return node_coordinates
 end
 
-function calc_node_coordinates(mesh::Union{P4estMesh,T8codeMesh}, nodes, n_visnodes)
-  # Extract number of spatial dimensions
-  ndims_ = ndims(mesh)
-  ndims_spa = size(mesh.tree_node_coordinates,1)
 
-  node_coordinates = Array{Float64, ndims_+2}(undef, ndims_spa,
-                                              ntuple(_ -> n_visnodes, ndims_)...,
+# Version of calc_node_coordinates for a P4estMesh representing a manifold of dimension
+# NDIMS embedded within an ambient space of dimension NDIMS_AMBIENT. This provides support 
+# for standard 2D and 3D meshes (i.e. NDIMS = NDIMS_AMBIENT) as well as 2D surfaces in 3D 
+# space (i.e. NDIMS = 2 and NDIMS_AMBIENT = 3).
+function calc_node_coordinates(mesh::P4estMesh{NDIMS, NDIMS_AMBIENT}, nodes, 
+                               n_visnodes) where {NDIMS, NDIMS_AMBIENT}
+
+  node_coordinates = Array{Float64, NDIMS+2}(undef, NDIMS_AMBIENT,
+                                              ntuple(_ -> n_visnodes, NDIMS)...,
                                               Trixi.ncells(mesh))
 
   return Trixi.calc_node_coordinates!(node_coordinates, mesh, nodes)
 end
 
+
+function calc_node_coordinates(mesh::T8codeMesh, nodes, n_visnodes)
+  # Extract number of spatial dimensions
+  ndims_ = ndims(mesh)
+
+  node_coordinates = Array{Float64, ndims_+2}(undef, ndims_,
+                                              ntuple(_ -> n_visnodes, ndims_)...,
+                                              Trixi.ncells(mesh))
+
+  return Trixi.calc_node_coordinates!(node_coordinates, mesh, nodes)
+end
 
 # Calculation of the node coordinates for `TreeMesh` in 2D
 function calc_node_coordinates!(node_coordinates, nodes, mesh::TreeMesh{2})
