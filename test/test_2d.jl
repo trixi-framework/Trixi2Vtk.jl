@@ -16,6 +16,7 @@ if !isdir(artifacts_dir)
 end
 
 @testset "2D" begin
+
   @testset "TreeMesh" begin
     isdir(outdir) && rm(outdir, recursive=true)
     run_trixi(joinpath(examples_dir(), "tree_2d_dgsem", "elixir_euler_sedov_blast_wave.jl"), maxiters=10)
@@ -518,6 +519,59 @@ end
       compare_cell_data(out_file, ref_file)
     end
   end
+
+  @testset "2D surface in 3D using P4estMesh" begin
+    isdir(outdir) && rm(outdir, recursive=true)
+
+    @timed_testset "without reinterpolation" begin
+      # Get .h5 files from remote repository (in the future, we will run TrixiAtmo.jl here)
+      solution_file = get_test_reference_file("dgsem_isolated_mountain_05.h5", 
+                                              "2d/p4estmesh_surface/dgsem_isolated_mountain_05.h5")
+      mesh_file = get_test_reference_file("mesh.h5", "2d/p4estmesh_surface/mesh.h5")
+      p4est_data_file = get_test_reference_file("p4est_data", 
+                                                "2d/p4estmesh_surface/p4est_data")
+
+      # Create and test output without reinterpolation
+      @test_nowarn trixi2vtk(solution_file, output_directory=outdir, reinterpolate=false)
+      outfilename = "dgsem_isolated_mountain_05.vtu"
+      out_file = joinpath(outdir, outfilename)
+
+      # save output file to `artifacts` to facilitate debugging of failing tests
+      testname = "2d-p4estmesh-2d-surface-no-reinterp"
+      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+
+      # remote file path is actually a URL so it always has the same path structure
+      remote_filename = "2d/p4estmesh_surface/dgsem_isolated_mountain_no_reinterp_05.vtu"
+      ref_file = get_test_reference_file("dgsem_isolated_mountain_05_no_reinterp.vtu", 
+                                         remote_filename)
+      compare_point_data(out_file, ref_file)
+    end
+
+    @timed_testset "with reinterpolation" begin
+      # Get .h5 files from remote repository (in the future, we will run TrixiAtmo.jl here)
+      solution_file = get_test_reference_file("dgsem_isolated_mountain_05.h5", 
+                                              "2d/p4estmesh_surface/dgsem_isolated_mountain_05.h5")
+      mesh_file = get_test_reference_file("mesh.h5", "2d/p4estmesh_surface/mesh.h5")
+      p4est_data_file = get_test_reference_file("p4est_data", 
+                                                "2d/p4estmesh_surface/p4est_data")
+
+      # Create and test output without reinterpolation
+      @test_nowarn trixi2vtk(solution_file, output_directory=outdir, reinterpolate=true)
+      outfilename = "dgsem_isolated_mountain_05.vtu"
+      out_file = joinpath(outdir, outfilename)
+
+      # save output file to `artifacts` to facilitate debugging of failing tests
+      testname = "2d-p4estmesh-2d-surface-no-reinterp"
+      cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+
+      # remote file path is actually a URL so it always has the same path structure
+      remote_filename = "2d/p4estmesh_surface/dgsem_isolated_mountain_reinterp_05.vtu"
+      ref_file = get_test_reference_file("dgsem_isolated_mountain_05_reinterp.vtu", 
+                                        remote_filename)
+      compare_point_data(out_file, ref_file)
+    end
+  end
+
 end
 
 # Clean up afterwards: delete Trixi output directory and reference file directory
