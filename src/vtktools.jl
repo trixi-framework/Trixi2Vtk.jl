@@ -256,6 +256,7 @@ function calc_node_coordinates(mesh::T8codeMesh, nodes, n_visnodes)
   return Trixi.calc_node_coordinates!(node_coordinates, mesh, nodes)
 end
 
+
 # Calculation of the node coordinates for `TreeMesh` in 2D
 function calc_node_coordinates!(node_coordinates, nodes, mesh::TreeMesh{2})
   _, levels, _, length_level_0 = extract_mesh_information(mesh)
