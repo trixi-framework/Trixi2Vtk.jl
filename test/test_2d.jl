@@ -16,7 +16,6 @@ if !isdir(artifacts_dir)
 end
 
 @testset "2D" begin
-
   @testset "TreeMesh" begin
     isdir(outdir) && rm(outdir, recursive=true)
     run_trixi(joinpath(examples_dir(), "tree_2d_dgsem", "elixir_euler_sedov_blast_wave.jl"), maxiters=10)
