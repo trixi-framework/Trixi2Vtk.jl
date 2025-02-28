@@ -5,8 +5,6 @@ using Trixi2Vtk
 using ReadVTK
 
 
-import Pkg
-using UUIDs: UUID
 
 # Leading zeros will always be "000" since we have restricted Trixi.jl to 0.9+
 const LEADING_ZEROS = "000"
