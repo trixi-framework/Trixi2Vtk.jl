@@ -1,6 +1,7 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
+OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
 OrdinaryDiffEqLowStorageRK = "b0944070-b475-4768-8dec-fb6eb410534d"
 OrdinaryDiffEqSSPRK = "669c94d9-1f4b-4b64-b377-1aa079aa2388"
 ReadVTK = "dc215faf-f008-4882-a9f7-a79a826fadc3"
@@ -10,6 +11,7 @@ Trixi = "a7f1ee26-1774-49b1-8366-f1abc58fbfcb"
 [compat]
 Documenter = "0.27, 1"
 Downloads = "1"
+OrdinaryDiffEq = "6"
 OrdinaryDiffEqLowStorageRK = "1.2"
 OrdinaryDiffEqSSPRK = "1.2"
 ReadVTK = "0.1, 0.2"
