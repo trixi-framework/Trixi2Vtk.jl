@@ -5,19 +5,8 @@ using Trixi2Vtk
 using ReadVTK
 
 
-# Get the version of Trixi.jl we are testing since the output file name
-# format changed in v0.8.0
-import Pkg
-using UUIDs: UUID
-const LEADING_ZEROS = let
-  trixi_uuid = UUID("a7f1ee26-1774-49b1-8366-f1abc58fbfcb")
-  trixi_version = Pkg.dependencies()[trixi_uuid].version
-  if trixi_version > v"0.7.999999999"
-    "000"
-  else
-    ""
-  end
-end
+# Leading zeros will always be "000" since we have restricted Trixi.jl to 0.9+
+const LEADING_ZEROS = "000"
 
 
 function run_trixi(elixir; kwargs...)
@@ -54,7 +43,7 @@ end
 # Note: The purpose of using a specific commit hash (instead of `main`) is to be able to tie a given
 #       version of Trixi2Vtk to a specific version of the test file repository. This way, also tests
 #       for older Trixi2Vtk releases should continue to work.
-const TEST_REFERENCE_COMMIT = "8e9a77a6febe86a175c15f8a04c68261db53ae6f"
+const TEST_REFERENCE_COMMIT = "7f8c33ef2a0cb2a06470fead8d7bf3b170a7c178"
 
 # Local folder to store downloaded reference files. If you change this, also adapt `../.gitignore`!
 const TEST_REFERENCE_DIR = "reference_files"
