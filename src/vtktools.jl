@@ -208,7 +208,7 @@ function calc_node_coordinates(mesh::UnstructuredMesh2D, nodes, n_visnodes)
   ndims_ = ndims(mesh)
   n_elements = length(mesh)
 
-  # intialize the container for the node coordinates
+  # initialize the container for the node coordinates
   node_coordinates = Array{Float64, ndims_+2}(undef, ndims_, ntuple(_ -> n_visnodes, ndims_)..., n_elements)
 
   # work container for the corners of elements
