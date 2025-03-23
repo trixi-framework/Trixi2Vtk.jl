@@ -402,7 +402,7 @@ function calc_node_coordinates!(node_coordinates::AbstractArray{<:Any, 5}, f, no
 end
 
 
-# Determine and return filenames for PVD fiels
+# Determine and return filenames for PVD fields
 function pvd_filenames(filenames, pvd, output_directory)
   # Determine pvd filename
   if !isnothing(pvd)
