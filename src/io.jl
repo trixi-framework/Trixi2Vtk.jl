@@ -156,6 +156,6 @@ function read_datafile_dgmulti(filename::String)
       index +=1
     end
 
-    return labels, data, n_elements, n_nodes, element_variables, node_variables, time
+    return labels, data, n_elements, n_nodes, element_variables, node_variables, time, etype, polydeg
   end
 end

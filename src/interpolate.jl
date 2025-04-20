@@ -49,15 +49,15 @@ end
 
 # Interpolate data from input format to desired output format (StructuredMesh or UnstructuredMesh2D version)
 function interpolate_data(::Val{:vtu}, input_data,
-                          mesh::DGMultiMesh,
+                          mesh::DGMultiMesh, element_type, polydeg,
                           n_visnodes, verbose)
   rd = mesh.rd
 
   if length(rd.N) > 1
-      @assert length(Set(rd.N)) == 1 "`order` must have equal elements."
-      order = first(rd.N)
+      @assert length(Set(polydeg)) == 1 "`order` must have equal elements."
+      order = first(polydeg)
   else
-      order = rd.N
+      order = polydeg
   end
 
   interpolator = Trixi.StartUpDG.vandermonde(rd.element_type, order, Trixi.StartUpDG.equi_nodes(rd.element_type, order)...) / rd.VDM

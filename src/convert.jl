@@ -130,7 +130,8 @@ function trixi2vtk(filename::AbstractString...;
 
       if mesh isa Trixi.DGMultiMesh
         @timeit "read data" (labels, data, n_elements, n_nodes,
-                             element_variables, node_variables, time) = read_datafile_dgmulti(filename)
+                             element_variables, node_variables, time, element_type, 
+                             polydeg) = read_datafile_dgmulti(filename)
       else
         @timeit "read data" (labels, data, n_elements, n_nodes,
                              element_variables, node_variables, time) = read_datafile(filename)
@@ -178,9 +179,21 @@ function trixi2vtk(filename::AbstractString...;
     if is_datafile
       verbose && println("| Interpolating data...")
       if reinterpolate
-        @timeit "interpolate data" interpolated_data = interpolate_data(Val(format),
-                                                                        data, mesh,
-                                                                        n_visnodes, verbose)
+        if mesh isa Trixi.DGMultiMesh
+          # For DGMulti, we need to pass the element type and polynomial degree, as 
+          # it is not assumed that the solution is stored on LGL quadrature nodes.
+          @timeit "interpolate data" interpolated_data = interpolate_data(Val(format),
+                                                                          data, mesh,
+                                                                          element_type,
+                                                                          polydeg,
+                                                                          n_visnodes,
+                                                                          verbose)
+        else # Solution is stored on LGL quadrature nodes
+          @timeit "interpolate data" interpolated_data = interpolate_data(Val(format),
+                                                                          data, mesh,
+                                                                          n_visnodes,
+                                                                          verbose)
+        end
       else # Copy the raw solution data; only works for `vtu` format
         # Extract data shape information
         ndims_ = ndims(data) - 2
