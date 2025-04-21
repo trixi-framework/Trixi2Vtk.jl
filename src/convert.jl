@@ -134,8 +134,8 @@ function trixi2vtk(filename::AbstractString...;
       verbose && println("| Reading data file...")
 
       @timeit "read data" (labels, data, n_elements, n_nodes,
-                            element_variables, node_variables, 
-                            time) = read_datafile(filename, mesh)
+                           element_variables, node_variables, 
+                           time) = read_datafile(filename, mesh)
       
       assert_cells_elements(n_elements, mesh, filename, meshfile)
 

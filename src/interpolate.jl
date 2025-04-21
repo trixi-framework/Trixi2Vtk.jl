@@ -49,20 +49,21 @@ coordinates, levels, center_level_0, length_level_0 = extract_mesh_information(m
   return structured_data
 end
 
-# Interpolate data from input format to desired output format (StructuredMesh or UnstructuredMesh2D version)
+# Interpolate data from input format to desired output format (DGMulti version)
 function interpolate_data(::Val{:vtu}, input_data,
-                          mesh::DGMultiMesh, basis, element_type, polydeg,
+                          mesh::DGMultiMesh, basis,
                           n_visnodes, verbose)
-  rd = mesh.rd
-
-  if length(rd.N) > 1
-      @assert length(Set(polydeg)) == 1 "`order` must have equal elements."
-      order = first(polydeg)
+  if length(basis.N) > 1
+      @assert length(Set(basis.N)) == 1 "`order` must have equal elements."
+      order = first(basis.N)
   else
-      order = polydeg
+      order = basis.N
   end
 
-  interpolator = Trixi.StartUpDG.vandermonde(rd.element_type, order, Trixi.StartUpDG.equi_nodes(rd.element_type, order)...) / rd.VDM
+  visualization_nodes = Trixi.StartUpDG.equi_nodes(basis.element_type, order)
+
+  interpolator = Trixi.StartUpDG.vandermonde(basis.element_type, order, 
+                                             visualization_nodes...) / basis.VDM
 
   dof_per_elem, n_elements, n_variables = size(input_data)
   result = zeros((interpolator |> size |> first, n_elements, n_variables))
