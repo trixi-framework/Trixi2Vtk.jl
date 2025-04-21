@@ -1,6 +1,7 @@
 
 # Interpolate data from input format to desired output format (vtu version)
-function interpolate_data(::Val{:vtu}, input_data, mesh::TreeMesh, n_visnodes, verbose)
+function interpolate_data(::Val{:vtu}, input_data, mesh::TreeMesh, basis, n_visnodes,
+                          verbose)
   # Calculate equidistant output nodes (visualization nodes)
   dx = 2 / n_visnodes
   nodes_out = collect(range(-1 + dx/2, 1 - dx/2, length=n_visnodes))
@@ -11,7 +12,7 @@ end
 
 # Interpolate data from input format to desired output format (StructuredMesh or UnstructuredMesh2D version)
 function interpolate_data(::Val{:vtu}, input_data,
-                          mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, T8codeMesh},
+                          mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, T8codeMesh}, basis,
                           n_visnodes, verbose)
   # Calculate equidistant output nodes
   nodes_out = collect(range(-1, 1, length=n_visnodes))
@@ -21,8 +22,9 @@ end
 
 
 # Interpolate data from input format to desired output format (vti version)
-function interpolate_data(::Val{:vti}, input_data, mesh::TreeMesh, n_visnodes, verbose)
-  coordinates, levels, center_level_0, length_level_0 = extract_mesh_information(mesh)
+function interpolate_data(::Val{:vti}, input_data, mesh::TreeMesh, basis, n_visnodes, 
+                          verbose)
+coordinates, levels, center_level_0, length_level_0 = extract_mesh_information(mesh)
 
   # Normalize element coordinates: move center to origin and domain size to [-1, 1]²
   normalized_coordinates = similar(coordinates)
@@ -49,7 +51,7 @@ end
 
 # Interpolate data from input format to desired output format (StructuredMesh or UnstructuredMesh2D version)
 function interpolate_data(::Val{:vtu}, input_data,
-                          mesh::DGMultiMesh, element_type, polydeg,
+                          mesh::DGMultiMesh, basis, element_type, polydeg,
                           n_visnodes, verbose)
   rd = mesh.rd
 

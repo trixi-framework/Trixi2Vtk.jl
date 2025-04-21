@@ -117,7 +117,12 @@ function trixi2vtk(filename::AbstractString...;
 
     # Read mesh
     verbose && println("| Reading mesh file...")
-    @timeit "read mesh" mesh = Trixi.load_mesh_serial(meshfile; n_cells_max=0, RealT=Float64)
+    @timeit "read mesh" mesh = Trixi.load_mesh_serial(meshfile; n_cells_max=0,
+                                                      RealT=Float64)
+
+    # For DGMulti, we will reconstruct the `basis`, which is of type `RefElemData`. For 
+    # other mesh types, we do not need to do this, and will just set `basis = nothing`.
+    @timeit "reconstruct basis" basis = load_basis(meshfile, mesh)
 
     # Check compatibility of the mesh type and the output format
     if format === :vti && !(mesh isa Trixi.TreeMesh{2})
@@ -128,15 +133,10 @@ function trixi2vtk(filename::AbstractString...;
     if is_datafile
       verbose && println("| Reading data file...")
 
-      if mesh isa Trixi.DGMultiMesh
-        @timeit "read data" (labels, data, n_elements, n_nodes,
-                             element_variables, node_variables, time, element_type, 
-                             polydeg) = read_datafile_dgmulti(filename)
-      else
-        @timeit "read data" (labels, data, n_elements, n_nodes,
-                             element_variables, node_variables, time) = read_datafile(filename)
-      end
-
+      @timeit "read data" (labels, data, n_elements, n_nodes,
+                            element_variables, node_variables, 
+                            time) = read_datafile(filename, mesh)
+      
       assert_cells_elements(n_elements, mesh, filename, meshfile)
 
       # Determine resolution for data interpolation
@@ -172,28 +172,17 @@ function trixi2vtk(filename::AbstractString...;
     mkpath(output_directory)
 
     # Build VTK grids
-    vtk_nodedata, vtk_celldata = build_vtk_grids(Val(format), mesh, node_set, n_visnodes, verbose,
-                                                 output_directory, is_datafile, filename, Val(reinterpolate))
+    vtk_nodedata, vtk_celldata = build_vtk_grids(Val(format), mesh, node_set, basis,
+                                                 n_visnodes, verbose, output_directory, is_datafile, filename, Val(reinterpolate))
 
     # Interpolate data
     if is_datafile
       verbose && println("| Interpolating data...")
       if reinterpolate
-        if mesh isa Trixi.DGMultiMesh
-          # For DGMulti, we need to pass the element type and polynomial degree, as 
-          # it is not assumed that the solution is stored on LGL quadrature nodes.
-          @timeit "interpolate data" interpolated_data = interpolate_data(Val(format),
-                                                                          data, mesh,
-                                                                          element_type,
-                                                                          polydeg,
-                                                                          n_visnodes,
-                                                                          verbose)
-        else # Solution is stored on LGL quadrature nodes
-          @timeit "interpolate data" interpolated_data = interpolate_data(Val(format),
-                                                                          data, mesh,
-                                                                          n_visnodes,
-                                                                          verbose)
-        end
+        @timeit "interpolate data" interpolated_data = interpolate_data(Val(format),
+                                                                        data, mesh,
+                                                                        basis, n_visnodes,
+                                                                        verbose)
       else # Copy the raw solution data; only works for `vtu` format
         # Extract data shape information
         ndims_ = ndims(data) - 2

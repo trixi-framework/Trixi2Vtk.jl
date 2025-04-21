@@ -1,6 +1,6 @@
 # Create and return VTK grids on enriched uniform nodes
 # that are ready to be filled with reinterpolated data (vtu version)
-function build_vtk_grids(::Val{:vtu}, mesh::TreeMesh, nodes, n_visnodes, verbose,
+function build_vtk_grids(::Val{:vtu}, mesh::TreeMesh, nodes, basis, n_visnodes, verbose,
                          output_directory, is_datafile, filename, reinterpolate::Val{true})
   coordinates, levels, center_level_0, length_level_0 = extract_mesh_information(mesh)
 
@@ -47,7 +47,7 @@ end
 # Create and return VTK grids with nodes on which the raw was created
 # ready to be filled with raw data (vtu version)
 function build_vtk_grids(::Val{:vtu}, mesh::TreeMesh,
-                         nodes, n_visnodes, verbose,
+                         nodes, basis, n_visnodes, verbose,
                          output_directory, is_datafile, filename, reinterpolate::Val{false})
 
   @timeit "prepare coordinate information" node_coordinates = calc_node_coordinates(mesh, nodes, n_visnodes)
@@ -88,7 +88,7 @@ end
 
 # Create and return VTK grids on enriched uniform nodes
 # that are ready to be filled with reinterpolated data (vti version)
-function build_vtk_grids(::Val{:vti}, mesh::TreeMesh, nodes, n_visnodes, verbose,
+function build_vtk_grids(::Val{:vti}, mesh::TreeMesh, nodes, basis, n_visnodes, verbose,
                          output_directory, is_datafile, filename, reinterpolate::Val{true})
 
   coordinates, levels, center_level_0, length_level_0 = extract_mesh_information(mesh)
@@ -138,7 +138,7 @@ end
 # Routine is agnostic with respect to reinterpolation.
 function build_vtk_grids(::Val{:vtu},
                          mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, T8codeMesh},
-                         nodes, n_visnodes, verbose, output_directory, is_datafile, filename,
+                         nodes, basis, n_visnodes, verbose, output_directory, is_datafile, filename,
                          reinterpolate::Union{Val{true}, Val{false}})
 
   @timeit "prepare coordinate information" node_coordinates = calc_node_coordinates(mesh, nodes, n_visnodes)
@@ -178,20 +178,20 @@ end
 
 function build_vtk_grids(::Val{:vtu},
                          mesh::DGMultiMesh,
-                         nodes, n_visnodes, verbose, output_directory, is_datafile, filename,
+                         nodes, basis, n_visnodes, verbose, output_directory, is_datafile, filename,
                          reinterpolate::Union{Val{true}, Val{false}})
 
   # Calculate VTK points and cells.
   verbose && println("| Preparing VTK cells...")
   if is_datafile
     @timeit "prepare VTK cells (node data)" begin
-      vtk_points, vtk_cells = calc_vtk_points_cells(mesh.md, mesh.rd, reinterpolate)
+      vtk_points, vtk_cells = calc_vtk_points_cells(mesh.md, basis, reinterpolate)
     end
   end
 
   # Prepare VTK points and cells for celldata file.
   @timeit "prepare VTK cells (cell data)" begin
-    vtk_celldata_points, vtk_celldata_cells = calc_vtk_points_cells(mesh.md, mesh.rd, reinterpolate)
+    vtk_celldata_points, vtk_celldata_cells = calc_vtk_points_cells(mesh.md, basis, reinterpolate)
   end
 
   # Determine output file names.
@@ -713,8 +713,10 @@ function calc_vtk_points_cells(node_coordinates::AbstractArray{<:Any,5})
   return vtk_points, vtk_cells
 end
 
-# Convert coordinates and level information to a list of points and VTK cells for `StructuredMesh` (2D version)
-function calc_vtk_points_cells(md::Trixi.MeshData, rd::Trixi.RefElemData, reinterpolate = Val(true))
+# Convert coordinates and level information to a list of points and VTK cells for
+# DGMultiMesh
+function calc_vtk_points_cells(md::Trixi.MeshData, rd::Trixi.RefElemData, 
+                               reinterpolate = Val(true))
   # Compute the permutation between the StartUpDG order of points and vtk.
   perm = Trixi.StartUpDG.SUD_to_vtk_order(rd)
 

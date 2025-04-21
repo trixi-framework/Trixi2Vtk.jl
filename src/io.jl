@@ -32,7 +32,8 @@ end
 
 
 # Read in data file and return all relevant information
-function read_datafile(filename::String)
+function read_datafile(filename::String, ::Union{TreeMesh, StructuredMesh,
+                                                 UnstructuredMesh2D, P4estMesh, T8codeMesh})
   # Open file for reading
   h5open(filename, "r") do file
     # Extract basic information
@@ -95,8 +96,8 @@ function read_datafile(filename::String)
   end
 end
 
-# Read in data file and return all relevant information
-function read_datafile_dgmulti(filename::String)
+# Read in data file and return all relevant information for a DGMulti solution
+function read_datafile(filename::String, ::DGMultiMesh)
   # Open file for reading
   h5open(filename, "r") do file
     # Extract basic information
@@ -158,4 +159,40 @@ function read_datafile_dgmulti(filename::String)
 
     return labels, data, n_elements, n_nodes, element_variables, node_variables, time, etype, polydeg
   end
+end
+
+# Reconstruct a `RefElemData` from information in `mesh_file`
+function load_basis(mesh_file, ::DGMultiMesh)
+  etype_str = h5open(mesh_file, "r") do file
+      return read(attributes(file)["element_type"])
+  end
+
+  etype = Trixi.get_element_type_from_string(etype_str)()
+  polydeg = h5open(mesh_file, "r") do file
+      if etype isa Trixi.Wedge
+          return tuple(read(attributes(file)["polydeg_tri"]),
+                      read(attributes(file)["polydeg_line"]))
+      else
+          return read(attributes(file)["polydeg"])
+      end
+  end
+
+  if etype isa Trixi.StartUpDG.Wedge
+    factor_a = Trixi.RefElemData(Trixi.StartUpDG.Tri(), Trixi.Polynomial(), polydeg[1])
+    factor_b = Trixi.RefElemData(Trixi.StartUpDG.Line(), Trixi.Polynomial(), polydeg[2])
+
+    tensor = Trixi.StartUpDG.TensorProductWedge(factor_a, factor_b)
+    rd = Trixi.RefElemData(etype, tensor)
+  else
+    rd = Trixi.RefElemData(etype, Trixi.Polynomial(), polydeg)
+  end
+
+  return rd
+end
+
+# For other mesh types, return nothing
+function load_basis(mesh_file, ::Union{TreeMesh, StructuredMesh,
+                                       UnstructuredMesh2D, P4estMesh, 
+                                       T8codeMesh})
+  return nothing
 end
