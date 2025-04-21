@@ -229,7 +229,8 @@ function trixi2vtk(filename::AbstractString...;
               end
               @timeit "interpolate data" interpolated_cell_data = interpolate_data(Val(format),
                                                                     reshape(variable, size(variable)..., 1),
-                                                                    mesh, n_visnodes, verbose)
+                                                                    mesh, basis, 
+                                                                    n_visnodes, verbose)
             else
               @timeit "interpolate data" interpolated_cell_data = reshape(variable,
                                                                           n_visnodes^ndims_ * n_elements)
