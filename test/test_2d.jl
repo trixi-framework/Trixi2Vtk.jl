@@ -224,7 +224,7 @@ end
 
     @testset "UnstructuredMesh2D" begin
       isdir(outdir) && rm(outdir, recursive=true)
-      run_trixi(joinpath(examples_dir(), "unstructured_2d_dgsem", "elixir_shallowwater_ec.jl"), maxiters=1)
+      run_trixi(joinpath(examples_dir(), "unstructured_2d_dgsem", "elixir_euler_ec.jl"), maxiters=1)
 
       @timed_testset "mesh data" begin
         # create the output file to be tested
@@ -237,8 +237,8 @@ end
         cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
 
         # remote file path is actually a URL so it always has the same path structure
-        remote_filename = "2d/unstructuredmesh/dgsem_swe_mesh_01.vtu"
-        ref_file = get_test_reference_file("dgsem_swe_mesh_01.vtu", remote_filename)
+        remote_filename = "2d/unstructuredmesh/dgsem_euler_mesh_01.vtu"
+        ref_file = get_test_reference_file("dgsem_euler_mesh_01.vtu", remote_filename)
         compare_cell_data(out_file, ref_file)
       end
 
@@ -253,8 +253,8 @@ end
         cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
 
         # remote file path is actually a URL so it always has the same path structure
-        remote_filename = "2d/unstructuredmesh/dgsem_swe_celldata_01.vtu"
-        ref_file = get_test_reference_file("dgsem_swe_celldata_01.vtu", remote_filename)
+        remote_filename = "2d/unstructuredmesh/dgsem_euler_celldata_01.vtu"
+        ref_file = get_test_reference_file("dgsem_euler_celldata_01.vtu", remote_filename)
         compare_cell_data(out_file, ref_file)
       end
 
@@ -269,8 +269,8 @@ end
         cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
 
         # remote file path is actually a URL so it always has the same path structure
-        remote_filename = "2d/unstructuredmesh/dgsem_swe_reinterp_01.vtu"
-        ref_file = get_test_reference_file("dgsem_swe_reinterp_01.vtu", remote_filename)
+        remote_filename = "2d/unstructuredmesh/dgsem_euler_reinterp_01.vtu"
+        ref_file = get_test_reference_file("dgsem_euler_reinterp_01.vtu", remote_filename)
         compare_point_data(out_file, ref_file)
       end
 
@@ -285,8 +285,8 @@ end
         cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
 
         # remote file path is actually a URL so it always has the same path structure
-        remote_filename = "2d/unstructuredmesh/dgsem_swe_no_reinterp_01.vtu"
-        ref_file = get_test_reference_file("dgsem_swe_no_reinterp_01.vtu", remote_filename)
+        remote_filename = "2d/unstructuredmesh/dgsem_euler_no_reinterp_01.vtu"
+        ref_file = get_test_reference_file("dgsem_euler_no_reinterp_01.vtu", remote_filename)
         compare_point_data(out_file, ref_file)
       end
 
@@ -302,8 +302,8 @@ end
         cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
 
         # remote file path is actually a URL so it always has the same path structure
-        remote_filename = "2d/unstructuredmesh/dgsem_swe_no_reinterp_uniform_01.vtu"
-        ref_file = get_test_reference_file("dgsem_swe_no_reinterp_uniform_01.vtu", remote_filename)
+        remote_filename = "2d/unstructuredmesh/dgsem_euler_no_reinterp_uniform_01.vtu"
+        ref_file = get_test_reference_file("dgsem_euler_no_reinterp_uniform_01.vtu", remote_filename)
         compare_point_data(out_file, ref_file)
       end
     end
@@ -524,10 +524,10 @@ end
 
     @timed_testset "without reinterpolation" begin
       # Get .h5 files from remote repository (in the future, we will run TrixiAtmo.jl here)
-      solution_file = get_test_reference_file("dgsem_isolated_mountain_05.h5", 
+      solution_file = get_test_reference_file("dgsem_isolated_mountain_05.h5",
                                               "2d/p4estmesh_surface/dgsem_isolated_mountain_05.h5")
       mesh_file = get_test_reference_file("mesh.h5", "2d/p4estmesh_surface/mesh.h5")
-      p4est_data_file = get_test_reference_file("p4est_data", 
+      p4est_data_file = get_test_reference_file("p4est_data",
                                                 "2d/p4estmesh_surface/p4est_data")
 
       # Create and test output without reinterpolation
@@ -541,17 +541,17 @@ end
 
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "2d/p4estmesh_surface/dgsem_isolated_mountain_no_reinterp_05.vtu"
-      ref_file = get_test_reference_file("dgsem_isolated_mountain_05_no_reinterp.vtu", 
+      ref_file = get_test_reference_file("dgsem_isolated_mountain_05_no_reinterp.vtu",
                                          remote_filename)
       compare_point_data(out_file, ref_file)
     end
 
     @timed_testset "with reinterpolation" begin
       # Get .h5 files from remote repository (in the future, we will run TrixiAtmo.jl here)
-      solution_file = get_test_reference_file("dgsem_isolated_mountain_05.h5", 
+      solution_file = get_test_reference_file("dgsem_isolated_mountain_05.h5",
                                               "2d/p4estmesh_surface/dgsem_isolated_mountain_05.h5")
       mesh_file = get_test_reference_file("mesh.h5", "2d/p4estmesh_surface/mesh.h5")
-      p4est_data_file = get_test_reference_file("p4est_data", 
+      p4est_data_file = get_test_reference_file("p4est_data",
                                                 "2d/p4estmesh_surface/p4est_data")
 
       # Create and test output without reinterpolation
@@ -565,7 +565,7 @@ end
 
       # remote file path is actually a URL so it always has the same path structure
       remote_filename = "2d/p4estmesh_surface/dgsem_isolated_mountain_reinterp_05.vtu"
-      ref_file = get_test_reference_file("dgsem_isolated_mountain_05_reinterp.vtu", 
+      ref_file = get_test_reference_file("dgsem_isolated_mountain_05_reinterp.vtu",
                                         remote_filename)
       compare_point_data(out_file, ref_file)
     end
