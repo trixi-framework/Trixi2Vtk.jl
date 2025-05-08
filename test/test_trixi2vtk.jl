@@ -43,7 +43,7 @@ end
 # Note: The purpose of using a specific commit hash (instead of `main`) is to be able to tie a given
 #       version of Trixi2Vtk to a specific version of the test file repository. This way, also tests
 #       for older Trixi2Vtk releases should continue to work.
-const TEST_REFERENCE_COMMIT = "7f8c33ef2a0cb2a06470fead8d7bf3b170a7c178"
+const TEST_REFERENCE_COMMIT = "857ed155d1b3aeff20474b284e83bab01748237a"
 
 # Local folder to store downloaded reference files. If you change this, also adapt `../.gitignore`!
 const TEST_REFERENCE_DIR = "reference_files"
@@ -62,7 +62,7 @@ mkpath(TEST_REFERENCE_DIR)
 """
      compare_cell_data(out_filename, ref_filename; atol=500*eps(), rtol=sqrt(eps()))
 
-Test values from the VTK file header and acutal (possibly interpolated) cell data. Uses
+Test values from the VTK file header and actual (possibly interpolated) cell data. Uses
 `out_filename` created during testing and compares against `ref_filename` that comes
 from the
 [`Trixi2Vtk_reference_files` repository](https://github.com/trixi-framework/Trixi2Vtk_reference_files).
@@ -92,7 +92,7 @@ function compare_cell_data(out_filename, ref_filename; atol=500*eps(), rtol=sqrt
   @test out_cell_data.names == ref_cell_data.names
 
   # Note!!
-  # Occassionally, for the last equation variable there is an issue
+  # Occasionally, for the last equation variable there is an issue
   # that the size of the data extracted with
   # [`ReadVTK.jl`](https://github.com/trixi-framework/ReadVTK.jl)
   # is one byte larger than expected. Somehow this is related to
@@ -117,7 +117,7 @@ end
 """
     compare_point_data(out_filename, ref_filename; atol=500*eps(), rtol=sqrt(eps()))
 
-Test values from the VTK file header and acutal (possibly interpolated) point data. Uses
+Test values from the VTK file header and actual (possibly interpolated) point data. Uses
 `out_filename` created during testing and compares against `ref_filename` that comes
 from the
 [`Trixi2Vtk_reference_files` repository](https://github.com/trixi-framework/Trixi2Vtk_reference_files).
@@ -148,7 +148,7 @@ function compare_point_data(out_filename, ref_filename; atol=500*eps(), rtol=sqr
   @test out_point_data.names == ref_point_data.names
 
   # Note!!
-  # Occassionally, for the last equation variable there is an issue
+  # Occasionally, for the last equation variable there is an issue
   # that the size of the data extracted with
   # [`ReadVTK.jl`](https://github.com/trixi-framework/ReadVTK.jl)
   # is one byte larger than expected. Somehow this is related to
