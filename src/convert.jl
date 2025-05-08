@@ -466,6 +466,7 @@ function add_celldata!(vtk_celldata, mesh::P4estMeshView, verbose)
     end
     tree_counter += 1
   end
+end
 
 function add_celldata!(vtk_celldata, mesh::T8codeMesh, verbose)
   # Create temporary storage for the tree_ids and levels.
