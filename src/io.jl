@@ -177,7 +177,7 @@ function load_basis(mesh_file, ::DGMultiMesh)
       end
   end
 
-  if etype isa Trixi.Wedge && haskey(attributes(file), "polydeg_tri")
+  if etype isa Trixi.Wedge && polydeg isa NTuple{2}
     factor_a = Trixi.RefElemData(Trixi.StartUpDG.Tri(), Trixi.Polynomial(), polydeg[1])
     factor_b = Trixi.RefElemData(Trixi.StartUpDG.Line(), Trixi.Polynomial(), polydeg[2])
 
