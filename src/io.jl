@@ -106,7 +106,7 @@ function read_datafile(filename::String, ::DGMultiMesh)
     etype_str = read(attributes(file)["element_type"])
     etype = Trixi.get_element_type_from_string(etype_str)()
 
-    if etype isa Trixi.Wedge
+    if etype isa Trixi.Wedge && haskey(attributes(file), "polydeg_tri")
         polydeg = tuple(read(attributes(file)["polydeg_tri"]),
                         read(attributes(file)["polydeg_line"]))
     else
@@ -169,7 +169,7 @@ function load_basis(mesh_file, ::DGMultiMesh)
 
   etype = Trixi.get_element_type_from_string(etype_str)()
   polydeg = h5open(mesh_file, "r") do file
-      if etype isa Trixi.Wedge
+      if etype isa Trixi.Wedge && haskey(attributes(file), "polydeg_tri")
           return tuple(read(attributes(file)["polydeg_tri"]),
                       read(attributes(file)["polydeg_line"]))
       else
@@ -177,11 +177,11 @@ function load_basis(mesh_file, ::DGMultiMesh)
       end
   end
 
-  if etype isa Trixi.StartUpDG.Wedge
+  if etype isa Trixi.Wedge && haskey(attributes(file), "polydeg_tri")
     factor_a = Trixi.RefElemData(Trixi.StartUpDG.Tri(), Trixi.Polynomial(), polydeg[1])
     factor_b = Trixi.RefElemData(Trixi.StartUpDG.Line(), Trixi.Polynomial(), polydeg[2])
 
-    tensor = Trixi.StartUpDG.TensorProductWedge(factor_a, factor_b)
+    tensor = Trixi.TensorProductWedge(factor_a, factor_b)
     rd = Trixi.RefElemData(etype, tensor)
   else
     rd = Trixi.RefElemData(etype, Trixi.Polynomial(), polydeg)
