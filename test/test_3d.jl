@@ -2,6 +2,7 @@ module Test3D
 
 using Test
 using Trixi2Vtk
+using MPI: mpiexec
 
 include("test_trixi2vtk.jl")
 
@@ -100,6 +101,32 @@ end
       ref_file = get_test_reference_file("dgsem_blob_amr_no_reinterp_uniform_04.vtu", remote_filename)
       compare_point_data(out_file, ref_file)
     end
+  end
+
+  @testset "Parallel Trixi.jl" begin
+    # Clean output directory
+    isdir(outdir) && rm(outdir, recursive=true)
+
+    # Run trixi in parallel with 2 ranks
+    mpiexec() do cmd
+      run(`$cmd -n 2 $(Base.julia_cmd()) --threads=1 --project=@. -e 'using Trixi; trixi_include(@__MODULE__, joinpath(examples_dir(), "p4est_3d_dgsem", "elixir_mhd_alfven_wave_nonconforming.jl"), trees_per_dimension=(1, 1, 1),  maxiters=4)'`)
+    end
+
+    # Get output file name
+    filename = joinpath(outdir, "solution_" * LEADING_ZEROS * "000004.h5")
+
+    # Read data from file
+    (labels, data, n_elements, n_nodes, element_variables, node_variables, time) = Trixi2Vtk.read_datafile(filename)
+
+    # Create reference for mpi_rank
+    mpi_rank_ref = zeros(n_elements)
+    mpi_rank_ref[50:end] .= 1.0
+
+    # Compare read-in mpi_rank with reference
+    @test element_variables["mpi_rank"] == mpi_rank_ref
+
+    # Finally, test if we can generate the output file without warnings
+    @test_nowarn trixi2vtk(filename, output_directory=outdir)
   end
 
   if !Sys.iswindows() && get(ENV, "CI", nothing) == "true"
