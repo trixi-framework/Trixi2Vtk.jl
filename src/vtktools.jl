@@ -1,6 +1,6 @@
 # Create and return VTK grids on enriched uniform nodes
 # that are ready to be filled with reinterpolated data (vtu version)
-function build_vtk_grids(::Val{:vtu}, mesh::TreeMesh, nodes, n_visnodes, verbose,
+function build_vtk_grids(::Val{:vtu}, mesh::TreeMesh, nodes, basis, n_visnodes, verbose,
                          output_directory, is_datafile, filename, reinterpolate::Val{true})
   coordinates, levels, center_level_0, length_level_0 = extract_mesh_information(mesh)
 
@@ -47,7 +47,7 @@ end
 # Create and return VTK grids with nodes on which the raw was created
 # ready to be filled with raw data (vtu version)
 function build_vtk_grids(::Val{:vtu}, mesh::TreeMesh,
-                         nodes, n_visnodes, verbose,
+                         nodes, basis, n_visnodes, verbose,
                          output_directory, is_datafile, filename, reinterpolate::Val{false})
 
   @timeit "prepare coordinate information" node_coordinates = calc_node_coordinates(mesh, nodes, n_visnodes)
@@ -88,7 +88,7 @@ end
 
 # Create and return VTK grids on enriched uniform nodes
 # that are ready to be filled with reinterpolated data (vti version)
-function build_vtk_grids(::Val{:vti}, mesh::TreeMesh, nodes, n_visnodes, verbose,
+function build_vtk_grids(::Val{:vti}, mesh::TreeMesh, nodes, basis, n_visnodes, verbose,
                          output_directory, is_datafile, filename, reinterpolate::Val{true})
 
   coordinates, levels, center_level_0, length_level_0 = extract_mesh_information(mesh)
@@ -138,7 +138,7 @@ end
 # Routine is agnostic with respect to reinterpolation.
 function build_vtk_grids(::Val{:vtu},
                          mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, T8codeMesh},
-                         nodes, n_visnodes, verbose, output_directory, is_datafile, filename,
+                         nodes, basis, n_visnodes, verbose, output_directory, is_datafile, filename,
                          reinterpolate::Union{Val{true}, Val{false}})
 
   @timeit "prepare coordinate information" node_coordinates = calc_node_coordinates(mesh, nodes, n_visnodes)
@@ -176,6 +176,43 @@ function build_vtk_grids(::Val{:vtu},
   return vtk_nodedata, vtk_celldata
 end
 
+function build_vtk_grids(::Val{:vtu},
+                         mesh::DGMultiMesh,
+                         nodes, basis, n_visnodes, verbose, output_directory, is_datafile, filename,
+                         reinterpolate::Union{Val{true}, Val{false}})
+
+  # Calculate VTK points and cells.
+  verbose && println("| Preparing VTK cells...")
+  if is_datafile
+    @timeit "prepare VTK cells (node data)" begin
+      vtk_points, vtk_cells = calc_vtk_points_cells(mesh.md, basis, reinterpolate)
+    end
+  end
+
+  # Prepare VTK points and cells for celldata file.
+  @timeit "prepare VTK cells (cell data)" begin
+    vtk_celldata_points, vtk_celldata_cells = calc_vtk_points_cells(mesh.md, basis, reinterpolate)
+  end
+
+  # Determine output file names.
+  base, _ = splitext(splitdir(filename)[2])
+  vtk_filename = joinpath(output_directory, base)
+  vtk_celldata_filename = vtk_filename * "_celldata"
+
+  # Open VTK files.
+  verbose && println("| Building VTK grid...")
+  if is_datafile
+    @timeit "build VTK grid (node data)" vtk_nodedata = vtk_grid(vtk_filename, vtk_points...,
+                                                                 vtk_cells)
+  else
+    vtk_nodedata = nothing
+  end
+  @timeit "build VTK grid (cell data)" vtk_celldata = vtk_grid(vtk_celldata_filename,
+                                                                vtk_celldata_points...,
+                                                                vtk_celldata_cells)
+
+  return vtk_nodedata, vtk_celldata
+end
 
 function calc_node_coordinates(mesh::TreeMesh, nodes, n_visnodes)
   coordinates, levels, _, _ = extract_mesh_information(mesh)
@@ -255,7 +292,6 @@ function calc_node_coordinates(mesh::T8codeMesh, nodes, n_visnodes)
 
   return Trixi.calc_node_coordinates!(node_coordinates, mesh, nodes)
 end
-
 
 # Calculation of the node coordinates for `TreeMesh` in 2D
 function calc_node_coordinates!(node_coordinates, nodes, mesh::TreeMesh{2})
@@ -620,7 +656,6 @@ function calc_vtk_points_cells(node_coordinates::AbstractArray{<:Any,4})
   return vtk_points, vtk_cells
 end
 
-
 # Convert coordinates and level information to a list of points and VTK cells for `StructuredMesh` (3D version)
 function calc_vtk_points_cells(node_coordinates::AbstractArray{<:Any,5})
   n_elements = size(node_coordinates, 5)
@@ -675,5 +710,36 @@ function calc_vtk_points_cells(node_coordinates::AbstractArray{<:Any,5})
     vtk_cells[element] = MeshCell(VTKCellTypes.VTK_LAGRANGE_HEXAHEDRON, point_ids)
   end
 
+  return vtk_points, vtk_cells
+end
+
+# Convert coordinates and level information to a list of points and VTK cells for
+# DGMultiMesh
+function calc_vtk_points_cells(md::Trixi.MeshData, rd::Trixi.RefElemData, 
+                               reinterpolate = Val(true))
+  # Compute the permutation between the StartUpDG order of points and vtk.
+  perm = Trixi.StartUpDG.SUD_to_vtk_order(rd)
+
+  if length(rd.N) > 1
+      @assert length(Set(rd.N)) == 1 "`order` must have equal elements."
+      order = first(rd.N)
+  else
+      order = rd.N
+  end
+
+  # The number of points per element.
+  num_lagrange_points = length(perm)
+  vtk_cell_type = Trixi.StartUpDG.type_to_vtk(rd.element_type)
+
+  # Construction of VTK mesh cell list.
+  vtk_cells = [MeshCell(vtk_cell_type, perm .+ ((i-1) * num_lagrange_points)) for i in 1:md.num_elements]
+
+  if reinterpolate == Val(true)
+      interpolate = Trixi.StartUpDG.vandermonde(rd.element_type, order, Trixi.StartUpDG.equi_nodes(rd.element_type, order)...) / rd.VDM
+      vtk_points = map(x -> vec(interpolate * x), md.xyz)
+  else # don't interpolate
+      vtk_points = vec.(md.xyz) 
+  end   
+  
   return vtk_points, vtk_cells
 end
