@@ -42,6 +42,8 @@ isdir(outdir) && rm(outdir, recursive=true)
   @testset "trixi2vtk set number of output nodes" begin
     @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000000.h5"); nvisnodes=0)
 
+    @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000000.h5"); nvisnodes=1)
+
     @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000000.h5"); nvisnodes=5)
   end
 
