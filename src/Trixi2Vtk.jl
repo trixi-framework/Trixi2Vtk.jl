@@ -1,4 +1,4 @@
-module Trixi2Vtk
+module Trixi2Vtk 
 
 # Include other packages
 using Glob: glob
