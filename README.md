@@ -1,6 +1,6 @@
 # Trixi2Vtk.jl
 
-[![Docs-stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://trixi-framework.github.io/Trixi.jl/stable)
+[![Docs-stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://trixi-framework.github.io/TrixiDocumentation/stable/visualization/#Trixi2Vtk)
 [![Build Status](https://github.com/trixi-framework/Trixi2Vtk.jl/workflows/CI/badge.svg)](https://github.com/trixi-framework/Trixi2Vtk.jl/actions?query=workflow%3ACI)
 [![Coveralls](https://coveralls.io/repos/github/trixi-framework/Trixi2Vtk.jl/badge.svg?branch=main)](https://coveralls.io/github/trixi-framework/Trixi2Vtk.jl?branch=main)
 [![License: MIT](https://img.shields.io/badge/License-MIT-success.svg)](https://opensource.org/licenses/MIT)
@@ -18,7 +18,7 @@ generate publication-quality visualizations. Trixi2Vtk is part of the
 ## Installation
 If you have not yet installed Julia, please [follow the instructions for your
 operating system](https://julialang.org/downloads/platform/). Trixi2Vtk works
-with Julia v1.7 and newer.
+with Julia v1.10 and newer.
 
 Trixi2Vtk is a registered Julia package. Hence, you can install it by executing
 the following commands in the Julia REPL:

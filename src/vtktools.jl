@@ -137,7 +137,7 @@ end
 # (StructuredMesh/UnstructuredMesh2D/P4estMesh version).
 # Routine is agnostic with respect to reinterpolation.
 function build_vtk_grids(::Val{:vtu},
-                         mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh},
+                         mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, T8codeMesh},
                          nodes, n_visnodes, verbose, output_directory, is_datafile, filename,
                          reinterpolate::Union{Val{true}, Val{false}})
 
@@ -208,7 +208,7 @@ function calc_node_coordinates(mesh::UnstructuredMesh2D, nodes, n_visnodes)
   ndims_ = ndims(mesh)
   n_elements = length(mesh)
 
-  # intialize the container for the node coordinates
+  # initialize the container for the node coordinates
   node_coordinates = Array{Float64, ndims_+2}(undef, ndims_, ntuple(_ -> n_visnodes, ndims_)..., n_elements)
 
   # work container for the corners of elements
@@ -230,8 +230,22 @@ function calc_node_coordinates(mesh::UnstructuredMesh2D, nodes, n_visnodes)
   return node_coordinates
 end
 
+# Version of calc_node_coordinates for a P4estMesh representing a manifold of dimension
+# NDIMS embedded within an ambient space of dimension NDIMS_AMBIENT. This provides support 
+# for standard 2D and 3D meshes (i.e. NDIMS = NDIMS_AMBIENT) as well as 2D surfaces in 3D 
+# space (i.e. NDIMS = 2 and NDIMS_AMBIENT = 3).
+function calc_node_coordinates(mesh::P4estMesh{NDIMS, NDIMS_AMBIENT}, nodes, 
+                               n_visnodes) where {NDIMS, NDIMS_AMBIENT}
 
-function calc_node_coordinates(mesh::P4estMesh, nodes, n_visnodes)
+  node_coordinates = Array{Float64, NDIMS+2}(undef, NDIMS_AMBIENT,
+                                              ntuple(_ -> n_visnodes, NDIMS)...,
+                                              Trixi.ncells(mesh))
+
+  return Trixi.calc_node_coordinates!(node_coordinates, mesh, nodes)
+end
+
+
+function calc_node_coordinates(mesh::T8codeMesh, nodes, n_visnodes)
   # Extract number of spatial dimensions
   ndims_ = ndims(mesh)
 
@@ -388,7 +402,7 @@ function calc_node_coordinates!(node_coordinates::AbstractArray{<:Any, 5}, f, no
 end
 
 
-# Determine and return filenames for PVD fiels
+# Determine and return filenames for PVD fields
 function pvd_filenames(filenames, pvd, output_directory)
   # Determine pvd filename
   if !isnothing(pvd)
@@ -579,8 +593,10 @@ function calc_vtk_points_cells(node_coordinates::AbstractArray{<:Any,4})
   # Linear indices to access points by node indices and element id
   linear_indices = LinearIndices(size_[2:end])
 
-  # Use lagrange nodes as VTK points
-  vtk_points = reshape(node_coordinates, (2, n_points))
+  # Use Lagrange nodes as VTK points. Note that we call size(node_coordinates, 1) in order  
+  # to provide support for standard two-dimensional meshes as well as meshes representing 
+  # 2D surfaces in 3D space, which are implemented using P4estMesh{2, 3}.
+  vtk_points = reshape(node_coordinates, (size(node_coordinates, 1), n_points))
   vtk_cells = Vector{MeshCell}(undef, n_elements)
 
   # Create cell for each element
