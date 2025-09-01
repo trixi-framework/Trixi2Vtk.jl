@@ -164,18 +164,36 @@ function raw2interpolated(data_gl::AbstractArray{Float64}, nodes_out)
   @assert ndims_ == 2 || ndims_ == 3 "Only 2D and 3D data supported"
   # Create output data structure
   data_vis = Array{Float64}(undef, ntuple(_ -> n_nodes_out, ndims_)..., n_elements, n_variables)
-  # For each variable, interpolate element data and store to global data structure
+
+  if ndims_ == 2
+    # For each variable, interpolate element data and store to global data structure
     for v in 1:n_variables
       # Reshape data array for use in interpolate_nodes function
-      @views reshaped_data = reshape(data_gl[.., v], 1, ntuple(_ -> n_nodes_in, ndims_)..., n_elements)
+      @views reshaped_data = reshape(data_gl[:, :, :, v],
+                                     1, n_nodes_in, n_nodes_in, n_elements)
 
       # Interpolate data to visualization nodes
       for element_id in 1:n_elements
-        @views data_vis[.., element_id, v] .= reshape(
-            interpolate_nodes(reshaped_data[.., element_id], vandermonde, 1),
-            ntuple(_ -> n_nodes_out, ndims_)...)
+        @views data_vis[:, :, element_id, v] .= reshape(
+            interpolate_nodes(reshaped_data[:, :, :, element_id], vandermonde, 1),
+            n_nodes_out, n_nodes_out)
       end
     end
+  elseif ndims_ == 3
+    # For each variable, interpolate element data and store to global data structure
+    for v in 1:n_variables
+      # Reshape data array for use in interpolate_nodes function
+      @views reshaped_data = reshape(data_gl[:, :, :, :, v],
+                                    1, n_nodes_in, n_nodes_in, n_nodes_in, n_elements)
+
+      # Interpolate data to visualization nodes
+      for element_id in 1:n_elements
+        @views data_vis[:, :, :, element_id, v] .= reshape(
+            interpolate_nodes(reshaped_data[:, :, :, :, element_id], vandermonde, 1),
+            n_nodes_out, n_nodes_out, n_nodes_out)
+      end
+    end
+  end
 
   # Return as one 1D array for each variable
   return reshape(data_vis, n_nodes_out^ndims_ * n_elements, n_variables)
