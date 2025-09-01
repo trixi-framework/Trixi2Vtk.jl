@@ -51,20 +51,11 @@ function read_datafile(filename::String)
     # Extract data arrays
     n_nodes = polydeg + 1
 
-    if ndims_ == 2
-      data = Array{Float64}(undef, n_nodes, n_nodes, n_elements, n_variables)
-      for v = 1:n_variables
-        vardata = read(file["variables_$v"])
-        @views data[:, :, :, v][:] .= vardata
-      end
-    elseif ndims_ == 3
-      data = Array{Float64}(undef, n_nodes, n_nodes, n_nodes, n_elements, n_variables)
-      for v = 1:n_variables
-        vardata = read(file["variables_$v"])
-        @views data[:, :, :, :, v][:] .= vardata
-      end
-    else
-      error("Unsupported number of spatial dimensions: ", ndims_)
+    @assert ndims_ == 2 || ndims_ == 3 "Only 2D and 3D data supported"
+    data = Array{Float64}(undef, ntuple(_ -> n_nodes, ndims_)..., n_elements, n_variables)
+    for v = 1:n_variables
+      vardata = read(file["variables_$v"])
+      @views data[.., v][:] .= vardata
     end
 
     # Extract element variable arrays
