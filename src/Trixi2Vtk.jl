@@ -1,7 +1,7 @@
 module Trixi2Vtk
 
 # Include other packages
-using EllipsisNotation: ..
+using EllipsisNotation
 using Glob: glob
 using HDF5: h5open, attributes, haskey
 using ProgressMeter: @showprogress, Progress, next!
