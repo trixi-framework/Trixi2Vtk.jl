@@ -167,7 +167,7 @@ function raw2interpolated(data_gl::AbstractArray{Float64}, nodes_out)
   # For each variable, interpolate element data and store to global data structure
     for v in 1:n_variables
       # Reshape data array for use in interpolate_nodes function
-      @views reshaped_data = reshape(data_gl[.., v], 1, n_nodes_in, n_nodes_in, n_elements)
+      @views reshaped_data = reshape(data_gl[.., v], 1, ntuple(_ -> n_nodes_in, ndims_)..., n_elements)
 
       # Interpolate data to visualization nodes
       for element_id in 1:n_elements
