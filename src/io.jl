@@ -55,7 +55,11 @@ function read_datafile(filename::String)
     data = Array{Float64}(undef, ntuple(_ -> n_nodes, ndims_)..., n_elements, n_variables)
     for v = 1:n_variables
       vardata = read(file["variables_$v"])
-      @views data[:, .., v][:] .= vardata
+      if n_dims_ == 2
+        @views data[:, :, :, v][:] .= vardata
+      else
+        @views data[:, :, :, :, v][:] .= vardata
+      end
     end
 
     # Extract element variable arrays
