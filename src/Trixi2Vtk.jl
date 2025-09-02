@@ -1,6 +1,7 @@
 module Trixi2Vtk
 
 # Include other packages
+using EllipsisNotation #..
 using Glob: glob
 using HDF5: h5open, attributes, haskey
 using ProgressMeter: @showprogress, Progress, next!
@@ -19,9 +20,7 @@ include("vtktools.jl")
 # Include top-level conversion method
 include("convert.jl")
 
-
 # export types/functions that define the public API of Trixi2Vtk
 export trixi2vtk
-
 
 end # module Trixi2Vtk
