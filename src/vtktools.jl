@@ -137,7 +137,7 @@ end
 # (StructuredMesh/UnstructuredMesh2D/P4estMesh version).
 # Routine is agnostic with respect to reinterpolation.
 function build_vtk_grids(::Val{:vtu},
-                         mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, T8codeMesh},
+                         mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, T8codeMesh, P4estMeshView},
                          nodes, n_visnodes, verbose, output_directory, is_datafile, filename,
                          reinterpolate::Union{Val{true}, Val{false}})
 
@@ -234,7 +234,8 @@ end
 # NDIMS embedded within an ambient space of dimension NDIMS_AMBIENT. This provides support 
 # for standard 2D and 3D meshes (i.e. NDIMS = NDIMS_AMBIENT) as well as 2D surfaces in 3D 
 # space (i.e. NDIMS = 2 and NDIMS_AMBIENT = 3).
-function calc_node_coordinates(mesh::P4estMesh{NDIMS, NDIMS_AMBIENT}, nodes, 
+function calc_node_coordinates(mesh::Union{P4estMesh{NDIMS, NDIMS_AMBIENT},
+                                           P4estMeshView{NDIMS, NDIMS_AMBIENT}}, nodes,
                                n_visnodes) where {NDIMS, NDIMS_AMBIENT}
 
   node_coordinates = Array{Float64, NDIMS+2}(undef, NDIMS_AMBIENT,
