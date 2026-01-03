@@ -1,7 +1,7 @@
 name = "Trixi2Vtk"
 uuid = "bc1476a1-1ca6-4cc3-950b-c312b255ff95"
 authors = ["Michael Schlottke-Lakemper <michael@sloede.com>", "Hendrik Ranocha <mail@ranocha.de>"]
-version = "0.3.27-DEV"
+version = "0.3.28-dev"
 
 [deps]
 EllipsisNotation = "da5c29d0-fa7d-589e-88eb-ea29b0a81949"
