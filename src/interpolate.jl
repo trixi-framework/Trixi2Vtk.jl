@@ -1,6 +1,7 @@
 
 # Interpolate data from input format to desired output format (vtu version)
-function interpolate_data(::Val{:vtu}, input_data, mesh::TreeMesh, n_visnodes, verbose)
+function interpolate_data(::Val{:vtu}, input_data, mesh::TreeMesh, basis, n_visnodes,
+                          verbose)
   # Calculate equidistant output nodes (visualization nodes)
   dx = 2 / n_visnodes
   nodes_out = collect(range(-1 + dx/2, 1 - dx/2, length=n_visnodes))
@@ -11,7 +12,7 @@ end
 
 # Interpolate data from input format to desired output format (StructuredMesh or UnstructuredMesh2D version)
 function interpolate_data(::Val{:vtu}, input_data,
-                          mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, T8codeMesh},
+                          mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, T8codeMesh}, basis,
                           n_visnodes, verbose)
   # Calculate equidistant output nodes
   nodes_out = collect(range(-1, 1, length=n_visnodes))
@@ -21,8 +22,9 @@ end
 
 
 # Interpolate data from input format to desired output format (vti version)
-function interpolate_data(::Val{:vti}, input_data, mesh::TreeMesh, n_visnodes, verbose)
-  coordinates, levels, center_level_0, length_level_0 = extract_mesh_information(mesh)
+function interpolate_data(::Val{:vti}, input_data, mesh::TreeMesh, basis, n_visnodes, 
+                          verbose)
+coordinates, levels, center_level_0, length_level_0 = extract_mesh_information(mesh)
 
   # Normalize element coordinates: move center to origin and domain size to [-1, 1]²
   normalized_coordinates = similar(coordinates)
@@ -47,6 +49,33 @@ function interpolate_data(::Val{:vti}, input_data, mesh::TreeMesh, n_visnodes, v
   return structured_data
 end
 
+# Interpolate data from input format to desired output format (DGMulti version)
+function interpolate_data(::Val{:vtu}, input_data,
+                          mesh::DGMultiMesh, basis,
+                          n_visnodes, verbose)
+  if length(basis.N) > 1
+      @assert length(Set(basis.N)) == 1 "`order` must have equal elements."
+      order = first(basis.N)
+  else
+      order = basis.N
+  end
+
+  visualization_nodes = Trixi.StartUpDG.equi_nodes(basis.element_type, order)
+
+  interpolator = Trixi.StartUpDG.vandermonde(basis.element_type, order, 
+                                             visualization_nodes...) / basis.VDM
+
+  dof_per_elem, n_elements, n_variables = size(input_data)
+  result = zeros((interpolator |> size |> first, n_elements, n_variables))
+
+  for v = 1:n_variables
+    for e = 1:n_elements
+      @views result[:,e,v] = interpolator * input_data[:,e,v]
+    end
+  end
+
+  return reshape(result, (interpolator |> size |> first) * n_elements, n_variables)
+end
 
 # Interpolate unstructured DG data to structured data (cell-centered)
 function unstructured2structured(unstructured_data::AbstractArray{Float64},
