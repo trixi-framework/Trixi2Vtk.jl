@@ -1,6 +1,6 @@
 # Trixi2Vtk.jl
 
-[![Docs-stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://trixi-framework.github.io/Trixi.jl/stable)
+[![Docs-stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://trixi-framework.github.io/TrixiDocumentation/stable/visualization/#Trixi2Vtk)
 [![Build Status](https://github.com/trixi-framework/Trixi2Vtk.jl/workflows/CI/badge.svg)](https://github.com/trixi-framework/Trixi2Vtk.jl/actions?query=workflow%3ACI)
 [![Coveralls](https://coveralls.io/repos/github/trixi-framework/Trixi2Vtk.jl/badge.svg?branch=main)](https://coveralls.io/github/trixi-framework/Trixi2Vtk.jl?branch=main)
 [![License: MIT](https://img.shields.io/badge/License-MIT-success.svg)](https://opensource.org/licenses/MIT)
