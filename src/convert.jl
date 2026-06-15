@@ -447,24 +447,41 @@ function add_celldata!(vtk_celldata, mesh::P4estMesh, verbose)
   return vtk_celldata
 end
 
+# function add_celldata!(vtk_celldata, mesh::P4estMeshView, verbose)
+#   # Create temporary storage for the tree_ids and levels.
+#   tree_ids = zeros( Trixi.ncells(mesh) )
+#   cell_levels = zeros( Trixi.ncells(mesh) )
+#   # Set global counters.
+#   tree_counter = 1
+#   cell_counter = 1
+#   # Iterate through the p4est trees and each of their quadrants.
+#   # Assigns the tree index values. Also, grab and assign the level value.
+#   trees = Trixi.unsafe_wrap_sc(Trixi.P4est.p4est_tree_t, unsafe_load(mesh.parent.p4est).trees)
+#   for tree_view in eachindex(mesh.cell_ids)
+#     tree = trees[tree_view]
+#     for quadrant in Trixi.unsafe_wrap_sc(Trixi.P4est.p4est_quadrant_t, tree.quadrants)
+#       tree_ids[cell_counter] = tree_counter
+#       cell_levels[cell_counter] = quadrant.level
+#       cell_counter += 1
+#     end
+#     tree_counter += 1
+#   end
+# end
+
+# Disregard trees and do everything on the cell level.
 function add_celldata!(vtk_celldata, mesh::P4estMeshView, verbose)
   # Create temporary storage for the tree_ids and levels.
   tree_ids = zeros( Trixi.ncells(mesh) )
   cell_levels = zeros( Trixi.ncells(mesh) )
   # Set global counters.
-  tree_counter = 1
   cell_counter = 1
   # Iterate through the p4est trees and each of their quadrants.
   # Assigns the tree index values. Also, grab and assign the level value.
   trees = Trixi.unsafe_wrap_sc(Trixi.P4est.p4est_tree_t, unsafe_load(mesh.parent.p4est).trees)
-  for tree_view in eachindex(mesh.cell_ids)
-    tree = trees[tree_view]
-    for quadrant in Trixi.unsafe_wrap_sc(Trixi.P4est.p4est_quadrant_t, tree.quadrants)
-      tree_ids[cell_counter] = tree_counter
-      cell_levels[cell_counter] = quadrant.level
-      cell_counter += 1
-    end
-    tree_counter += 1
+  for cell_counter in eachindex(mesh.cell_ids)
+    tree_ids[cell_counter] = cell_counter
+    cell_levels[cell_counter] = 1
+    cell_counter += 1
   end
 end
 
