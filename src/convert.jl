@@ -441,7 +441,7 @@ function add_celldata!(vtk_celldata, mesh::T8codeMesh, verbose)
   elem_counter = 1
   num_local_trees = Trixi.t8_forest_get_num_local_trees(mesh.forest)
   for itree in 1:num_local_trees
-      num_elements_in_tree = Trixi.t8_forest_get_tree_num_elements(mesh.forest, itree-1)
+      num_elements_in_tree = Trixi.t8_forest_get_tree_num_leaf_elements(mesh.forest, itree-1)
       for ielement in 1:num_elements_in_tree
           tree_ids[elem_counter] = itree
           elem_counter += 1
