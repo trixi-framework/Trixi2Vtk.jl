@@ -58,12 +58,16 @@ jobs:
         env:
           PYTHON: ""
       - uses: julia-actions/julia-processcoverage@v1
+      # Workaround for https://github.com/coverallsapp/github-action/issues/264
+      - name: Trust Coveralls Homebrew tap (Homebrew 6 requirement)
+        if: runner.os == 'macOS'
+        run: brew trust coverallsapp/coveralls
       - uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           flag-name: run-${{ matrix.version }}-${{ matrix.os }}-${{ matrix.arch }}
           parallel: true
-          path-to-lcov: ./lcov.info
+          file: ./lcov.info
       - uses: actions/upload-artifact@v7
         if: success() || failure() # upload artifacts even if tests have failed
         with:
