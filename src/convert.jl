@@ -117,7 +117,7 @@ function trixi2vtk(filename::AbstractString...;
 
     # Read mesh
     verbose && println("| Reading mesh file...")
-    @timeit "read mesh" mesh = Trixi.load_mesh_serial(meshfile; n_cells_max=0, RealT=Float64)
+    @timeit "read mesh" mesh = Trixi.load_mesh_serial(meshfile; RealT=Float64)
 
     # Check compatibility of the mesh type and the output format
     if format === :vti && !(mesh isa Trixi.TreeMesh{2})
