@@ -327,6 +327,15 @@ function assert_cells_elements(n_elements, mesh::Union{P4estMesh, P4estMeshView,
   end
 end
 
+function assert_cells_elements(n_elements, mesh::P4estMeshView, filename, meshfile)
+  # Check if dimensions match
+  if Trixi.ncells(mesh) != n_elements
+    error("number of elements in '$(filename)' do not match number of cells in " *
+          "'$(meshfile)' " *
+          "(did you forget to clean your 'out/' directory between different runs?)")
+  end
+end
+
 # default number of visualization nodes if a solution should be visualized
 function get_default_nvisnodes_solution(nvisnodes, n_nodes, mesh::TreeMesh)
   if nvisnodes === nothing
@@ -438,22 +447,20 @@ function add_celldata!(vtk_celldata, mesh::P4estMesh, verbose)
 end
 
 function add_celldata!(vtk_celldata, mesh::P4estMeshView, verbose)
-  # Create temporary storage for the tree_ids and levels, indexed by the view's
-  # local cell numbering (mesh.cell_id_to_local maps parent cell id -> local id).
+  # Create temporary storage for the tree_ids and levels.
   tree_ids = zeros( Trixi.ncells(mesh) )
   cell_levels = zeros( Trixi.ncells(mesh) )
-  # Set global counters (over cells of the parent mesh).
+  # Set global counters.
   tree_counter = 1
   cell_counter = 1
-  # Iterate through the p4est trees and each of their quadrants of the parent mesh,
-  # keeping only the ones that belong to this view.
-  for tree in Trixi.unsafe_wrap_sc(Trixi.P4est.p4est_tree_t, unsafe_load(mesh.parent.p4est).trees)
+  # Iterate through the p4est trees and each of their quadrants.
+  # Assigns the tree index values. Also, grab and assign the level value.
+  trees = Trixi.unsafe_wrap_sc(Trixi.P4est.p4est_tree_t, unsafe_load(mesh.parent.p4est).trees)
+  for tree_view in eachindex(mesh.cell_ids)
+    tree = trees[tree_view]
     for quadrant in Trixi.unsafe_wrap_sc(Trixi.P4est.p4est_quadrant_t, tree.quadrants)
-      local_id = get(mesh.cell_id_to_local, cell_counter, 0)
-      if local_id != 0
-        tree_ids[local_id] = tree_counter
-        cell_levels[local_id] = quadrant.level
-      end
+      tree_ids[cell_counter] = tree_counter
+      cell_levels[cell_counter] = quadrant.level
       cell_counter += 1
     end
     tree_counter += 1

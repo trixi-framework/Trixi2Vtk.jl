@@ -230,23 +230,12 @@ function calc_node_coordinates(mesh::UnstructuredMesh2D, nodes, n_visnodes)
   return node_coordinates
 end
 
-
-function calc_node_coordinates(mesh::P4estMesh{NDIMS, NDIMS_AMBIENT}, nodes,
-                               n_visnodes) where {NDIMS, NDIMS_AMBIENT}
-
-  node_coordinates = Array{Float64, NDIMS+2}(undef, NDIMS_AMBIENT,
-                                              ntuple(_ -> n_visnodes, NDIMS)...,
-                                              Trixi.ncells(mesh))
-
-  return Trixi.calc_node_coordinates!(node_coordinates, mesh, nodes)
-end
-
-
-# Version of calc_node_coordinates for a P4estMeshView, i.e. a subset of cells of a
-# parent P4estMesh (used e.g. for coupled multi-physics setups). Trixi.jl already
-# provides a `calc_node_coordinates!` method for `P4estMeshView` that only fills in
-# the cells belonging to the view, so this just needs to size the buffer correctly.
-function calc_node_coordinates(mesh::P4estMeshView{NDIMS, NDIMS_AMBIENT}, nodes,
+# Version of calc_node_coordinates for a P4estMesh representing a manifold of dimension
+# NDIMS embedded within an ambient space of dimension NDIMS_AMBIENT. This provides support 
+# for standard 2D and 3D meshes (i.e. NDIMS = NDIMS_AMBIENT) as well as 2D surfaces in 3D 
+# space (i.e. NDIMS = 2 and NDIMS_AMBIENT = 3).
+function calc_node_coordinates(mesh::Union{P4estMesh{NDIMS, NDIMS_AMBIENT},
+                                           P4estMeshView{NDIMS, NDIMS_AMBIENT}}, nodes,
                                n_visnodes) where {NDIMS, NDIMS_AMBIENT}
 
   node_coordinates = Array{Float64, NDIMS+2}(undef, NDIMS_AMBIENT,
