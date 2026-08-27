@@ -137,7 +137,7 @@ end
 # (StructuredMesh/UnstructuredMesh2D/P4estMesh version).
 # Routine is agnostic with respect to reinterpolation.
 function build_vtk_grids(::Val{:vtu},
-                         mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, P4estMeshView},
+                         mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, P4estMeshView, T8codeMesh},
                          nodes, n_visnodes, verbose, output_directory, is_datafile, filename,
                          reinterpolate::Union{Val{true}, Val{false}})
 
@@ -231,7 +231,33 @@ function calc_node_coordinates(mesh::UnstructuredMesh2D, nodes, n_visnodes)
 end
 
 
-function calc_node_coordinates(mesh::Union{P4estMesh, P4estMeshView}, nodes, n_visnodes)
+function calc_node_coordinates(mesh::P4estMesh{NDIMS, NDIMS_AMBIENT}, nodes,
+                               n_visnodes) where {NDIMS, NDIMS_AMBIENT}
+
+  node_coordinates = Array{Float64, NDIMS+2}(undef, NDIMS_AMBIENT,
+                                              ntuple(_ -> n_visnodes, NDIMS)...,
+                                              Trixi.ncells(mesh))
+
+  return Trixi.calc_node_coordinates!(node_coordinates, mesh, nodes)
+end
+
+
+# Version of calc_node_coordinates for a P4estMeshView, i.e. a subset of cells of a
+# parent P4estMesh (used e.g. for coupled multi-physics setups). Trixi.jl already
+# provides a `calc_node_coordinates!` method for `P4estMeshView` that only fills in
+# the cells belonging to the view, so this just needs to size the buffer correctly.
+function calc_node_coordinates(mesh::P4estMeshView{NDIMS, NDIMS_AMBIENT}, nodes,
+                               n_visnodes) where {NDIMS, NDIMS_AMBIENT}
+
+  node_coordinates = Array{Float64, NDIMS+2}(undef, NDIMS_AMBIENT,
+                                              ntuple(_ -> n_visnodes, NDIMS)...,
+                                              Trixi.ncells(mesh))
+
+  return Trixi.calc_node_coordinates!(node_coordinates, mesh, nodes)
+end
+
+
+function calc_node_coordinates(mesh::T8codeMesh, nodes, n_visnodes)
   # Extract number of spatial dimensions
   ndims_ = ndims(mesh)
 

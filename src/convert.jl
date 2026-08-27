@@ -318,16 +318,7 @@ function assert_cells_elements(n_elements, mesh::UnstructuredMesh2D, filename, m
 end
 
 
-function assert_cells_elements(n_elements, mesh::Union{P4estMesh, T8codeMesh}, filename, meshfile)
-  # Check if dimensions match
-  if Trixi.ncells(mesh) != n_elements
-    error("number of elements in '$(filename)' do not match number of cells in " *
-          "'$(meshfile)' " *
-          "(did you forget to clean your 'out/' directory between different runs?)")
-  end
-end
-
-function assert_cells_elements(n_elements, mesh::P4estMeshView, filename, meshfile)
+function assert_cells_elements(n_elements, mesh::Union{P4estMesh, P4estMeshView, T8codeMesh}, filename, meshfile)
   # Check if dimensions match
   if Trixi.ncells(mesh) != n_elements
     error("number of elements in '$(filename)' do not match number of cells in " *
@@ -348,8 +339,7 @@ function get_default_nvisnodes_solution(nvisnodes, n_nodes, mesh::TreeMesh)
 end
 
 function get_default_nvisnodes_solution(nvisnodes, n_nodes,
-                                        mesh::Union{StructuredMesh, UnstructuredMesh2D,
-                                                    P4estMesh, T8codeMesh, P4estMeshView})
+                                        mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, P4estMeshView, T8codeMesh})
   if nvisnodes === nothing || nvisnodes == 0
     return n_nodes
   else
@@ -369,7 +359,7 @@ function get_default_nvisnodes_mesh(nvisnodes, mesh::TreeMesh)
 end
 
 function get_default_nvisnodes_mesh(nvisnodes,
-                                    mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, T8codeMesh})
+                                    mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, P4estMeshView, T8codeMesh})
   if nvisnodes === nothing
     # for curved meshes, we need to get at least the vertices
     return 2
@@ -447,42 +437,38 @@ function add_celldata!(vtk_celldata, mesh::P4estMesh, verbose)
   return vtk_celldata
 end
 
-# function add_celldata!(vtk_celldata, mesh::P4estMeshView, verbose)
-#   # Create temporary storage for the tree_ids and levels.
-#   tree_ids = zeros( Trixi.ncells(mesh) )
-#   cell_levels = zeros( Trixi.ncells(mesh) )
-#   # Set global counters.
-#   tree_counter = 1
-#   cell_counter = 1
-#   # Iterate through the p4est trees and each of their quadrants.
-#   # Assigns the tree index values. Also, grab and assign the level value.
-#   trees = Trixi.unsafe_wrap_sc(Trixi.P4est.p4est_tree_t, unsafe_load(mesh.parent.p4est).trees)
-#   for tree_view in eachindex(mesh.cell_ids)
-#     tree = trees[tree_view]
-#     for quadrant in Trixi.unsafe_wrap_sc(Trixi.P4est.p4est_quadrant_t, tree.quadrants)
-#       tree_ids[cell_counter] = tree_counter
-#       cell_levels[cell_counter] = quadrant.level
-#       cell_counter += 1
-#     end
-#     tree_counter += 1
-#   end
-# end
-
-# Disregard trees and do everything on the cell level.
 function add_celldata!(vtk_celldata, mesh::P4estMeshView, verbose)
-  # Create temporary storage for the tree_ids and levels.
+  # Create temporary storage for the tree_ids and levels, indexed by the view's
+  # local cell numbering (mesh.cell_id_to_local maps parent cell id -> local id).
   tree_ids = zeros( Trixi.ncells(mesh) )
   cell_levels = zeros( Trixi.ncells(mesh) )
-  # Set global counters.
+  # Set global counters (over cells of the parent mesh).
+  tree_counter = 1
   cell_counter = 1
-  # Iterate through the p4est trees and each of their quadrants.
-  # Assigns the tree index values. Also, grab and assign the level value.
-  trees = Trixi.unsafe_wrap_sc(Trixi.P4est.p4est_tree_t, unsafe_load(mesh.parent.p4est).trees)
-  for cell_counter in eachindex(mesh.cell_ids)
-    tree_ids[cell_counter] = cell_counter
-    cell_levels[cell_counter] = 1
-    cell_counter += 1
+  # Iterate through the p4est trees and each of their quadrants of the parent mesh,
+  # keeping only the ones that belong to this view.
+  for tree in Trixi.unsafe_wrap_sc(Trixi.P4est.p4est_tree_t, unsafe_load(mesh.parent.p4est).trees)
+    for quadrant in Trixi.unsafe_wrap_sc(Trixi.P4est.p4est_quadrant_t, tree.quadrants)
+      local_id = get(mesh.cell_id_to_local, cell_counter, 0)
+      if local_id != 0
+        tree_ids[local_id] = tree_counter
+        cell_levels[local_id] = quadrant.level
+      end
+      cell_counter += 1
+    end
+    tree_counter += 1
   end
+  @timeit "add data to VTK file" begin
+    # Add tree/element data to celldata VTK file
+    verbose && println("| | tree_ids...")
+    @timeit "tree_ids" vtk_celldata["tree_ids"] = tree_ids
+    verbose && println("| | element_ids...")
+    @timeit "element_ids" vtk_celldata["element_ids"] = collect(1:Trixi.ncells(mesh))
+    verbose && println("| | levels...")
+    @timeit "levels" vtk_celldata["levels"] = cell_levels
+  end
+
+  return vtk_celldata
 end
 
 function add_celldata!(vtk_celldata, mesh::T8codeMesh, verbose)
