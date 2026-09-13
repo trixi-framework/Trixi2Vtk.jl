@@ -318,7 +318,7 @@ function assert_cells_elements(n_elements, mesh::UnstructuredMesh2D, filename, m
 end
 
 
-function assert_cells_elements(n_elements, mesh::Union{P4estMesh, T8codeMesh}, filename, meshfile)
+function assert_cells_elements(n_elements, mesh::Union{P4estMesh, P4estMeshView, T8codeMesh}, filename, meshfile)
   # Check if dimensions match
   if Trixi.ncells(mesh) != n_elements
     error("number of elements in '$(filename)' do not match number of cells in " *
@@ -348,8 +348,7 @@ function get_default_nvisnodes_solution(nvisnodes, n_nodes, mesh::TreeMesh)
 end
 
 function get_default_nvisnodes_solution(nvisnodes, n_nodes,
-                                        mesh::Union{StructuredMesh, UnstructuredMesh2D,
-                                                    P4estMesh, T8codeMesh, P4estMeshView})
+                                        mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, P4estMeshView, T8codeMesh})
   if nvisnodes === nothing || nvisnodes == 0
     return n_nodes
   else
@@ -369,7 +368,7 @@ function get_default_nvisnodes_mesh(nvisnodes, mesh::TreeMesh)
 end
 
 function get_default_nvisnodes_mesh(nvisnodes,
-                                    mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, T8codeMesh})
+                                    mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, P4estMeshView, T8codeMesh})
   if nvisnodes === nothing
     # for curved meshes, we need to get at least the vertices
     return 2
@@ -473,13 +472,12 @@ function add_celldata!(vtk_celldata, mesh::P4estMeshView, verbose)
     end
     tree_counter += 1
   end
-
   @timeit "add data to VTK file" begin
     # Add tree/element data to celldata VTK file
     verbose && println("| | tree_ids...")
     @timeit "tree_ids" vtk_celldata["tree_ids"] = tree_ids
     verbose && println("| | element_ids...")
-    @timeit "element_ids" vtk_celldata["element_ids"] = collect(1:n_cells)
+    @timeit "element_ids" vtk_celldata["element_ids"] = collect(1:Trixi.ncells(mesh))
     verbose && println("| | levels...")
     @timeit "levels" vtk_celldata["levels"] = cell_levels
   end

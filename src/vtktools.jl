@@ -137,7 +137,7 @@ end
 # (StructuredMesh/UnstructuredMesh2D/P4estMesh version).
 # Routine is agnostic with respect to reinterpolation.
 function build_vtk_grids(::Val{:vtu},
-                         mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, T8codeMesh, P4estMeshView},
+                         mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, P4estMeshView, T8codeMesh},
                          nodes, n_visnodes, verbose, output_directory, is_datafile, filename,
                          reinterpolate::Union{Val{true}, Val{false}})
 
@@ -208,7 +208,7 @@ function calc_node_coordinates(mesh::UnstructuredMesh2D, nodes, n_visnodes)
   ndims_ = ndims(mesh)
   n_elements = length(mesh)
 
-  # initialize the container for the node coordinates
+  # intialize the container for the node coordinates
   node_coordinates = Array{Float64, ndims_+2}(undef, ndims_, ntuple(_ -> n_visnodes, ndims_)..., n_elements)
 
   # work container for the corners of elements
@@ -403,7 +403,7 @@ function calc_node_coordinates!(node_coordinates::AbstractArray{<:Any, 5}, f, no
 end
 
 
-# Determine and return filenames for PVD fields
+# Determine and return filenames for PVD fiels
 function pvd_filenames(filenames, pvd, output_directory)
   # Determine pvd filename
   if !isnothing(pvd)
@@ -594,10 +594,8 @@ function calc_vtk_points_cells(node_coordinates::AbstractArray{<:Any,4})
   # Linear indices to access points by node indices and element id
   linear_indices = LinearIndices(size_[2:end])
 
-  # Use Lagrange nodes as VTK points. Note that we call size(node_coordinates, 1) in order  
-  # to provide support for standard two-dimensional meshes as well as meshes representing 
-  # 2D surfaces in 3D space, which are implemented using P4estMesh{2, 3}.
-  vtk_points = reshape(node_coordinates, (size(node_coordinates, 1), n_points))
+  # Use lagrange nodes as VTK points
+  vtk_points = reshape(node_coordinates, (2, n_points))
   vtk_cells = Vector{MeshCell}(undef, n_elements)
 
   # Create cell for each element
