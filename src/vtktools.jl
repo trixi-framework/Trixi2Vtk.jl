@@ -713,33 +713,100 @@ function calc_vtk_points_cells(node_coordinates::AbstractArray{<:Any,5})
   return vtk_points, vtk_cells
 end
 
-# Convert coordinates and level information to a list of points and VTK cells for
-# DGMultiMesh
-function calc_vtk_points_cells(md::Trixi.MeshData, rd::Trixi.RefElemData, 
-                               reinterpolate = Val(true))
-  # Compute the permutation between the StartUpDG order of points and vtk.
+# Convert coordinates to a list of points and VTK Lagrange cells for `DGMultiMesh`.
+# With reinterpolation, the points are the equidistant plotting nodes `rd.rstp`
+# (of degree `rd.Nplot`, see `load_basis`).
+function calc_vtk_points_cells(md::Trixi.MeshData, rd::Trixi.RefElemData,
+                               reinterpolate::Val{true})
+  # Permutation of the plotting nodes `rd.rstp` into VTK Lagrange order
   perm = Trixi.StartUpDG.SUD_to_vtk_order(rd)
 
-  if length(rd.N) > 1
-      @assert length(Set(rd.N)) == 1 "`order` must have equal elements."
-      order = first(rd.N)
-  else
-      order = rd.N
-  end
+  vtk_cells = calc_vtk_cells_dgmulti(md.num_elements, rd, perm)
+  vtk_points = map(x -> vec(rd.Vp * x), md.xyz)
 
-  # The number of points per element.
-  num_lagrange_points = length(perm)
+  return vtk_points, vtk_cells
+end
+
+# Without reinterpolation, the points are the solution nodes `rd.rst`. Their order differs
+# from the order of the plotting nodes `rd.rstp` (e.g., for `Quad` elements), such that we
+# need a separate permutation into VTK Lagrange order.
+function calc_vtk_points_cells(md::Trixi.MeshData, rd::Trixi.RefElemData,
+                               reinterpolate::Val{false})
+  perm = solution_nodes_to_vtk_order(rd)
+
+  vtk_cells = calc_vtk_cells_dgmulti(md.num_elements, rd, perm)
+  vtk_points = vec.(md.xyz)
+
+  return vtk_points, vtk_cells
+end
+
+function calc_vtk_cells_dgmulti(n_elements, rd::Trixi.RefElemData, perm)
+  n_points_per_element = length(perm)
   vtk_cell_type = Trixi.StartUpDG.type_to_vtk(rd.element_type)
 
-  # Construction of VTK mesh cell list.
-  vtk_cells = [MeshCell(vtk_cell_type, perm .+ ((i-1) * num_lagrange_points)) for i in 1:md.num_elements]
+  return [MeshCell(vtk_cell_type, perm .+ ((element - 1) * n_points_per_element))
+          for element in 1:n_elements]
+end
 
-  if reinterpolate == Val(true)
-      interpolate = Trixi.StartUpDG.vandermonde(rd.element_type, order, Trixi.StartUpDG.equi_nodes(rd.element_type, order)...) / rd.VDM
-      vtk_points = map(x -> vec(interpolate * x), md.xyz)
-  else # don't interpolate
-      vtk_points = vec.(md.xyz) 
-  end   
-  
-  return vtk_points, vtk_cells
+function polydeg_dgmulti(rd::Trixi.RefElemData)
+  if length(rd.N) > 1
+    @assert length(Set(rd.N)) == 1 "`order` must have equal elements."
+    return first(rd.N)
+  else
+    return rd.N
+  end
+end
+
+# Compute the permutation of the solution nodes `rd.rst` into VTK Lagrange order.
+# VTK Lagrange cells identify nodes by their topological position within the element.
+# Thus, we map each solution node to the equidistant node at the same topological position
+# and match these against the VTK node ordering.
+function solution_nodes_to_vtk_order(rd::Trixi.RefElemData{NDIMS}) where {NDIMS}
+  StartUpDG = Trixi.StartUpDG
+  element_type = rd.element_type
+  order = polydeg_dgmulti(rd)
+  tol = 100 * eps()
+
+  if element_type isa Union{StartUpDG.Quad, StartUpDG.Hex}
+    # The solution nodes are a tensor product of 1D nodes. Replace each coordinate by the
+    # equidistant 1D node with the same index.
+    nodes_equi_1d = range(-1, 1, length = order + 1)
+    nodes_topological = ntuple(NDIMS) do dim
+      coordinates = rd.rst[dim]
+      nodes_1d = unique_sorted_nodes(coordinates, tol)
+      if length(nodes_1d) != order + 1
+        throw(ArgumentError("solution nodes are not a tensor product of $(order + 1) " *
+                            "1D nodes; use `reinterpolate=true`"))
+      end
+      map(x -> nodes_equi_1d[findfirst(y -> abs(x - y) <= tol, nodes_1d)], coordinates)
+    end
+  elseif element_type isa Union{StartUpDG.Tri, StartUpDG.Tet} &&
+         length(rd.r) == length(first(StartUpDG.nodes(element_type, order))) &&
+         all(isapprox.(rd.rst, StartUpDG.nodes(element_type, order)))
+    # The default nodes on simplices (warp & blend) are constructed by moving the
+    # equidistant nodes, i.e., they are ordered in the same way.
+    nodes_topological = StartUpDG.equi_nodes(element_type, order)
+  else
+    throw(ArgumentError("`reinterpolate=false` is not supported for $(nameof(typeof(element_type))) " *
+                        "elements with $(nameof(typeof(rd.approximation_type))) approximation " *
+                        "since the solution nodes cannot be mapped to a VTK Lagrange cell; " *
+                        "use `reinterpolate=true`"))
+  end
+
+  nodes_vtk = StartUpDG.vtk_order(element_type, order)
+  nodes_vtk_formatted = ntuple(dim -> nodes_vtk[dim, :], NDIMS)
+
+  return StartUpDG.match_coordinate_vectors(nodes_vtk_formatted, nodes_topological; tol)
+end
+
+# Return the sorted unique values of `x` (up to tolerance `tol`)
+function unique_sorted_nodes(x, tol)
+  nodes = eltype(x)[]
+  for value in sort(x)
+    if isempty(nodes) || value - last(nodes) > tol
+      push!(nodes, value)
+    end
+  end
+
+  return nodes
 end

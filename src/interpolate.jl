@@ -53,17 +53,10 @@ end
 function interpolate_data(::Val{:vtu}, input_data,
                           mesh::DGMultiMesh, basis,
                           n_visnodes, verbose)
-  if length(basis.N) > 1
-      @assert length(Set(basis.N)) == 1 "`order` must have equal elements."
-      order = first(basis.N)
-  else
-      order = basis.N
-  end
-
-  visualization_nodes = Trixi.StartUpDG.equi_nodes(basis.element_type, order)
-
-  interpolator = Trixi.StartUpDG.vandermonde(basis.element_type, order, 
-                                             visualization_nodes...) / basis.VDM
+  # `basis.Vp` interpolates from the solution nodes to the equidistant plotting nodes
+  # `basis.rstp` of degree `basis.Nplot` (see `load_basis`). This is the same operator
+  # used for the VTK points in `calc_vtk_points_cells`, such that data and points match.
+  interpolator = basis.Vp
 
   dof_per_elem, n_elements, n_variables = size(input_data)
   result = zeros((interpolator |> size |> first, n_elements, n_variables))

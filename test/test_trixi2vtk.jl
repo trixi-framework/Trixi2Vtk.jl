@@ -171,6 +171,27 @@ end
 
 
 """
+    compare_points_and_cells(out_filename, ref_filename; atol=500*eps(), rtol=sqrt(eps()))
+
+Test that the point coordinates and the cell connectivity in `out_filename` match those in
+`ref_filename`. This is important for high-order (Lagrange) VTK cells, where a wrong node
+ordering results in an invalid VTK file that still has the correct number of points and cells.
+"""
+function compare_points_and_cells(out_filename, ref_filename; atol=500*eps(), rtol=sqrt(eps()))
+  ref_vtk = VTKFile(ref_filename)
+  vtk = VTKFile(out_filename)
+
+  @test isapprox(get_points(vtk), get_points(ref_vtk), atol=atol, rtol=rtol)
+
+  cells = get_cells(vtk)
+  ref_cells = get_cells(ref_vtk)
+  @test cells.connectivity == ref_cells.connectivity
+  @test cells.offsets == ref_cells.offsets
+  @test cells.types == ref_cells.types
+end
+
+
+"""
     @timed_testset "name of the testset" #= code to test #=
 
 Similar to `@testset`, but wraps the execution of the testset using `@time`
@@ -178,10 +199,12 @@ and prints the name of the testset after execution.
 """
 macro timed_testset(name, expr)
   @assert name isa String
-  quote
+  # Escape the whole expression such that `expr` is evaluated in the scope of the caller,
+  # e.g., to have access to local (loop) variables
+  esc(quote
     @time @testset $name $expr
     flush(stdout)
     @info("Testset " * $name * " finished.\n")
     flush(stdout)
-  end
+  end)
 end

@@ -86,8 +86,6 @@ function read_datafile(filename::String, ::DGMultiMesh)
   # Open file for reading
   h5open(filename, "r") do file
     # Extract basic information
-    ndims_ = read(attributes(file)["ndims"])
-
     etype_str = read(attributes(file)["element_type"])
     etype = Trixi.get_element_type_from_string(etype_str)()
 
@@ -127,18 +125,14 @@ function read_datafile(filename::String, ::DGMultiMesh)
       index +=1
     end
 
-    # Extract node variable arrays
+    # Extract node variable arrays. As for the solution variables, DGMulti stores these
+    # as `(dof_per_elem, n_elements)` arrays independent of the number of dimensions.
     node_variables = Dict{String, Union{Array{Float64}, Array{Int}}}()
     index = 1
     while haskey(file, "node_variables_$index")
       varname = read(attributes(file["node_variables_$index"])["name"])
       nodedata = read(file["node_variables_$index"])
-      if ndims_ == 2
-        node_variables[varname] = Array{Float64}(undef, n_nodes, n_nodes, n_elements)
-        @views node_variables[varname][:, :, :] .= nodedata
-      else
-        error("Unsupported number of spatial dimensions: ", ndims_)
-      end
+      node_variables[varname] = reshape(nodedata, dof_per_elem, n_elements)
       index +=1
     end
 
@@ -162,14 +156,21 @@ function load_basis(mesh_file, ::DGMultiMesh)
       end
   end
 
+  # The visualization operators `rd.Vp` (interpolation to equidistant plotting nodes `rd.rstp`)
+  # and `SUD_to_vtk_order(rd)` (permutation of `rd.rstp` into VTK Lagrange order) both use
+  # plotting nodes of degree `rd.Nplot`. We visualize with VTK Lagrange cells of the same degree
+  # as the solution, thus we need to set `Nplot` to the polynomial degree. Otherwise, StartUpDG's
+  # default (`Nplot = 10`) would result in an inconsistent VTK cell connectivity.
   if etype isa Trixi.Wedge && polydeg isa NTuple{2}
-    factor_a = Trixi.RefElemData(Trixi.StartUpDG.Tri(), Trixi.Polynomial(), polydeg[1])
-    factor_b = Trixi.RefElemData(Trixi.StartUpDG.Line(), Trixi.Polynomial(), polydeg[2])
+    factor_a = Trixi.RefElemData(Trixi.StartUpDG.Tri(), Trixi.Polynomial(), polydeg[1];
+                                 Nplot = polydeg[1])
+    factor_b = Trixi.RefElemData(Trixi.StartUpDG.Line(), Trixi.Polynomial(), polydeg[2];
+                                 Nplot = polydeg[2])
 
     tensor = Trixi.TensorProductWedge(factor_a, factor_b)
     rd = Trixi.RefElemData(etype, tensor)
   else
-    rd = Trixi.RefElemData(etype, Trixi.Polynomial(), polydeg)
+    rd = Trixi.RefElemData(etype, Trixi.Polynomial(), polydeg; Nplot = polydeg)
   end
 
   return rd

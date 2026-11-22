@@ -183,13 +183,11 @@ function trixi2vtk(filename::AbstractString...;
                                                                         basis, n_visnodes,
                                                                         verbose)
       else # Copy the raw solution data; only works for `vtu` format
-        # Extract data shape information
-        ndims_ = ndims(data) - 2
         n_variables = length(labels)
-        # Save raw data as one 1D array for each variable
-        @timeit "interpolate data" interpolated_data = reshape(data,
-                                                               n_visnodes^ndims_ * n_elements,
-                                                               n_variables)
+        # Save raw data as one 1D array for each variable. The data has the shape
+        # `(nodes..., n_elements, n_variables)`, where `nodes...` is `n_nodes` in each
+        # dimension for tensor product meshes and `dof_per_elem` for `DGMultiMesh`.
+        @timeit "interpolate data" interpolated_data = reshape(data, :, n_variables)
       end
     end
 
@@ -231,8 +229,7 @@ function trixi2vtk(filename::AbstractString...;
                                                                     mesh, basis, 
                                                                     n_visnodes, verbose)
             else
-              @timeit "interpolate data" interpolated_cell_data = reshape(variable,
-                                                                          n_visnodes^ndims_ * n_elements)
+              @timeit "interpolate data" interpolated_cell_data = vec(variable)
             end
             # Add to node_data
             @timeit label vtk_nodedata[label] = interpolated_cell_data

@@ -479,6 +479,94 @@ end
         compare_point_data(out_file, ref_file)
       end
     end
+
+    @testset "DGMultiMesh" begin
+      # Combinations of element type and approximation type, given as
+      # (elixir in `examples/dgmulti_2d`, prefix of the reference files)
+      # TODO: Add `Tri()` + `SBP()` (e.g., `elixir_euler_sedov_limiter_zhang_shu.jl`) once
+      #       Trixi.jl stores the approximation type in the mesh file. Currently,
+      #       `Trixi.load_mesh_serial` always reconstructs a `Polynomial()` basis, which does
+      #       not match the SBP nodes on triangles.
+      dgmulti_cases = [("elixir_euler_weakform.jl", "tri_polynomial_weakform"),
+                       ("elixir_euler_brown_minion_vortex.jl", "quad_polynomial_brown_minion_vortex"),
+                       ("elixir_euler_curved.jl", "quad_sbp_curved"),
+                       ("elixir_euler_shockcapturing.jl", "quad_gausssbp_shockcapturing")]
+
+      for (elixir, ref_prefix) in dgmulti_cases
+        @testset "$elixir" begin
+          isdir(outdir) && rm(outdir, recursive=true)
+          run_trixi(joinpath(examples_dir(), "dgmulti_2d", elixir), maxiters=5)
+
+          @timed_testset "mesh data" begin
+            # create the output file to be tested
+            @test_nowarn trixi2vtk(joinpath(outdir, "mesh.h5"), output_directory=outdir)
+            outfilename = "mesh_celldata.vtu"
+            out_file = joinpath(outdir, outfilename)
+
+            # save output file to `artifacts` to facilitate debugging of failing tests
+            testname = "2d-dgmulti-" * ref_prefix
+            cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+
+            # remote file path is actually a URL so it always has the same path structure
+            ref_filename = ref_prefix * "_mesh_05.vtu"
+            ref_file = get_test_reference_file(ref_filename, "2d/dgmulti/" * ref_filename)
+            compare_points_and_cells(out_file, ref_file)
+            compare_cell_data(out_file, ref_file)
+          end
+
+          @timed_testset "solution celldata" begin
+            # create the output file to be tested
+            @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000005.h5"), output_directory=outdir)
+            outfilename = "solution_" * LEADING_ZEROS * "000005_celldata.vtu"
+            out_file = joinpath(outdir, outfilename)
+
+            # save output file to `artifacts` to facilitate debugging of failing tests
+            testname = "2d-dgmulti-" * ref_prefix
+            cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+
+            # remote file path is actually a URL so it always has the same path structure
+            ref_filename = ref_prefix * "_celldata_05.vtu"
+            ref_file = get_test_reference_file(ref_filename, "2d/dgmulti/" * ref_filename)
+            compare_points_and_cells(out_file, ref_file)
+            compare_cell_data(out_file, ref_file)
+          end
+
+          @timed_testset "reinterpolate with nonuniform data" begin
+            # Create and test output with reinterpolation (default options: `reinterpolate=true, data_is_uniform=false`)
+            @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000005.h5"), output_directory=outdir)
+            outfilename = "solution_" * LEADING_ZEROS * "000005.vtu"
+            out_file = joinpath(outdir, outfilename)
+
+            # save output file to `artifacts` to facilitate debugging of failing tests
+            testname = "2d-dgmulti-" * ref_prefix * "-reinterp"
+            cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+
+            # remote file path is actually a URL so it always has the same path structure
+            ref_filename = ref_prefix * "_reinterp_05.vtu"
+            ref_file = get_test_reference_file(ref_filename, "2d/dgmulti/" * ref_filename)
+            compare_points_and_cells(out_file, ref_file)
+            compare_point_data(out_file, ref_file)
+          end
+
+          @timed_testset "do not reinterpolate with nonuniform data" begin
+            # Create and test output without reinterpolation, i.e., on the solution nodes
+            @test_nowarn trixi2vtk(joinpath(outdir, "solution_" * LEADING_ZEROS * "000005.h5"), output_directory=outdir, reinterpolate=false)
+            outfilename = "solution_" * LEADING_ZEROS * "000005.vtu"
+            out_file = joinpath(outdir, outfilename)
+
+            # save output file to `artifacts` to facilitate debugging of failing tests
+            testname = "2d-dgmulti-" * ref_prefix * "-no-reinterp"
+            cp(out_file, joinpath(artifacts_dir, testname * "-" * outfilename), force=true)
+
+            # remote file path is actually a URL so it always has the same path structure
+            ref_filename = ref_prefix * "_no_reinterp_05.vtu"
+            ref_file = get_test_reference_file(ref_filename, "2d/dgmulti/" * ref_filename)
+            compare_points_and_cells(out_file, ref_file)
+            compare_point_data(out_file, ref_file)
+          end
+        end
+      end
+    end
   end
 
   @testset "Subcell limiting coefficients" begin
