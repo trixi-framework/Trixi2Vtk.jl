@@ -170,10 +170,30 @@ function load_basis(mesh_file, ::DGMultiMesh)
     tensor = Trixi.TensorProductWedge(factor_a, factor_b)
     rd = Trixi.RefElemData(etype, tensor)
   else
-    rd = Trixi.RefElemData(etype, Trixi.Polynomial(), polydeg; Nplot = polydeg)
+    approximation_type = load_approximation_type(mesh_file)
+    rd = Trixi.RefElemData(etype, approximation_type, polydeg; Nplot = polydeg)
   end
 
   return rd
+end
+
+# The approximation type (e.g., `SBP()`) determines the solution nodes. It is stored in mesh
+# files written by newer versions of Trixi.jl. Older mesh files do not contain this information,
+# in which case Trixi.jl assumes the default `Polynomial()` approximation when loading the mesh.
+function load_approximation_type(mesh_file)
+  approximation_type_str = h5open(mesh_file, "r") do file
+    if haskey(attributes(file), "approximation_type")
+      return read(attributes(file)["approximation_type"])
+    else
+      return nothing
+    end
+  end
+
+  if approximation_type_str === nothing
+    return Trixi.Polynomial()
+  else
+    return Trixi.get_approximation_type_from_string(approximation_type_str)
+  end
 end
 
 # For other mesh types, return nothing
