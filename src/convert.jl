@@ -117,8 +117,7 @@ function trixi2vtk(filename::AbstractString...;
 
     # Read mesh
     verbose && println("| Reading mesh file...")
-    @timeit "read mesh" mesh = Trixi.load_mesh_serial(meshfile; n_cells_max=0,
-                                                      RealT=Float64)
+    @timeit "read mesh" mesh = Trixi.load_mesh_serial(meshfile; RealT=Float64)
 
     # For DGMulti, we will reconstruct the `basis`, which is of type `RefElemData`. For 
     # other mesh types, we do not need to do this, and will just set `basis = nothing`.
@@ -451,7 +450,7 @@ function add_celldata!(vtk_celldata, mesh::T8codeMesh, verbose)
   elem_counter = 1
   num_local_trees = Trixi.t8_forest_get_num_local_trees(mesh.forest)
   for itree in 1:num_local_trees
-      num_elements_in_tree = Trixi.t8_forest_get_tree_num_elements(mesh.forest, itree-1)
+      num_elements_in_tree = Trixi.t8_forest_get_tree_num_leaf_elements(mesh.forest, itree-1)
       for ielement in 1:num_elements_in_tree
           tree_ids[elem_counter] = itree
           elem_counter += 1
