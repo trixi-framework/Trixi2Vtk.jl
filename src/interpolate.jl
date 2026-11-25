@@ -24,7 +24,7 @@ end
 # Interpolate data from input format to desired output format (vti version)
 function interpolate_data(::Val{:vti}, input_data, mesh::TreeMesh, basis, n_visnodes, 
                           verbose)
-coordinates, levels, center_level_0, length_level_0 = extract_mesh_information(mesh)
+  coordinates, levels, center_level_0, length_level_0 = extract_mesh_information(mesh)
 
   # Normalize element coordinates: move center to origin and domain size to [-1, 1]²
   normalized_coordinates = similar(coordinates)
@@ -58,16 +58,12 @@ function interpolate_data(::Val{:vtu}, input_data,
   # in `calc_vtk_points_cells`, such that data and points match.
   interpolator = plotting_interpolation_matrix(basis)
 
-  dof_per_elem, n_elements, n_variables = size(input_data)
-  result = zeros((interpolator |> size |> first, n_elements, n_variables))
+  # Interpolate all elements and variables at once by treating the data as a matrix of
+  # size `(dof_per_elem, n_elements * n_variables)`
+  n_variables = size(input_data, 3)
+  interpolated_data = interpolator * reshape(input_data, size(input_data, 1), :)
 
-  for v = 1:n_variables
-    for e = 1:n_elements
-      @views result[:,e,v] = interpolator * input_data[:,e,v]
-    end
-  end
-
-  return reshape(result, (interpolator |> size |> first) * n_elements, n_variables)
+  return reshape(interpolated_data, :, n_variables)
 end
 
 # Interpolate unstructured DG data to structured data (cell-centered)

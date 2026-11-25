@@ -134,26 +134,17 @@ end
 
 
 # Create and return VTK grids that are ready to be filled with data
-# (StructuredMesh/UnstructuredMesh2D/P4estMesh version).
+# (StructuredMesh/UnstructuredMesh2D/P4estMesh/T8codeMesh/DGMultiMesh version).
 # Routine is agnostic with respect to reinterpolation.
 function build_vtk_grids(::Val{:vtu},
-                         mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, T8codeMesh},
+                         mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, T8codeMesh, DGMultiMesh},
                          nodes, basis, n_visnodes, verbose, output_directory, is_datafile, filename,
                          reinterpolate::Union{Val{true}, Val{false}})
 
-  @timeit "prepare coordinate information" node_coordinates = calc_node_coordinates(mesh, nodes, n_visnodes)
-
-  # Calculate VTK points and cells
+  # Calculate VTK points and cells, which are the same for the node data and cell data files
   verbose && println("| Preparing VTK cells...")
-  if is_datafile
-    @timeit "prepare VTK cells (node data)" begin
-      vtk_points, vtk_cells = calc_vtk_points_cells(node_coordinates)
-    end
-  end
-
-  # Prepare VTK points and cells for celldata file
-  @timeit "prepare VTK cells (cell data)" begin
-    vtk_celldata_points, vtk_celldata_cells = calc_vtk_points_cells(node_coordinates)
+  @timeit "prepare VTK cells" begin
+    vtk_points, vtk_cells = calc_vtk_points_cells(mesh, nodes, basis, n_visnodes, reinterpolate)
   end
 
   # Determine output file names
@@ -170,48 +161,18 @@ function build_vtk_grids(::Val{:vtu},
     vtk_nodedata = nothing
   end
   @timeit "build VTK grid (cell data)" vtk_celldata = vtk_grid(vtk_celldata_filename,
-                                                                vtk_celldata_points,
-                                                                vtk_celldata_cells)
+                                                                vtk_points, vtk_cells)
 
   return vtk_nodedata, vtk_celldata
 end
 
-function build_vtk_grids(::Val{:vtu},
-                         mesh::DGMultiMesh,
-                         nodes, basis, n_visnodes, verbose, output_directory, is_datafile, filename,
-                         reinterpolate::Union{Val{true}, Val{false}})
+function calc_vtk_points_cells(mesh, nodes, basis, n_visnodes, reinterpolate)
+  @timeit "prepare coordinate information" node_coordinates = calc_node_coordinates(mesh, nodes, n_visnodes)
+  return calc_vtk_points_cells(node_coordinates)
+end
 
-  # Calculate VTK points and cells.
-  verbose && println("| Preparing VTK cells...")
-  if is_datafile
-    @timeit "prepare VTK cells (node data)" begin
-      vtk_points, vtk_cells = calc_vtk_points_cells(mesh.md, basis, reinterpolate)
-    end
-  end
-
-  # Prepare VTK points and cells for celldata file.
-  @timeit "prepare VTK cells (cell data)" begin
-    vtk_celldata_points, vtk_celldata_cells = calc_vtk_points_cells(mesh.md, basis, reinterpolate)
-  end
-
-  # Determine output file names.
-  base, _ = splitext(splitdir(filename)[2])
-  vtk_filename = joinpath(output_directory, base)
-  vtk_celldata_filename = vtk_filename * "_celldata"
-
-  # Open VTK files.
-  verbose && println("| Building VTK grid...")
-  if is_datafile
-    @timeit "build VTK grid (node data)" vtk_nodedata = vtk_grid(vtk_filename, vtk_points...,
-                                                                 vtk_cells)
-  else
-    vtk_nodedata = nothing
-  end
-  @timeit "build VTK grid (cell data)" vtk_celldata = vtk_grid(vtk_celldata_filename,
-                                                                vtk_celldata_points...,
-                                                                vtk_celldata_cells)
-
-  return vtk_nodedata, vtk_celldata
+function calc_vtk_points_cells(mesh::DGMultiMesh, nodes, basis, n_visnodes, reinterpolate)
+  return calc_vtk_points_cells(mesh.md, basis, reinterpolate)
 end
 
 function calc_node_coordinates(mesh::TreeMesh, nodes, n_visnodes)
@@ -292,6 +253,7 @@ function calc_node_coordinates(mesh::T8codeMesh, nodes, n_visnodes)
 
   return Trixi.calc_node_coordinates!(node_coordinates, mesh, nodes)
 end
+
 
 # Calculation of the node coordinates for `TreeMesh` in 2D
 function calc_node_coordinates!(node_coordinates, nodes, mesh::TreeMesh{2})
@@ -656,6 +618,7 @@ function calc_vtk_points_cells(node_coordinates::AbstractArray{<:Any,4})
   return vtk_points, vtk_cells
 end
 
+
 # Convert coordinates and level information to a list of points and VTK cells for `StructuredMesh` (3D version)
 function calc_vtk_points_cells(node_coordinates::AbstractArray{<:Any,5})
   n_elements = size(node_coordinates, 5)
@@ -715,14 +678,32 @@ end
 
 # Convert coordinates to a list of points and VTK Lagrange cells for `DGMultiMesh`.
 # With reinterpolation, the points are the equidistant nodes of a VTK Lagrange cell of
-# degree `rd.N`, already given in VTK order (see `plotting_interpolation_matrix`).
-function calc_vtk_points_cells(md::Trixi.MeshData, rd::Trixi.RefElemData,
-                               reinterpolate::Val{true})
-  interpolator = plotting_interpolation_matrix(rd)
-  perm = plotting_nodes_to_vtk_order(rd)
+# degree `rd.N` (see `plotting_interpolation_matrix`). Without reinterpolation, the points
+# are the solution nodes `rd.rst`. Their order differs from the order of the plotting nodes
+# (e.g., for `Quad` elements), such that we need a separate permutation into VTK order.
+function calc_vtk_points_cells(md::Trixi.MeshData, rd::Trixi.RefElemData, reinterpolate)
+  if reinterpolate isa Val{true}
+    interpolator = plotting_interpolation_matrix(rd)
+    xyz = map(x -> interpolator * x, md.xyz)
+    if rd.approximation_type isa Trixi.TensorProductWedge
+      # `rd.rstp` are of degree `rd.Nplot`, which is set to the polynomial degree in `load_basis`
+      perm = Trixi.StartUpDG.SUD_to_vtk_order(rd)
+    else
+      # The plotting nodes are already in VTK order
+      perm = 1:size(interpolator, 1)
+    end
+  else
+    xyz = md.xyz
+    perm = solution_nodes_to_vtk_order(rd)
+  end
 
-  vtk_cells = calc_vtk_cells_dgmulti(md.num_elements, rd, perm)
-  vtk_points = map(x -> vec(interpolator * x), md.xyz)
+  # Store the points as a matrix of size `(NDIMS, n_points)`
+  vtk_points = permutedims(reduce(hcat, vec.(xyz)))
+
+  n_points_per_element = length(perm)
+  vtk_cell_type = Trixi.StartUpDG.type_to_vtk(rd.element_type)
+  vtk_cells = [MeshCell(vtk_cell_type, collect(perm .+ ((element - 1) * n_points_per_element)))
+               for element in 1:md.num_elements]
 
   return vtk_points, vtk_cells
 end
@@ -739,7 +720,7 @@ end
 function plotting_interpolation_matrix(rd::Trixi.RefElemData{NDIMS}) where {NDIMS}
   # The polynomial degree of a `TensorProductWedge` is a tuple, for which there is no
   # `vandermonde` matrix. Here, we use `rd.Vp` (which is ordered consistently with `rd.rstp`)
-  # together with the permutation `SUD_to_vtk_order(rd)`, see `plotting_nodes_to_vtk_order`.
+  # together with the permutation `SUD_to_vtk_order(rd)`, see `calc_vtk_points_cells`.
   if rd.approximation_type isa Trixi.TensorProductWedge
     return rd.Vp
   end
@@ -752,47 +733,6 @@ function plotting_interpolation_matrix(rd::Trixi.RefElemData{NDIMS}) where {NDIM
          StartUpDG.vandermonde(rd.element_type, rd.N, rd.rst...)
 end
 
-# Permutation of the plotting nodes (see `plotting_interpolation_matrix`) into VTK order
-function plotting_nodes_to_vtk_order(rd::Trixi.RefElemData)
-  if rd.approximation_type isa Trixi.TensorProductWedge
-    # `rd.rstp` are of degree `rd.Nplot`, which is set to the polynomial degree in `load_basis`
-    return Trixi.StartUpDG.SUD_to_vtk_order(rd)
-  end
-
-  # The plotting nodes are already in VTK order
-  return collect(1:size(plotting_interpolation_matrix(rd), 1))
-end
-
-# Without reinterpolation, the points are the solution nodes `rd.rst`. Their order differs
-# from the order of the plotting nodes `rd.rstp` (e.g., for `Quad` elements), such that we
-# need a separate permutation into VTK Lagrange order.
-function calc_vtk_points_cells(md::Trixi.MeshData, rd::Trixi.RefElemData,
-                               reinterpolate::Val{false})
-  perm = solution_nodes_to_vtk_order(rd)
-
-  vtk_cells = calc_vtk_cells_dgmulti(md.num_elements, rd, perm)
-  vtk_points = vec.(md.xyz)
-
-  return vtk_points, vtk_cells
-end
-
-function calc_vtk_cells_dgmulti(n_elements, rd::Trixi.RefElemData, perm)
-  n_points_per_element = length(perm)
-  vtk_cell_type = Trixi.StartUpDG.type_to_vtk(rd.element_type)
-
-  return [MeshCell(vtk_cell_type, perm .+ ((element - 1) * n_points_per_element))
-          for element in 1:n_elements]
-end
-
-function polydeg_dgmulti(rd::Trixi.RefElemData)
-  if length(rd.N) > 1
-    @assert length(Set(rd.N)) == 1 "`order` must have equal elements."
-    return first(rd.N)
-  else
-    return rd.N
-  end
-end
-
 # Compute the permutation of the solution nodes `rd.rst` into VTK Lagrange order.
 # VTK Lagrange cells identify nodes by their topological position within the element.
 # Thus, we map each solution node to the equidistant node at the same topological position
@@ -800,7 +740,7 @@ end
 function solution_nodes_to_vtk_order(rd::Trixi.RefElemData{NDIMS}) where {NDIMS}
   StartUpDG = Trixi.StartUpDG
   element_type = rd.element_type
-  order = polydeg_dgmulti(rd)
+  order = rd.N
   tol = 100 * eps()
 
   if element_type isa Union{StartUpDG.Quad, StartUpDG.Hex}
