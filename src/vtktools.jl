@@ -714,17 +714,53 @@ function calc_vtk_points_cells(node_coordinates::AbstractArray{<:Any,5})
 end
 
 # Convert coordinates to a list of points and VTK Lagrange cells for `DGMultiMesh`.
-# With reinterpolation, the points are the equidistant plotting nodes `rd.rstp`
-# (of degree `rd.Nplot`, see `load_basis`).
+# With reinterpolation, the points are the equidistant nodes of a VTK Lagrange cell of
+# degree `rd.N`, already given in VTK order (see `plotting_interpolation_matrix`).
 function calc_vtk_points_cells(md::Trixi.MeshData, rd::Trixi.RefElemData,
                                reinterpolate::Val{true})
-  # Permutation of the plotting nodes `rd.rstp` into VTK Lagrange order
-  perm = Trixi.StartUpDG.SUD_to_vtk_order(rd)
+  interpolator = plotting_interpolation_matrix(rd)
+  perm = plotting_nodes_to_vtk_order(rd)
 
   vtk_cells = calc_vtk_cells_dgmulti(md.num_elements, rd, perm)
-  vtk_points = map(x -> vec(rd.Vp * x), md.xyz)
+  vtk_points = map(x -> vec(interpolator * x), md.xyz)
 
   return vtk_points, vtk_cells
+end
+
+# Interpolation matrix from the solution nodes `rd.rst` to the equidistant plotting nodes.
+# We take the plotting nodes directly in VTK order from `vtk_order`, which encodes the
+# VTK node convention for Lagrange cells. Thus, the result is independent of the order of
+# StartUpDG's plotting nodes `rd.rstp` and of `rd.Vp`. The latter is not even ordered
+# consistently with `rd.rstp` for all element and approximation types. For example, for
+# `Quad` elements with `Polynomial()` or `GaussSBP()` approximation, StartUpDG builds `rd.Vp`
+# as a Kronecker product whose rows are transposed compared to `rd.rstp`.
+# If there are more solution nodes than polynomial modes (e.g., for `SBP()` on `Tri` elements),
+# this corresponds to a least squares projection onto polynomials of degree `rd.N`.
+function plotting_interpolation_matrix(rd::Trixi.RefElemData{NDIMS}) where {NDIMS}
+  # The polynomial degree of a `TensorProductWedge` is a tuple, for which there is no
+  # `vandermonde` matrix. Here, we use `rd.Vp` (which is ordered consistently with `rd.rstp`)
+  # together with the permutation `SUD_to_vtk_order(rd)`, see `plotting_nodes_to_vtk_order`.
+  if rd.approximation_type isa Trixi.TensorProductWedge
+    return rd.Vp
+  end
+
+  StartUpDG = Trixi.StartUpDG
+  nodes_vtk = StartUpDG.vtk_order(rd.element_type, rd.N)
+  nodes_vtk_formatted = ntuple(dim -> nodes_vtk[dim, :], NDIMS)
+
+  return StartUpDG.vandermonde(rd.element_type, rd.N, nodes_vtk_formatted...) /
+         StartUpDG.vandermonde(rd.element_type, rd.N, rd.rst...)
+end
+
+# Permutation of the plotting nodes (see `plotting_interpolation_matrix`) into VTK order
+function plotting_nodes_to_vtk_order(rd::Trixi.RefElemData)
+  if rd.approximation_type isa Trixi.TensorProductWedge
+    # `rd.rstp` are of degree `rd.Nplot`, which is set to the polynomial degree in `load_basis`
+    return Trixi.StartUpDG.SUD_to_vtk_order(rd)
+  end
+
+  # The plotting nodes are already in VTK order
+  return collect(1:size(plotting_interpolation_matrix(rd), 1))
 end
 
 # Without reinterpolation, the points are the solution nodes `rd.rst`. Their order differs

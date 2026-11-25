@@ -53,10 +53,10 @@ end
 function interpolate_data(::Val{:vtu}, input_data,
                           mesh::DGMultiMesh, basis,
                           n_visnodes, verbose)
-  # `basis.Vp` interpolates from the solution nodes to the equidistant plotting nodes
-  # `basis.rstp` of degree `basis.Nplot` (see `load_basis`). This is the same operator
-  # used for the VTK points in `calc_vtk_points_cells`, such that data and points match.
-  interpolator = basis.Vp
+  # Interpolate from the solution nodes to the equidistant plotting nodes, see
+  # `plotting_interpolation_matrix`. This is the same operator used for the VTK points
+  # in `calc_vtk_points_cells`, such that data and points match.
+  interpolator = plotting_interpolation_matrix(basis)
 
   dof_per_elem, n_elements, n_variables = size(input_data)
   result = zeros((interpolator |> size |> first, n_elements, n_variables))

@@ -188,6 +188,42 @@ function compare_points_and_cells(out_filename, ref_filename; atol=500*eps(), rt
   @test cells.connectivity == ref_cells.connectivity
   @test cells.offsets == ref_cells.offsets
   @test cells.types == ref_cells.types
+
+  # Independent of the reference file, check that all 2D Lagrange cells are oriented
+  # counterclockwise, i.e., that the nodes are assigned consistently to the VTK cells
+  test_counterclockwise_lagrange_cells(vtk)
+end
+
+
+"""
+    test_counterclockwise_lagrange_cells(vtk::VTKFile)
+
+Test that the corner nodes of all 2D Lagrange cells (triangles and quadrilaterals) in `vtk`
+are ordered counterclockwise, as required by VTK. A wrong assignment of the nodes to the
+VTK cells (e.g., a transposed node ordering) results in cells with inverted orientation.
+"""
+function test_counterclockwise_lagrange_cells(vtk::VTKFile)
+  points = get_points(vtk)
+  cells = get_cells(vtk)
+  # VTK cell type IDs: 69 = VTK_LAGRANGE_TRIANGLE, 70 = VTK_LAGRANGE_QUADRILATERAL
+  n_corners = Dict(69 => 3, 70 => 4)
+
+  start = 1
+  min_signed_area = Inf
+  for (cell_type, offset) in zip(cells.types, cells.offsets)
+    if haskey(n_corners, cell_type)
+      n = n_corners[cell_type]
+      corners = cells.connectivity[start:(start + n - 1)]
+      x = points[1, corners]
+      y = points[2, corners]
+      # Shoelace formula for the signed area of the corner polygon
+      signed_area = sum(x[i] * y[mod1(i + 1, n)] - x[mod1(i + 1, n)] * y[i] for i in 1:n) / 2
+      min_signed_area = min(min_signed_area, signed_area)
+    end
+    start = offset + 1
+  end
+
+  @test min_signed_area > 0
 end
 
 

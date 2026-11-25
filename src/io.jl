@@ -156,11 +156,12 @@ function load_basis(mesh_file, ::DGMultiMesh)
       end
   end
 
-  # The visualization operators `rd.Vp` (interpolation to equidistant plotting nodes `rd.rstp`)
-  # and `SUD_to_vtk_order(rd)` (permutation of `rd.rstp` into VTK Lagrange order) both use
-  # plotting nodes of degree `rd.Nplot`. We visualize with VTK Lagrange cells of the same degree
-  # as the solution, thus we need to set `Nplot` to the polynomial degree. Otherwise, StartUpDG's
-  # default (`Nplot = 10`) would result in an inconsistent VTK cell connectivity.
+  # We visualize with VTK Lagrange cells of the same degree as the solution. For a
+  # `TensorProductWedge`, the visualization uses StartUpDG's plotting nodes `rd.rstp` of degree
+  # `rd.Nplot` (see `plotting_interpolation_matrix`), thus we need to set `Nplot` to the
+  # polynomial degree. Otherwise, StartUpDG's default (`Nplot = 10`) would result in an
+  # inconsistent VTK cell connectivity. For all other cases, `rd.rstp` is not used, and setting
+  # `Nplot` just avoids computing unused operators of a higher degree.
   if etype isa Trixi.Wedge && polydeg isa NTuple{2}
     factor_a = Trixi.RefElemData(Trixi.StartUpDG.Tri(), Trixi.Polynomial(), polydeg[1];
                                  Nplot = polydeg[1])

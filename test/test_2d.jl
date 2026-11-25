@@ -483,19 +483,22 @@ end
     @testset "DGMultiMesh" begin
       # Combinations of element type and approximation type, given as
       # (elixir in `examples/dgmulti_2d`, prefix of the reference files,
-      #  whether `reinterpolate=false` is supported).
+      #  whether `reinterpolate=false` is supported, additional keyword arguments for the elixir).
       # The SBP nodes on triangles cannot be mapped to a VTK Lagrange cell, such that
       # these can only be visualized with reinterpolation.
-      dgmulti_cases = [("elixir_euler_weakform.jl", "tri_polynomial_weakform", true),
-                       ("elixir_euler_sedov_limiter_zhang_shu.jl", "tri_sbp_sedov_limiter_zhang_shu", false),
-                       ("elixir_euler_brown_minion_vortex.jl", "quad_polynomial_brown_minion_vortex", true),
-                       ("elixir_euler_curved.jl", "quad_sbp_curved", true),
-                       ("elixir_euler_shockcapturing.jl", "quad_gausssbp_shockcapturing", true)]
+      sbp_legendre_face_nodes = SBP{Trixi.StartUpDG.Kubatko{Trixi.StartUpDG.LegendreFaceNodes}}()
+      dgmulti_cases = [("elixir_euler_weakform.jl", "tri_polynomial_weakform", true, (;)),
+                       ("elixir_euler_sedov_limiter_zhang_shu.jl", "tri_sbp_sedov_limiter_zhang_shu", false, (;)),
+                       ("elixir_euler_weakform.jl", "tri_sbp_legendre_face_nodes_weakform", false,
+                        (; approximation_type=sbp_legendre_face_nodes)),
+                       ("elixir_euler_brown_minion_vortex.jl", "quad_polynomial_brown_minion_vortex", true, (;)),
+                       ("elixir_euler_curved.jl", "quad_sbp_curved", true, (;)),
+                       ("elixir_euler_shockcapturing.jl", "quad_gausssbp_shockcapturing", true, (;))]
 
-      for (elixir, ref_prefix, supports_no_reinterp) in dgmulti_cases
-        @testset "$elixir" begin
+      for (elixir, ref_prefix, supports_no_reinterp, elixir_kwargs) in dgmulti_cases
+        @testset "$ref_prefix" begin
           isdir(outdir) && rm(outdir, recursive=true)
-          run_trixi(joinpath(examples_dir(), "dgmulti_2d", elixir), maxiters=5)
+          run_trixi(joinpath(examples_dir(), "dgmulti_2d", elixir); maxiters=5, elixir_kwargs...)
 
           @timed_testset "mesh data" begin
             # create the output file to be tested
