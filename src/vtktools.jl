@@ -749,7 +749,11 @@ function solution_nodes_to_vtk_order(rd::Trixi.RefElemData{NDIMS}) where {NDIMS}
     nodes_equi_1d = range(-1, 1, length = order + 1)
     nodes_topological = ntuple(NDIMS) do dim
       coordinates = rd.rst[dim]
-      nodes_1d = unique_sorted_nodes(coordinates, tol)
+      # Sorted unique values of the coordinates (up to tolerance `tol`)
+      coordinates_sorted = sort(coordinates)
+      # Keep the first value and every value that differs from its predecessor by more than `tol`
+      is_new_node = [true; diff(coordinates_sorted) .> tol]
+      nodes_1d = coordinates_sorted[is_new_node]
       if length(nodes_1d) != order + 1
         throw(ArgumentError("solution nodes are not a tensor product of $(order + 1) " *
                             "1D nodes; use `reinterpolate=true`"))
@@ -773,16 +777,4 @@ function solution_nodes_to_vtk_order(rd::Trixi.RefElemData{NDIMS}) where {NDIMS}
   nodes_vtk_formatted = ntuple(dim -> nodes_vtk[dim, :], NDIMS)
 
   return StartUpDG.match_coordinate_vectors(nodes_vtk_formatted, nodes_topological; tol)
-end
-
-# Return the sorted unique values of `x` (up to tolerance `tol`)
-function unique_sorted_nodes(x, tol)
-  nodes = eltype(x)[]
-  for value in sort(x)
-    if isempty(nodes) || value - last(nodes) > tol
-      push!(nodes, value)
-    end
-  end
-
-  return nodes
 end
