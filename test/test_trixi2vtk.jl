@@ -171,6 +171,63 @@ end
 
 
 """
+    compare_points_and_cells(out_filename, ref_filename; atol=500*eps(), rtol=sqrt(eps()))
+
+Test that the point coordinates and the cell connectivity in `out_filename` match those in
+`ref_filename`. This is important for high-order (Lagrange) VTK cells, where a wrong node
+ordering results in an invalid VTK file that still has the correct number of points and cells.
+"""
+function compare_points_and_cells(out_filename, ref_filename; atol=500*eps(), rtol=sqrt(eps()))
+  ref_vtk = VTKFile(ref_filename)
+  vtk = VTKFile(out_filename)
+
+  @test isapprox(get_points(vtk), get_points(ref_vtk), atol=atol, rtol=rtol)
+
+  cells = get_cells(vtk)
+  ref_cells = get_cells(ref_vtk)
+  @test cells.connectivity == ref_cells.connectivity
+  @test cells.offsets == ref_cells.offsets
+  @test cells.types == ref_cells.types
+
+  # Independent of the reference file, check that all 2D Lagrange cells are oriented
+  # counterclockwise, i.e., that the nodes are assigned consistently to the VTK cells
+  test_counterclockwise_lagrange_cells(vtk)
+end
+
+
+"""
+    test_counterclockwise_lagrange_cells(vtk::VTKFile)
+
+Test that the corner nodes of all 2D Lagrange cells (triangles and quadrilaterals) in `vtk`
+are ordered counterclockwise, as required by VTK. A wrong assignment of the nodes to the
+VTK cells (e.g., a transposed node ordering) results in cells with inverted orientation.
+"""
+function test_counterclockwise_lagrange_cells(vtk::VTKFile)
+  points = get_points(vtk)
+  cells = get_cells(vtk)
+  # VTK cell type IDs: 69 = VTK_LAGRANGE_TRIANGLE, 70 = VTK_LAGRANGE_QUADRILATERAL
+  n_corners = Dict(69 => 3, 70 => 4)
+
+  start = 1
+  min_signed_area = Inf
+  for (cell_type, offset) in zip(cells.types, cells.offsets)
+    if haskey(n_corners, cell_type)
+      n = n_corners[cell_type]
+      corners = cells.connectivity[start:(start + n - 1)]
+      x = points[1, corners]
+      y = points[2, corners]
+      # Shoelace formula for the signed area of the corner polygon
+      signed_area = sum(x[i] * y[mod1(i + 1, n)] - x[mod1(i + 1, n)] * y[i] for i in 1:n) / 2
+      min_signed_area = min(min_signed_area, signed_area)
+    end
+    start = offset + 1
+  end
+
+  @test min_signed_area > 0
+end
+
+
+"""
     @timed_testset "name of the testset" #= code to test #=
 
 Similar to `@testset`, but wraps the execution of the testset using `@time`
@@ -178,10 +235,12 @@ and prints the name of the testset after execution.
 """
 macro timed_testset(name, expr)
   @assert name isa String
-  quote
+  # Escape the whole expression such that `expr` is evaluated in the scope of the caller,
+  # e.g., to have access to local (loop) variables
+  esc(quote
     @time @testset $name $expr
     flush(stdout)
     @info("Testset " * $name * " finished.\n")
     flush(stdout)
-  end
+  end)
 end

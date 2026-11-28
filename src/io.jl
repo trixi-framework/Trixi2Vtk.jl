@@ -32,15 +32,26 @@ end
 
 
 # Read in data file and return all relevant information
-function read_datafile(filename::String)
+function read_datafile(filename::String, mesh)
   # Open file for reading
   h5open(filename, "r") do file
     # Extract basic information
-    ndims_ = read(attributes(file)["ndims"])
-    polydeg = read(attributes(file)["polydeg"])
     n_elements = read(attributes(file)["n_elements"])
     n_variables = read(attributes(file)["n_vars"])
     time = read(attributes(file)["time"])
+
+    # Determine the shape of the nodal data of one element. `DGMultiMesh` stores all nodal
+    # data as `(dof_per_elem, n_elements)` arrays independent of the number of dimensions.
+    if mesh isa DGMultiMesh
+      _, polydeg = read_dgmulti_element_type_polydeg(file)
+      n_nodes = maximum(polydeg) + 1
+      node_dims = (read(attributes(file)["dof_per_elem"]),)
+    else
+      ndims_ = read(attributes(file)["ndims"])
+      @assert ndims_ == 2 || ndims_ == 3 "Only 2D and 3D data supported"
+      n_nodes = read(attributes(file)["polydeg"]) + 1
+      node_dims = ntuple(_ -> n_nodes, ndims_)
+    end
 
     # Extract labels for legend
     labels = Array{String}(undef, 1, n_variables)
@@ -49,10 +60,7 @@ function read_datafile(filename::String)
     end
 
     # Extract data arrays
-    n_nodes = polydeg + 1
-
-    @assert ndims_ == 2 || ndims_ == 3 "Only 2D and 3D data supported"
-    data = Array{Float64}(undef, ntuple(_ -> n_nodes, ndims_)..., n_elements, n_variables)
+    data = Array{Float64}(undef, node_dims..., n_elements, n_variables)
     for v = 1:n_variables
       vardata = read(file["variables_$v"])
       @views data[.., v][:] .= vardata
@@ -72,10 +80,72 @@ function read_datafile(filename::String)
     index = 1
     while haskey(file, "node_variables_$index")
       varname = read(attributes(file["node_variables_$index"])["name"])
-      node_variables[varname]= read(file["node_variables_$index"])
+      nodedata = read(file["node_variables_$index"])
+      if mesh isa DGMultiMesh
+        nodedata = reshape(nodedata, node_dims..., n_elements)
+      end
+      node_variables[varname] = nodedata
       index +=1
     end
 
     return labels, data, n_elements, n_nodes, element_variables, node_variables, time
+  end
+end
+
+# Read the element type and polynomial degree from a DGMulti mesh or solution file.
+# For a `TensorProductWedge`, the polynomial degree is a tuple `(polydeg_tri, polydeg_line)`.
+function read_dgmulti_element_type_polydeg(file)
+  etype = Trixi.get_element_type_from_string(read(attributes(file)["element_type"]))()
+
+  if etype isa Trixi.Wedge && haskey(attributes(file), "polydeg_tri")
+    polydeg = (read(attributes(file)["polydeg_tri"]), read(attributes(file)["polydeg_line"]))
+  else
+    polydeg = read(attributes(file)["polydeg"])
+  end
+
+  return etype, polydeg
+end
+
+# Reconstruct the `basis` (a `RefElemData`) from information in `meshfile` for `DGMultiMesh`.
+# For other mesh types, the basis is not needed.
+load_basis(meshfile, mesh) = nothing
+
+function load_basis(meshfile, ::DGMultiMesh)
+  etype, polydeg, approximation_type_str = h5open(meshfile, "r") do file
+    etype, polydeg = read_dgmulti_element_type_polydeg(file)
+
+    # The approximation type (e.g., `SBP()`) determines the solution nodes. It is stored in
+    # mesh files written by newer versions of Trixi.jl. Older mesh files do not contain this
+    # information, in which case Trixi.jl assumes the default `Polynomial()` approximation.
+    if haskey(attributes(file), "approximation_type")
+      approximation_type_str = read(attributes(file)["approximation_type"])
+    else
+      approximation_type_str = nothing
+    end
+
+    return etype, polydeg, approximation_type_str
+  end
+
+  # We visualize with VTK Lagrange cells of the same degree as the solution. For a
+  # `TensorProductWedge`, the visualization uses StartUpDG's plotting nodes `rd.rstp` of degree
+  # `rd.Nplot` (see `plotting_interpolation_matrix`), thus we need to set `Nplot` to the
+  # polynomial degree. Otherwise, StartUpDG's default (`Nplot = 10`) would result in an
+  # inconsistent VTK cell connectivity. For all other cases, `rd.rstp` is not used, and setting
+  # `Nplot` just avoids computing unused operators of a higher degree.
+  if polydeg isa NTuple{2}
+    factor_a = Trixi.RefElemData(Trixi.StartUpDG.Tri(), Trixi.Polynomial(), polydeg[1];
+                                 Nplot = polydeg[1])
+    factor_b = Trixi.RefElemData(Trixi.StartUpDG.Line(), Trixi.Polynomial(), polydeg[2];
+                                 Nplot = polydeg[2])
+
+    return Trixi.RefElemData(etype, Trixi.TensorProductWedge(factor_a, factor_b))
+  else
+    if approximation_type_str === nothing
+      approximation_type = Trixi.Polynomial()
+    else
+      approximation_type = Trixi.get_approximation_type_from_string(approximation_type_str)
+    end
+
+    return Trixi.RefElemData(etype, approximation_type, polydeg; Nplot = polydeg)
   end
 end

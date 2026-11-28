@@ -1,6 +1,7 @@
 
 # Interpolate data from input format to desired output format (vtu version)
-function interpolate_data(::Val{:vtu}, input_data, mesh::TreeMesh, n_visnodes, verbose)
+function interpolate_data(::Val{:vtu}, input_data, mesh::TreeMesh, basis, n_visnodes,
+                          verbose)
   # Calculate equidistant output nodes (visualization nodes)
   dx = 2 / n_visnodes
   nodes_out = collect(range(-1 + dx/2, 1 - dx/2, length=n_visnodes))
@@ -11,7 +12,7 @@ end
 
 # Interpolate data from input format to desired output format (StructuredMesh or UnstructuredMesh2D version)
 function interpolate_data(::Val{:vtu}, input_data,
-                          mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, T8codeMesh},
+                          mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, T8codeMesh}, basis,
                           n_visnodes, verbose)
   # Calculate equidistant output nodes
   nodes_out = collect(range(-1, 1, length=n_visnodes))
@@ -21,7 +22,8 @@ end
 
 
 # Interpolate data from input format to desired output format (vti version)
-function interpolate_data(::Val{:vti}, input_data, mesh::TreeMesh, n_visnodes, verbose)
+function interpolate_data(::Val{:vti}, input_data, mesh::TreeMesh, basis, n_visnodes, 
+                          verbose)
   coordinates, levels, center_level_0, length_level_0 = extract_mesh_information(mesh)
 
   # Normalize element coordinates: move center to origin and domain size to [-1, 1]²
@@ -47,6 +49,22 @@ function interpolate_data(::Val{:vti}, input_data, mesh::TreeMesh, n_visnodes, v
   return structured_data
 end
 
+# Interpolate data from input format to desired output format (DGMulti version)
+function interpolate_data(::Val{:vtu}, input_data,
+                          mesh::DGMultiMesh, basis,
+                          n_visnodes, verbose)
+  # Interpolate from the solution nodes to the equidistant plotting nodes, see
+  # `plotting_interpolation_matrix`. This is the same operator used for the VTK points
+  # in `calc_vtk_points_cells`, such that data and points match.
+  interpolator = plotting_interpolation_matrix(basis)
+
+  # Interpolate all elements and variables at once by treating the data as a matrix of
+  # size `(dof_per_elem, n_elements * n_variables)`
+  n_variables = size(input_data, 3)
+  interpolated_data = interpolator * reshape(input_data, size(input_data, 1), :)
+
+  return reshape(interpolated_data, :, n_variables)
+end
 
 # Interpolate unstructured DG data to structured data (cell-centered)
 function unstructured2structured(unstructured_data::AbstractArray{Float64},

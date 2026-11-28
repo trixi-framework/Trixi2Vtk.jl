@@ -119,6 +119,10 @@ function trixi2vtk(filename::AbstractString...;
     verbose && println("| Reading mesh file...")
     @timeit "read mesh" mesh = Trixi.load_mesh_serial(meshfile; RealT=Float64)
 
+    # For DGMulti, we will reconstruct the `basis`, which is of type `RefElemData`. For 
+    # other mesh types, we do not need to do this, and will just set `basis = nothing`.
+    @timeit "reconstruct basis" basis = load_basis(meshfile, mesh)
+
     # Check compatibility of the mesh type and the output format
     if format === :vti && !(mesh isa Trixi.TreeMesh{2})
       throw(ArgumentError("VTI format only available for 2D TreeMesh"))
@@ -127,9 +131,11 @@ function trixi2vtk(filename::AbstractString...;
     # Read data only if it is a data file
     if is_datafile
       verbose && println("| Reading data file...")
-      @timeit "read data" (labels, data, n_elements, n_nodes,
-                           element_variables, node_variables, time) = read_datafile(filename)
 
+      @timeit "read data" (labels, data, n_elements, n_nodes,
+                           element_variables, node_variables, 
+                           time) = read_datafile(filename, mesh)
+      
       assert_cells_elements(n_elements, mesh, filename, meshfile)
 
       # Determine resolution for data interpolation
@@ -156,6 +162,7 @@ function trixi2vtk(filename::AbstractString...;
     else
       # If file is a mesh file, do not interpolate data as detailed
       n_visnodes = get_default_nvisnodes_mesh(nvisnodes, mesh)
+
       # Create an "empty" node set that is unused in the mesh conversion
       node_set = Array{Float64}(undef, n_visnodes)
     end
@@ -164,8 +171,8 @@ function trixi2vtk(filename::AbstractString...;
     mkpath(output_directory)
 
     # Build VTK grids
-    vtk_nodedata, vtk_celldata = build_vtk_grids(Val(format), mesh, node_set, n_visnodes, verbose,
-                                                 output_directory, is_datafile, filename, Val(reinterpolate))
+    vtk_nodedata, vtk_celldata = build_vtk_grids(Val(format), mesh, node_set, basis,
+                                                 n_visnodes, verbose, output_directory, is_datafile, filename, Val(reinterpolate))
 
     # Interpolate data
     if is_datafile
@@ -173,15 +180,14 @@ function trixi2vtk(filename::AbstractString...;
       if reinterpolate
         @timeit "interpolate data" interpolated_data = interpolate_data(Val(format),
                                                                         data, mesh,
-                                                                        n_visnodes, verbose)
+                                                                        basis, n_visnodes,
+                                                                        verbose)
       else # Copy the raw solution data; only works for `vtu` format
-        # Extract data shape information
-        ndims_ = ndims(data) - 2
         n_variables = length(labels)
-        # Save raw data as one 1D array for each variable
-        @timeit "interpolate data" interpolated_data = reshape(data,
-                                                               n_visnodes^ndims_ * n_elements,
-                                                               n_variables)
+        # Save raw data as one 1D array for each variable. The data has the shape
+        # `(nodes..., n_elements, n_variables)`, where `nodes...` is `n_nodes` in each
+        # dimension for tensor product meshes and `dof_per_elem` for `DGMultiMesh`.
+        @timeit "interpolate data" interpolated_data = reshape(data, :, n_variables)
       end
     end
 
@@ -220,10 +226,10 @@ function trixi2vtk(filename::AbstractString...;
               end
               @timeit "interpolate data" interpolated_cell_data = interpolate_data(Val(format),
                                                                     reshape(variable, size(variable)..., 1),
-                                                                    mesh, n_visnodes, verbose)
+                                                                    mesh, basis, 
+                                                                    n_visnodes, verbose)
             else
-              @timeit "interpolate data" interpolated_cell_data = reshape(variable,
-                                                                          n_visnodes^ndims_ * n_elements)
+              @timeit "interpolate data" interpolated_cell_data = vec(variable)
             end
             # Add to node_data
             @timeit label vtk_nodedata[label] = interpolated_cell_data
@@ -314,7 +320,7 @@ function assert_cells_elements(n_elements, mesh::UnstructuredMesh2D, filename, m
 end
 
 
-function assert_cells_elements(n_elements, mesh::Union{P4estMesh, T8codeMesh}, filename, meshfile)
+function assert_cells_elements(n_elements, mesh::Union{P4estMesh, T8codeMesh, DGMultiMesh}, filename, meshfile)
   # Check if dimensions match
   if Trixi.ncells(mesh) != n_elements
     error("number of elements in '$(filename)' do not match number of cells in " *
@@ -336,7 +342,7 @@ function get_default_nvisnodes_solution(nvisnodes, n_nodes, mesh::TreeMesh)
 end
 
 function get_default_nvisnodes_solution(nvisnodes, n_nodes,
-                                        mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, T8codeMesh})
+                                        mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, T8codeMesh, DGMultiMesh})
   if nvisnodes === nothing || nvisnodes == 0
     return n_nodes
   else
@@ -356,7 +362,7 @@ function get_default_nvisnodes_mesh(nvisnodes, mesh::TreeMesh)
 end
 
 function get_default_nvisnodes_mesh(nvisnodes,
-                                    mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, T8codeMesh})
+                                    mesh::Union{StructuredMesh, UnstructuredMesh2D, P4estMesh, T8codeMesh, DGMultiMesh})
   if nvisnodes === nothing
     # for curved meshes, we need to get at least the vertices
     return 2
@@ -458,6 +464,16 @@ function add_celldata!(vtk_celldata, mesh::T8codeMesh, verbose)
     @timeit "element_ids" vtk_celldata["element_ids"] = collect(1:Trixi.ncells(mesh))
     verbose && println("| | levels...")
     @timeit "levels" vtk_celldata["levels"] = levels
+  end
+
+  return vtk_celldata
+end
+
+function add_celldata!(vtk_celldata, mesh::DGMultiMesh, verbose)
+  @timeit "add data to VTK file" begin
+    # Add tree/element data to celldata VTK file
+    verbose && println("| | element_ids...")
+    @timeit "element_ids" vtk_celldata["element_ids"] = collect(1:Trixi.ncells(mesh))
   end
 
   return vtk_celldata

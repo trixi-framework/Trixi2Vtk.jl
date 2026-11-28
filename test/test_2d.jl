@@ -479,6 +479,74 @@ end
         compare_point_data(out_file, ref_file)
       end
     end
+
+    @testset "DGMultiMesh" begin
+      # Combinations of element type and approximation type, given as
+      # (elixir in `examples/dgmulti_2d`, prefix of the reference files,
+      #  whether `reinterpolate=false` is supported, additional keyword arguments for the elixir).
+      # The SBP nodes on triangles cannot be mapped to a VTK Lagrange cell, such that
+      # these can only be visualized with reinterpolation.
+      sbp_legendre_face_nodes = SBP{Trixi.StartUpDG.Kubatko{Trixi.StartUpDG.LegendreFaceNodes}}()
+      dgmulti_cases = [("elixir_euler_weakform.jl", "tri_polynomial_weakform", true, (;)),
+                       ("elixir_euler_sedov_limiter_zhang_shu.jl", "tri_sbp_sedov_limiter_zhang_shu", false, (;)),
+                       ("elixir_euler_weakform.jl", "tri_sbp_legendre_face_nodes_weakform", false,
+                        (; approximation_type=sbp_legendre_face_nodes)),
+                       ("elixir_euler_brown_minion_vortex.jl", "quad_polynomial_brown_minion_vortex", true, (;)),
+                       ("elixir_euler_curved.jl", "quad_sbp_curved", true, (;)),
+                       ("elixir_euler_shockcapturing.jl", "quad_gausssbp_shockcapturing", true, (;))]
+
+      # Convert `infile` in `outdir`, save the output file to `artifacts` to facilitate
+      # debugging of failing tests, and compare it to the reference file
+      function test_dgmulti_output(ref_prefix, infile, outfilename, ref_suffix, compare_data;
+                                   kwargs...)
+        @test_nowarn trixi2vtk(joinpath(outdir, infile); output_directory=outdir, kwargs...)
+        out_file = joinpath(outdir, outfilename)
+        cp(out_file, joinpath(artifacts_dir, "2d-dgmulti-$ref_prefix-$ref_suffix-$outfilename"),
+           force=true)
+
+        # remote file path is actually a URL so it always has the same path structure
+        ref_filename = "$(ref_prefix)_$(ref_suffix)_05.vtu"
+        ref_file = get_test_reference_file(ref_filename, "2d/dgmulti/" * ref_filename)
+        compare_points_and_cells(out_file, ref_file)
+        compare_data(out_file, ref_file)
+      end
+
+      for (elixir, ref_prefix, supports_no_reinterp, elixir_kwargs) in dgmulti_cases
+        @testset "$ref_prefix" begin
+          isdir(outdir) && rm(outdir, recursive=true)
+          run_trixi(joinpath(examples_dir(), "dgmulti_2d", elixir); maxiters=5, elixir_kwargs...)
+          solution = "solution_" * LEADING_ZEROS * "000005"
+
+          @timed_testset "mesh data" begin
+            test_dgmulti_output(ref_prefix, "mesh.h5", "mesh_celldata.vtu", "mesh",
+                                compare_cell_data)
+          end
+
+          @timed_testset "solution celldata" begin
+            test_dgmulti_output(ref_prefix, solution * ".h5", solution * "_celldata.vtu",
+                                "celldata", compare_cell_data)
+          end
+
+          @timed_testset "reinterpolate with nonuniform data" begin
+            # Default options: `reinterpolate=true, data_is_uniform=false`
+            test_dgmulti_output(ref_prefix, solution * ".h5", solution * ".vtu",
+                                "reinterp", compare_point_data)
+          end
+
+          @timed_testset "do not reinterpolate with nonuniform data" begin
+            if supports_no_reinterp
+              # Output on the solution nodes
+              test_dgmulti_output(ref_prefix, solution * ".h5", solution * ".vtu",
+                                  "no_reinterp", compare_point_data; reinterpolate=false)
+            else
+              # Purposely request a bad configuration and check that an error message gets thrown
+              @test_throws ArgumentError trixi2vtk(joinpath(outdir, solution * ".h5"),
+                                                   output_directory=outdir, reinterpolate=false)
+            end
+          end
+        end
+      end
+    end
   end
 
   @testset "Subcell limiting coefficients" begin
